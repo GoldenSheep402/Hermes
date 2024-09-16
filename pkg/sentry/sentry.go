@@ -2,8 +2,8 @@ package sentry
 
 import (
 	"fmt"
+	"github.com/GoldenSheep402/Hermes/conf"
 	"github.com/getsentry/sentry-go"
-	"github.com/juanjiTech/jframe/conf"
 )
 
 func Init() {

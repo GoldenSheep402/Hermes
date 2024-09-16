@@ -2,9 +2,9 @@ package pyroscope
 
 import (
 	"context"
+	"github.com/GoldenSheep402/Hermes/conf"
+	"github.com/GoldenSheep402/Hermes/core/kernel"
 	"github.com/grafana/pyroscope-go"
-	"github.com/juanjiTech/jframe/conf"
-	"github.com/juanjiTech/jframe/core/kernel"
 	"os"
 	"sync"
 )

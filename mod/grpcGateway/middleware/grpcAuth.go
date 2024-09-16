@@ -2,16 +2,16 @@ package middleware
 
 import (
 	"context"
+	"github.com/GoldenSheep402/Hermes/core/logx"
+	"github.com/GoldenSheep402/Hermes/pkg/auth"
+	"github.com/GoldenSheep402/Hermes/pkg/ctxKey"
 	grpcAuth "github.com/grpc-ecosystem/go-grpc-middleware/auth"
-	"github.com/juanjiTech/jframe/core/logx"
-	"github.com/juanjiTech/jframe/pkg/auth"
-	"github.com/juanjiTech/jframe/pkg/ctxKey"
 )
 
 func AuthInterceptor(ctx context.Context) (context.Context, error) {
 	token, err := grpcAuth.AuthFromMD(ctx, "bearer")
 	if err != nil {
-		return ctx, nil //不强求auth 交给具体方法判断（后续使用CASBin控制
+		return ctx, nil // 不强求auth 交给具体方法判断（后续使用CASBin控制
 	}
 
 	jwtClaims, err := auth.ParseToken(token)

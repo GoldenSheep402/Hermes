@@ -4,9 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/juanjiTech/jframe/conf"
-	"github.com/juanjiTech/jframe/core/kernel"
-	"github.com/juanjiTech/jframe/mod/jinx/healthcheck"
+	"github.com/GoldenSheep402/Hermes/core/kernel"
+	"github.com/GoldenSheep402/Hermes/mod/jinx/healthcheck"
 	rds "github.com/redis/go-redis/v9"
 	"time"
 )
@@ -15,17 +14,29 @@ var _ kernel.Module = (*Mod)(nil)
 
 type Mod struct {
 	kernel.UnimplementedModule // 请为所有Module引入UnimplementedModule
+	config                     Config
+}
+
+type Config struct {
+	Addr     string `yaml:"Addr"`
+	PORT     string `yaml:"Port"`
+	PASSWORD string `yaml:"Password"`
+	DB       int    `yaml:"DB"`
+}
+
+func (m *Mod) Config() any {
+	return &m.config
 }
 
 func (m *Mod) Name() string {
-	return "rds"
+	return "Rds"
 }
 
 func (m *Mod) PreInit(hub *kernel.Hub) error {
 	rdb := rds.NewClient(&rds.Options{
-		Addr:     fmt.Sprintf("%s:%s", conf.Get().Redis.Addr, conf.Get().Redis.PORT),
-		Password: conf.Get().Redis.PASSWORD,
-		DB:       conf.Get().Redis.DB,
+		Addr:     fmt.Sprintf("%s:%s", m.config.Addr, m.config.PORT),
+		Password: m.config.PASSWORD,
+		DB:       m.config.DB,
 	})
 
 	_, err := rdb.Ping(context.Background()).Result()
@@ -71,20 +82,20 @@ func (h *healthChecker) Name() string {
 	return "redis"
 }
 
-//var builderPool = sync.Pool{
+// var builderPool = sync.Pool{
 //	New: func() interface{} {
 //		return &strings.Builder{}
 //	},
-//}
+// }
 
-//这里最初是想实现一个自动为业务的key加前缀的功能，但是目前看起来有点麻烦，暂缓实现
+// 这里最初是想实现一个自动为业务的key加前缀的功能，但是目前看起来有点麻烦，暂缓实现
 //
-//type Client struct {
+// type Client struct {
 //	businessPool map[string]struct{}
 //	*rds.Client
-//}
+// }
 //
-//func (c *Client) SetBusiness(business string, indexes ...string) {
+// func (c *Client) SetBusiness(business string, indexes ...string) {
 //	builder := builderPool.Get().(*strings.Builder)
 //	defer builderPool.Put(builder)
 //	builder.WriteString("au")
@@ -101,4 +112,4 @@ func (h *healthChecker) Name() string {
 //
 //	rds.Command()
 //	c.Client.AddHook(genHook)
-//}
+// }

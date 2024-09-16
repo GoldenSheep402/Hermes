@@ -3,9 +3,9 @@ package config
 import (
 	"errors"
 	"fmt"
-	"github.com/juanjiTech/jframe/cmd/server/modList"
-	"github.com/juanjiTech/jframe/conf"
-	"github.com/juanjiTech/jframe/pkg/fsx"
+	"github.com/GoldenSheep402/Hermes/cmd/server/modList"
+	"github.com/GoldenSheep402/Hermes/conf"
+	"github.com/GoldenSheep402/Hermes/pkg/fsx"
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
 	"gopkg.in/yaml.v3"

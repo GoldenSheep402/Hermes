@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 	"github.com/Backblaze/blazer/b2"
-	"github.com/juanjiTech/jframe/conf"
-	"github.com/juanjiTech/jframe/core/kernel"
+	"github.com/GoldenSheep402/Hermes/conf"
+	"github.com/GoldenSheep402/Hermes/core/kernel"
 	"sync"
 )
 

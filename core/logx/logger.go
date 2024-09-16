@@ -1,8 +1,8 @@
 package logx
 
 import (
-	"github.com/juanjiTech/jframe/conf"
-	"github.com/juanjiTech/jframe/pkg/clsLog"
+	"github.com/GoldenSheep402/Hermes/conf"
+	"github.com/GoldenSheep402/Hermes/pkg/clsLog"
 	tencentcloud_cls_sdk_go "github.com/tencentcloud/tencentcloud-cls-sdk-go"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -39,9 +39,9 @@ func getEncoder() zapcore.Encoder {
 
 func Init(level zapcore.LevelEnabler) {
 	writeSyncer := getLogWriter()
-	//if level == zapcore.DebugLevel {
+	// if level == zapcore.DebugLevel {
 	//	writeSyncer = zapcore.NewMultiWriteSyncer(writeSyncer, zapcore.AddSync(os.Stdout))
-	//}
+	// }
 	writeSyncer = zapcore.NewMultiWriteSyncer(writeSyncer, os.Stdout)
 	encoder := getEncoder()
 	core := zapcore.NewCore(encoder, writeSyncer, level)

@@ -12,21 +12,6 @@ type GlobalConfig struct {
 			TopicID     string `yaml:"TopicID"`
 		} `yaml:"CLS"`
 	} `yaml:"Log"`
-	MySQL struct {
-		Addr     string `yaml:"Addr"`
-		PORT     string `yaml:"Port"`
-		USER     string `yaml:"User"`
-		PASSWORD string `yaml:"Password"`
-		DATABASE string `yaml:"Database"`
-		UseTLS   bool   `yaml:"UseTLS"`
-		Debug    bool   `yaml:"Debug"`
-	} `yaml:"MySQL"`
-	Redis struct {
-		Addr     string `yaml:"Addr"`
-		PORT     string `yaml:"Port"`
-		PASSWORD string `yaml:"Password"`
-		DB       int    `yaml:"Db"`
-	} `yaml:"Redis"`
 	B2 struct {
 		BucketKeyID string `yaml:"BucketKeyID"`
 		BucketKey   string `yaml:"BucketKey"`

@@ -4,6 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/GoldenSheep402/Hermes/conf"
+	"github.com/GoldenSheep402/Hermes/core/kernel"
+	"github.com/GoldenSheep402/Hermes/core/logx"
+	"github.com/GoldenSheep402/Hermes/mod/grpcGateway/gateway"
+	"github.com/GoldenSheep402/Hermes/mod/grpcGateway/middleware"
 	grpcMiddleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	grpcAuth "github.com/grpc-ecosystem/go-grpc-middleware/auth"
 	grpcZap "github.com/grpc-ecosystem/go-grpc-middleware/logging/zap"
@@ -11,11 +16,6 @@ import (
 	grpcCtxTags "github.com/grpc-ecosystem/go-grpc-middleware/tags"
 	grpcOpentracing "github.com/grpc-ecosystem/go-grpc-middleware/tracing/opentracing"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
-	"github.com/juanjiTech/jframe/conf"
-	"github.com/juanjiTech/jframe/core/kernel"
-	"github.com/juanjiTech/jframe/core/logx"
-	"github.com/juanjiTech/jframe/mod/grpcGateway/gateway"
-	"github.com/juanjiTech/jframe/mod/grpcGateway/middleware"
 	"github.com/juanjiTech/jin"
 	"github.com/opentracing/opentracing-go"
 	"github.com/soheilhy/cmux"
@@ -72,8 +72,8 @@ func (m *Mod) PostInit(h *kernel.Hub) error {
 
 	// 开始初始化grpc-gateway
 	opts := []grpc.DialOption{
-		//grpc.WithTimeout(10 * time.Second),
-		//grpc.WithBlock(),
+		// grpc.WithTimeout(10 * time.Second),
+		// grpc.WithBlock(),
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	}
 

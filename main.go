@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/juanjiTech/jframe/cmd"
+	"github.com/GoldenSheep402/Hermes/cmd"
 )
 
 func main() {

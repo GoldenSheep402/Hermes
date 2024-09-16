@@ -3,7 +3,7 @@ package create
 import (
 	"bytes"
 	"fmt"
-	"github.com/juanjiTech/jframe/mod/example"
+	"github.com/GoldenSheep402/Hermes/mod/example"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"io/fs"

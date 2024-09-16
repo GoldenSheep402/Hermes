@@ -3,8 +3,7 @@ package uptrace
 import (
 	"context"
 	"errors"
-	"github.com/juanjiTech/jframe/conf"
-	"github.com/juanjiTech/jframe/core/kernel"
+	"github.com/GoldenSheep402/Hermes/core/kernel"
 	"github.com/opentracing/opentracing-go"
 	"github.com/uptrace/uptrace-go/uptrace"
 	"gorm.io/gorm"
@@ -19,6 +18,17 @@ type Mod struct {
 	kernel.UnimplementedModule
 	closer func(ctx context.Context) error
 	tracer opentracing.Tracer
+	config Config
+}
+
+type Config struct {
+	DSN            string `yaml:"DSN"`
+	ServiceName    string `yaml:"ServiceName"`
+	ServiceVersion string `yaml:"ServiceVersion"`
+}
+
+func (m *Mod) Config() any {
+	return &m.config
 }
 
 func (m *Mod) Name() string {
@@ -27,9 +37,9 @@ func (m *Mod) Name() string {
 
 func (m *Mod) Init(hub *kernel.Hub) error {
 	uptrace.ConfigureOpentelemetry(
-		uptrace.WithDSN(conf.Get().Uptrace.DSN),
-		uptrace.WithServiceName(conf.Get().Uptrace.ServiceName),
-		uptrace.WithServiceVersion(conf.Get().Uptrace.ServiceVersion),
+		uptrace.WithDSN(m.config.DSN),
+		uptrace.WithServiceName(m.config.ServiceName),
+		uptrace.WithServiceVersion(m.config.ServiceVersion),
 	)
 
 	m.tracer = opentracing.GlobalTracer()

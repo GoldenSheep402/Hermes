@@ -2,12 +2,12 @@ package server
 
 import (
 	"fmt"
-	"github.com/juanjiTech/jframe/cmd/server/modList"
-	"github.com/juanjiTech/jframe/conf"
-	"github.com/juanjiTech/jframe/core/kernel"
-	"github.com/juanjiTech/jframe/core/logx"
-	"github.com/juanjiTech/jframe/pkg/ip"
-	"github.com/juanjiTech/jframe/pkg/sentry"
+	"github.com/GoldenSheep402/Hermes/cmd/server/modList"
+	"github.com/GoldenSheep402/Hermes/conf"
+	"github.com/GoldenSheep402/Hermes/core/kernel"
+	"github.com/GoldenSheep402/Hermes/core/logx"
+	"github.com/GoldenSheep402/Hermes/pkg/ip"
+	"github.com/GoldenSheep402/Hermes/pkg/sentry"
 	"github.com/soheilhy/cmux"
 	"github.com/spf13/cobra"
 	"go.uber.org/zap/zapcore"

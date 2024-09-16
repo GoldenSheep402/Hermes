@@ -1,9 +1,9 @@
 package cmd
 
 import (
-	"github.com/juanjiTech/jframe/cmd/config"
-	"github.com/juanjiTech/jframe/cmd/create"
-	"github.com/juanjiTech/jframe/cmd/server"
+	"github.com/GoldenSheep402/Hermes/cmd/config"
+	"github.com/GoldenSheep402/Hermes/cmd/create"
+	"github.com/GoldenSheep402/Hermes/cmd/server"
 	"github.com/spf13/cobra"
 	"os"
 )

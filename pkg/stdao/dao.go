@@ -2,7 +2,7 @@ package stdao
 
 import (
 	"context"
-	"github.com/juanjiTech/jframe/pkg/ctxKey"
+	"github.com/GoldenSheep402/Hermes/pkg/ctxKey"
 	"gorm.io/gorm"
 )
 

@@ -2,7 +2,7 @@ package jinPprof
 
 import (
 	"encoding/base64"
-	"github.com/juanjiTech/jframe/core/kernel"
+	"github.com/GoldenSheep402/Hermes/core/kernel"
 	"github.com/juanjiTech/jin"
 	"github.com/pkg/errors"
 	"net/http"

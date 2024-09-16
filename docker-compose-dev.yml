@@ -1,17 +1,17 @@
 version: '3'
 
 services:
-  jframe-rds:
+  cert-center-rds:
     image: redis
-    container_name: jframe-rds-ctn
+    container_name: hermes-rds-ctn
     ports:
       - "6379:6379"
-  jframe-mysql:
-    image: bitnami/mysql:latest
-    container_name: jframe-mysql-ctn
+  cert-center-postgres:
+    image: bitnami/postgresql:latest
+    container_name: hermes-ctn
     ports:
-      - "3306:3306"
+      - "5432:5432"
     environment:
-      - MYSQL_ROOT_PASSWORD=123456
-      - MYSQL_DATABASE=jframe
-      - MYSQL_CHARSET=utf8mb4
+      - POSTGRESQL_USERNAME=hermes
+      - POSTGRESQL_PASSWORD=123456
+      - POSTGRESQL_DATABASE=hermes

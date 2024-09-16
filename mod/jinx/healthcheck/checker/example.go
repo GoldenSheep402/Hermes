@@ -1,6 +1,6 @@
 package checker
 
-import "github.com/juanjiTech/jframe/mod/jinx/healthcheck"
+import "github.com/GoldenSheep402/Hermes/mod/jinx/healthcheck"
 
 var _ healthcheck.Checker = (*example)(nil)
 

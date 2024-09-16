@@ -1,0 +1,74 @@
+syntax = "proto3";
+package category.v1;
+option go_package = "github.com/GoldenSheep402/Hermes/pkg/proto/go/category/v1;categoryV1";
+
+import "google/api/annotations.proto";
+
+service CategoryService {
+  rpc GetCategory(GetCategoryRequest) returns (GetCategoryResponse) {
+    option (google.api.http) = {
+      get: "/gapi/category/v1/info"
+    };
+  }
+
+  rpc CreateCategory(CreateCategoryRequest) returns (CreateCategoryResponse) {
+    option (google.api.http) = {
+      post: "/gapi/category/v1/info"
+      body: "*"
+    };
+  }
+
+  rpc UpdateCategory(UpdateCategoryRequest) returns (UpdateCategoryResponse) {
+    option (google.api.http) = {
+      put: "/gapi/category/v1/info"
+      body: "*"
+    };
+  }
+
+  rpc DeleteCategory(DeleteCategoryRequest) returns (DeleteCategoryResponse) {
+    option (google.api.http) = {
+      delete: "/gapi/category/v1/info"
+    };
+  }
+}
+
+message Category {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+  repeated CategoryMetaData metaData = 4;
+}
+message CategoryMetaData {
+  string key = 1;
+  int32  order = 2;
+  string description = 3;
+  string type = 4;
+  string value = 5;
+  string defaultValue = 6;
+}
+
+// GetCategory
+message GetCategoryRequest {
+  string id = 1;
+}
+message GetCategoryResponse {
+  Category category = 1;
+}
+
+// CreateCategory
+message CreateCategoryRequest {
+  Category category = 1;
+}
+message CreateCategoryResponse {}
+
+// UpdateCategory
+message UpdateCategoryRequest {
+  Category category = 1;
+}
+message UpdateCategoryResponse {}
+
+// DeleteCategory
+message DeleteCategoryRequest {
+  string id = 1;
+}
+message DeleteCategoryResponse {}

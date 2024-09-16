@@ -1,0 +1,50 @@
+syntax = "proto3";
+package tracker.v1;
+option go_package = "github.com/GoldenSheep402/Hermes/pkg/proto/go/trackerV1/v1;trackerV1";
+
+import "google/api/annotations.proto";
+
+service TrackerService {
+  // GetTracker
+  rpc GetTracker(GetTrackerRequest) returns (GetTrackerResponse) {
+    option (google.api.http) = {
+      get: "/trackerV1/{key}"  // Using path parameter {key}
+    };
+  }
+}
+
+message GetTrackerRequest {
+  string key = 1;          // Unique identifier for the request
+  bytes info_hash = 2;    // Information hash for the torrent (Here is URL encoded)
+  bytes peer_id = 3;      // Unique identifier for the peer
+  int32 port = 4;         // Port number of the peer
+  int64 uploaded = 5;    // Amount of data uploaded by the peer
+  int64 downloaded = 6;  // Amount of data downloaded by the peer
+  int64 left = 7;        // Amount of data left to download
+  string event = 8;      // Event type (e.g., started, stopped, completed)
+  string ip = 9;         // IP address of the peer
+  int32 num_want = 10;   // Number of peers the client wants to receive
+  int32 compact = 11;    // Compact mode flag (0 for full, 1 for compact)
+  int32 no_peer_id = 12; // Flag indicating whether to send peer IDs (0 or 1)
+  int32 corrupt = 13;    // Number of corrupt pieces
+  int32 support_crypto = 14; // Flag indicating support for encryption (0 or 1)
+  int32 redundant = 15;  // Number of redundant pieces
+}
+
+message GetTrackerResponse {
+  string failure_reason = 1;        // Optional: Reason for failure
+  string warning_message = 2;       // Optional: Warning message
+  int32 interval = 3;               // Required: Update interval in seconds
+  int32 min_interval = 4;           // Optional: Minimum update interval in seconds
+  string tracker_id = 5;            // Optional: Identifier for the tracker
+  int32 complete = 6;               // Required: Number of complete torrents
+  int32 incomplete = 7;             // Required: Number of incomplete torrents
+  repeated PeerInfo peers = 8;      // List of peers in non-compact mode
+  bytes peers_compact = 9;          // List of peers in compact mode
+}
+
+message PeerInfo {
+  bytes peer_id = 1;  // Unique identifier for the peer
+  string ip = 2;      // IP address of the peer
+  int32 port = 3;     // Port number of the peer
+}

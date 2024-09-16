@@ -1,0 +1,59 @@
+syntax = "proto3";
+package torrent.v1;
+option go_package = "github.com/GoldenSheep402/Hermes/pkg/proto/go/torrent/v1;torrentV1";
+
+import "google/api/annotations.proto";
+
+message Torrent {
+  bytes data = 1;
+}
+
+service TorrentService{
+  /*
+     GetTorrentV1
+     @Description
+      Get torrent by id, return torrent data
+      The file follows the torrent file format V1.
+     @Param GetTorrentV1Request
+     @Return GetTorrentV1Response
+     @Http GET /gapi/torrent/v1/info
+  */
+  rpc GetTorrentV1(GetTorrentV1Request) returns (GetTorrentV1Response) {
+    option (google.api.http) = {
+      post: "/gapi/torrent/v1/info/v1"
+      body: "*"
+    };
+  }
+
+    /*
+     CreateTorrentV1
+     @Description
+      Create torrent, return torrent id
+      The file follows the torrent file format V1.
+     @Param CreateTorrentV1Request
+     @Return CreateTorrentV1Response
+     @Http POST /gapi/torrent/v1/info
+  */
+  rpc CreateTorrentV1(CreateTorrentV1Request) returns (CreateTorrentV1Response) {
+    option (google.api.http) = {
+      post: "/gapi/torrent/v1/create/v1"
+      body: "*"
+    };
+  }
+}
+
+// GetTorrentV1
+message GetTorrentV1Request {
+  string id = 1;
+}
+message GetTorrentV1Response {
+  Torrent torrent = 1;
+}
+
+// CreateTorrentV1
+message CreateTorrentV1Request {
+  Torrent torrent = 1;
+}
+message CreateTorrentV1Response {
+  string id = 1;
+}

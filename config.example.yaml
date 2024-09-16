@@ -1,0 +1,21 @@
+Port: "8080"
+Log:
+    LogPath: "./latest.log"
+    CLS:
+        Endpoint: ""
+        AccessKey: ""
+        AccessToken: ""
+        TopicID: ""
+MySQL:
+    Addr: "localhost"
+    Port: "3306"
+    User: "root"
+    Password: "123456"
+    Database: "jframe"
+    UseTLS: false
+    Debug: false
+Redis:
+    Addr: "localhost"
+    Port: "6379"
+    Password: ""
+    Db: 0

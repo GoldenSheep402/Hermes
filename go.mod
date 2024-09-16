@@ -1,6 +1,6 @@
-module github.com/juanjiTech/jframe
+module github.com/GoldenSheep402/Hermes
 
-go 1.22.1
+go 1.22.5
 
 require (
 	github.com/Backblaze/blazer v0.6.1
@@ -13,6 +13,7 @@ require (
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.20.0
 	github.com/grpc-ecosystem/protoc-gen-grpc-gateway-ts v1.1.2
 	github.com/juanjiTech/inject/v2 v2.0.1
+	github.com/juanjiTech/jframe v0.0.0-20240807140456-fedcdb510093
 	github.com/juanjiTech/jin v0.0.0-20240601062555-1519ab510262
 	github.com/juanjiTech/sentry-jin v0.0.0-20230921031955-5eb1a8402d04
 	github.com/oklog/ulid/v2 v2.1.0

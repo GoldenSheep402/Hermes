@@ -1,0 +1,159 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "torrent/v1/torrent.proto",
+    "version": "version not set"
+  },
+  "tags": [
+    {
+      "name": "TorrentService"
+    }
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/gapi/torrent/v1/create/v1": {
+      "post": {
+        "summary": "CreateTorrentV1\n@Description\nCreate torrent, return torrent id\nThe file follows the torrent file format V1.\n@Param CreateTorrentV1Request\n@Return CreateTorrentV1Response\n@Http POST /gapi/torrent/v1/info",
+        "operationId": "TorrentService_CreateTorrentV1",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1CreateTorrentV1Response"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1CreateTorrentV1Request"
+            }
+          }
+        ],
+        "tags": [
+          "TorrentService"
+        ]
+      }
+    },
+    "/gapi/torrent/v1/info/v1": {
+      "post": {
+        "summary": "GetTorrentV1\n@Description\nGet torrent by id, return torrent data\nThe file follows the torrent file format V1.\n@Param GetTorrentV1Request\n@Return GetTorrentV1Response\n@Http GET /gapi/torrent/v1/info",
+        "operationId": "TorrentService_GetTorrentV1",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GetTorrentV1Response"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1GetTorrentV1Request"
+            }
+          }
+        ],
+        "tags": [
+          "TorrentService"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": {}
+    },
+    "rpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    },
+    "v1CreateTorrentV1Request": {
+      "type": "object",
+      "properties": {
+        "torrent": {
+          "$ref": "#/definitions/v1Torrent"
+        }
+      },
+      "title": "CreateTorrentV1"
+    },
+    "v1CreateTorrentV1Response": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        }
+      }
+    },
+    "v1GetTorrentV1Request": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        }
+      },
+      "title": "GetTorrentV1"
+    },
+    "v1GetTorrentV1Response": {
+      "type": "object",
+      "properties": {
+        "torrent": {
+          "$ref": "#/definitions/v1Torrent"
+        }
+      }
+    },
+    "v1Torrent": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "type": "string",
+          "format": "byte"
+        }
+      }
+    }
+  }
+}

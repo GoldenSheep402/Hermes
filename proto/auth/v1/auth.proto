@@ -1,0 +1,66 @@
+syntax = "proto3";
+package auth.v1;
+option go_package = "github.com/GoldenSheep402/Hermes/pkg/proto/go/auth/v1;authV1";
+
+import "google/api/annotations.proto";
+
+service AuthService {
+  rpc RegisterSendEmail(RegisterSendEmailRequest) returns (RegisterSendEmailResponse) {
+    option (google.api.http) = {
+      post: "/gapi/auth/v1/register/send/email"
+      body: "*"
+    };
+  }
+
+  rpc RegisterWithEmail(RegisterWithEmailRequest) returns (RegisterWithEmailResponse) {
+    option (google.api.http) = {
+      post: "/gapi/auth/v1/register/email"
+      body: "*"
+    };
+  }
+
+  rpc Login(LoginRequest) returns (LoginResponse) {
+    option (google.api.http) = {
+      post: "/gapi/auth/v1/login"
+      body: "*"
+    };
+  }
+
+  rpc RefreshToken(RefreshTokenRequest) returns (RefreshTokenResponse) {
+    option (google.api.http) = {
+      post: "/gapi/auth/v1/refreshToken"
+      body: "*"
+    };
+  }
+}
+
+message RegisterSendEmailRequest {
+  string email = 1;
+}
+message RegisterSendEmailResponse {}
+
+message RegisterWithEmailRequest {
+  string username = 1;
+  string email = 2;
+  string password = 3;
+  string emailToken = 4;
+}
+
+message RegisterWithEmailResponse {}
+
+message LoginRequest {
+  string email = 1;
+  string password = 2;
+}
+message LoginResponse {
+  string accessToken = 1;
+  string refreshToken = 2;
+}
+
+message RefreshTokenRequest {
+  string refreshToken = 1;
+}
+message RefreshTokenResponse {
+  string accessToken = 1;
+  string refreshToken = 2;
+}

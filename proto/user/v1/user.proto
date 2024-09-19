@@ -1,0 +1,57 @@
+syntax = "proto3";
+package user.v1;
+option go_package = "github.com/GoldenSheep402/Hermes/pkg/proto/go/user/v1;userV1";
+
+import "google/api/annotations.proto";
+
+message User {
+  string id = 1;
+  string nickname = 2;
+  string role = 3;
+}
+
+service UserService {
+  rpc GetUser(GetUserRequest) returns (GetUserResponse) {
+    option (google.api.http) = {
+      get: "/gapi/user/v1/info"
+    };
+  }
+
+  rpc UpdateUser(UpdateUserRequest) returns (UpdateUserResponse) {
+    option (google.api.http) = {
+      put: "/gapi/user/v1/info"
+      body: "*"
+    };
+  }
+
+  rpc UpdatePassword(UpdatePasswordRequest) returns (UpdatePasswordResponse) {
+    option (google.api.http) = {
+      put: "/gapi/user/v1/password"
+      body: "*"
+    };
+  }
+}
+
+message GetUserRequest {
+  string id = 1;
+}
+
+message GetUserResponse {
+  User user = 1;
+}
+
+message UpdateUserRequest {
+  string username = 1;
+}
+
+message UpdateUserResponse {
+  User user = 1;
+}
+
+message UpdatePasswordRequest {
+  string oldPassword = 1;
+  string newPassword = 2;
+}
+
+message UpdatePasswordResponse {
+}

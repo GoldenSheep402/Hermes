@@ -1,0 +1,261 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "tracker/v1/tracker.proto",
+    "version": "version not set"
+  },
+  "tags": [
+    {
+      "name": "TrackerService"
+    }
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/tracker/{key}": {
+      "get": {
+        "summary": "GetTracker",
+        "operationId": "TrackerService_GetTracker",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GetTrackerResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "key",
+            "description": "Unique identifier for the request",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "infoHash",
+            "description": "Information hash for the torrent (Here is URL encoded)",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "byte"
+          },
+          {
+            "name": "peerId",
+            "description": "Unique identifier for the peer",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "byte"
+          },
+          {
+            "name": "port",
+            "description": "Port number of the peer",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "uploaded",
+            "description": "Amount of data uploaded by the peer",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
+          },
+          {
+            "name": "downloaded",
+            "description": "Amount of data downloaded by the peer",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
+          },
+          {
+            "name": "left",
+            "description": "Amount of data left to download",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
+          },
+          {
+            "name": "event",
+            "description": "Event type (e.g., started, stopped, completed)",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "ip",
+            "description": "IP address of the peer",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "numWant",
+            "description": "Number of peers the client wants to receive",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "compact",
+            "description": "Compact mode flag (0 for full, 1 for compact)",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "noPeerId",
+            "description": "Flag indicating whether to send peer IDs (0 or 1)",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "corrupt",
+            "description": "Number of corrupt pieces",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "supportCrypto",
+            "description": "Flag indicating support for encryption (0 or 1)",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "redundant",
+            "description": "Number of redundant pieces",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "tags": [
+          "TrackerService"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": {}
+    },
+    "rpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    },
+    "v1GetTrackerResponse": {
+      "type": "object",
+      "properties": {
+        "failureReason": {
+          "type": "string",
+          "title": "Optional: Reason for failure"
+        },
+        "warningMessage": {
+          "type": "string",
+          "title": "Optional: Warning message"
+        },
+        "interval": {
+          "type": "integer",
+          "format": "int32",
+          "title": "Required: Update interval in seconds"
+        },
+        "minInterval": {
+          "type": "integer",
+          "format": "int32",
+          "title": "Optional: Minimum update interval in seconds"
+        },
+        "trackerId": {
+          "type": "string",
+          "title": "Optional: Identifier for the tracker"
+        },
+        "complete": {
+          "type": "integer",
+          "format": "int32",
+          "title": "Required: Number of complete torrents"
+        },
+        "incomplete": {
+          "type": "integer",
+          "format": "int32",
+          "title": "Required: Number of incomplete torrents"
+        },
+        "peers": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1PeerInfo"
+          },
+          "title": "List of peers in non-compact mode"
+        },
+        "peersCompact": {
+          "type": "string",
+          "format": "byte",
+          "title": "List of peers in compact mode"
+        }
+      }
+    },
+    "v1PeerInfo": {
+      "type": "object",
+      "properties": {
+        "peerId": {
+          "type": "string",
+          "format": "byte",
+          "title": "Unique identifier for the peer"
+        },
+        "ip": {
+          "type": "string",
+          "title": "IP address of the peer"
+        },
+        "port": {
+          "type": "integer",
+          "format": "int32",
+          "title": "Port number of the peer"
+        }
+      }
+    }
+  }
+}

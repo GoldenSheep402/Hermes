@@ -43,6 +43,6 @@ export type PeerInfo = {
 
 export class TrackerService {
   static GetTracker(req: GetTrackerRequest, initReq?: fm.InitReq): Promise<GetTrackerResponse> {
-    return fm.fetchReq<GetTrackerRequest, GetTrackerResponse>(`/tracker/${req["key"]}?${fm.renderURLSearchParams(req, ["key"])}`, {...initReq, method: "GET"})
+    return fm.fetchReq<GetTrackerRequest, GetTrackerResponse>(`/trackerV1/${req["key"]}?${fm.renderURLSearchParams(req, ["key"])}`, {...initReq, method: "GET"})
   }
 }

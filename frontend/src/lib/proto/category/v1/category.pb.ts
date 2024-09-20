@@ -51,11 +51,11 @@ export type DeleteCategoryResponse = {
 }
 
 export class CategoryService {
-  static GetCategory(req: GetCategoryRequest, initReq?: fm.InitReq): Promise<GetCategoryResponse> {
-    return fm.fetchReq<GetCategoryRequest, GetCategoryResponse>(`/gapi/category/v1/info?${fm.renderURLSearchParams(req, [])}`, {...initReq, method: "GET"})
-  }
   static CreateCategory(req: CreateCategoryRequest, initReq?: fm.InitReq): Promise<CreateCategoryResponse> {
     return fm.fetchReq<CreateCategoryRequest, CreateCategoryResponse>(`/gapi/category/v1/info`, {...initReq, method: "POST", body: JSON.stringify(req, fm.replacer)})
+  }
+  static GetCategory(req: GetCategoryRequest, initReq?: fm.InitReq): Promise<GetCategoryResponse> {
+    return fm.fetchReq<GetCategoryRequest, GetCategoryResponse>(`/gapi/category/v1/info?${fm.renderURLSearchParams(req, [])}`, {...initReq, method: "GET"})
   }
   static UpdateCategory(req: UpdateCategoryRequest, initReq?: fm.InitReq): Promise<UpdateCategoryResponse> {
     return fm.fetchReq<UpdateCategoryRequest, UpdateCategoryResponse>(`/gapi/category/v1/info`, {...initReq, method: "PUT", body: JSON.stringify(req, fm.replacer)})

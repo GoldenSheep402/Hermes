@@ -55,7 +55,7 @@ func GroupIDPrefix(groupID string) string {
 	return "Group:" + groupID
 }
 
-func GroupWithLevelAndIDPrefix(groupID string, level int) string {
+func GroupWithIDAndLevelPrefix(groupID string, level int) string {
 	return "Group:" + groupID + ":" + strconv.Itoa(level)
 }
 
@@ -63,15 +63,15 @@ func CategoryIDPrefix(categoryID string) string {
 	return "Category:" + categoryID
 }
 
-func CategoryWithLevelAndIDPrefix(categoryID string, level int) string {
+func CategoryWithIDAndLevelPrefix(categoryID string, level int) string {
 	return "Category:" + categoryID + ":" + strconv.Itoa(level)
 }
 
 // Regex pattern shared by SplitPermission and SplitIdAndLevel
 var sharedPattern = regexp.MustCompile(`^([^:]+):([^:]+)(?::([^:]+))?`)
 
-// SplitPermission splits the permission into object and id.
-func SplitPermission(permission string) (string, string, error) {
+// SplitID splits the permission into object and id.
+func SplitID(permission string) (string, string, error) {
 	matches := sharedPattern.FindStringSubmatch(permission)
 	if len(matches) != 3 && len(matches) != 4 { // Handles both cases
 		return "", "", errors.New("permission format is invalid")

@@ -30,6 +30,49 @@ service UserService {
       body: "*"
     };
   }
+
+  rpc CreateGroup(CreateGroupRequest) returns (CreateGroupResponse) {
+    option (google.api.http) = {
+      post: "/gapi/group/v1/create"
+      body: "*"
+    };
+  }
+
+  rpc GetGroup(GetGroupRequest) returns (GetGroupResponse) {
+    option (google.api.http) = {
+      post: "/gapi/group/v1/get"
+      body: "*"
+    };
+  }
+
+
+  rpc UpdateGroup(UpdateGroupRequest) returns (UpdateGroupResponse) {
+    option (google.api.http) = {
+      post: "/gapi/group/v1/update"
+      body: "*"
+    };
+  }
+
+  rpc GroupAddUser(GroupAddUserRequest) returns (GroupAddUserResponse){
+    option (google.api.http) = {
+      post: "/gapi/group/v1/user/add"
+      body: "*",
+    };
+  }
+
+  rpc GroupRemoveUser(GroupRemoveUserRequest) returns (GroupRemoveUserResponse){
+    option (google.api.http) = {
+      post: "/gapi/group/v1/user/remove"
+      body: "*",
+    };
+  }
+
+  rpc GroupUserUpdate(GroupUserUpdateRequest) returns (GroupUserUpdateResponse){
+    option(google.api.http) = {
+      post: "/gapi/group/v1/user/update"
+      body: "*",
+    };
+  }
 }
 
 message GetUserRequest {
@@ -53,5 +96,60 @@ message UpdatePasswordRequest {
   string newPassword = 2;
 }
 
-message UpdatePasswordResponse {
+message UpdatePasswordResponse {}
+
+// GROUP
+message Group {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+  repeated GroupMetaData metaData = 4;
 }
+
+message GroupMetaData {
+  string key = 1;
+  int32  order = 2;
+  string description = 3;
+  string type = 4;
+  string value = 5;
+  string defaultValue = 6;
+}
+
+message CreateGroupRequest {
+  Group group = 1;
+}
+message CreateGroupResponse {}
+
+message GetGroupRequest {
+  string id = 1;
+}
+
+message GetGroupResponse {
+  Group group = 1;
+}
+
+message UpdateGroupRequest {
+  Group group = 1;
+}
+message UpdateGroupResponse {}
+
+message GroupAddUserRequest {
+  string userId = 1;
+  string groupId = 2;
+  repeated GroupMetaData metaData = 3;
+}
+
+message GroupAddUserResponse {}
+
+message  GroupRemoveUserRequest {
+  string userId = 1;
+  string groupId = 2;
+}
+message GroupRemoveUserResponse {}
+
+message GroupUserUpdateRequest {
+  string userId = 1;
+  string groupId = 2;
+  repeated GroupMetaData metaData = 3;
+}
+message GroupUserUpdateResponse {}

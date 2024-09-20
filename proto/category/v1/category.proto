@@ -5,16 +5,16 @@ option go_package = "github.com/GoldenSheep402/Hermes/pkg/proto/go/category/v1;c
 import "google/api/annotations.proto";
 
 service CategoryService {
-  rpc GetCategory(GetCategoryRequest) returns (GetCategoryResponse) {
-    option (google.api.http) = {
-      get: "/gapi/category/v1/info"
-    };
-  }
-
   rpc CreateCategory(CreateCategoryRequest) returns (CreateCategoryResponse) {
     option (google.api.http) = {
       post: "/gapi/category/v1/info"
       body: "*"
+    };
+  }
+
+  rpc GetCategory(GetCategoryRequest) returns (GetCategoryResponse) {
+    option (google.api.http) = {
+      get: "/gapi/category/v1/info"
     };
   }
 
@@ -30,6 +30,7 @@ service CategoryService {
       delete: "/gapi/category/v1/info"
     };
   }
+
 }
 
 message Category {

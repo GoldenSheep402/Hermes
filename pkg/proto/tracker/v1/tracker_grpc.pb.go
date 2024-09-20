@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.5.1
 // - protoc             (unknown)
-// source: trackerV1/v1/trackerV1.proto
+// source: tracker/v1/tracker.proto
 
 package trackerV1
 
@@ -19,7 +19,7 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	TrackerService_GetTracker_FullMethodName = "/trackerV1.v1.TrackerService/GetTracker"
+	TrackerService_GetTracker_FullMethodName = "/tracker.v1.TrackerService/GetTracker"
 )
 
 // TrackerServiceClient is the client API for TrackerService service.
@@ -110,7 +110,7 @@ func _TrackerService_GetTracker_Handler(srv interface{}, ctx context.Context, de
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var TrackerService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "trackerV1.v1.TrackerService",
+	ServiceName: "tracker.v1.TrackerService",
 	HandlerType: (*TrackerServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
@@ -119,5 +119,5 @@ var TrackerService_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "trackerV1/v1/trackerV1.proto",
+	Metadata: "tracker/v1/tracker.proto",
 }

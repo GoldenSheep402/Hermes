@@ -16,7 +16,7 @@
     "application/json"
   ],
   "paths": {
-    "/tracker/{key}": {
+    "/trackerV1/{key}": {
       "get": {
         "summary": "GetTracker",
         "operationId": "TrackerService_GetTracker",

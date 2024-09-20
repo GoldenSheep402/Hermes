@@ -1,11 +1,11 @@
 # RBAC 
 
 ```
-Category:{ID}:{Level} -> Torrent:{ID} == Action
+Category:{ID} -> Torrent:{ID} == Action
 
-GROUP:{ID}:{LEVEL} -> CATEGORY:{ID}:{LEVEL}
+GROUP:{ID} -> CATEGORY:{ID}
 
-USER:{ID} -> GROUP:{ID}:{LEVEL}
+USER:{ID} <-> GROUP:{ID} 
 ```
 
 

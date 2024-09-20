@@ -30,8 +30,8 @@ const (
 
 // Prefixes
 const (
-	ADMIN_PREFIX = "ADMIN"
-	USER_PREFIX  = "USER"
+	ADMIN_PREFIX = "Admin"
+	USER_PREFIX  = "User"
 )
 
 // Levels
@@ -44,6 +44,9 @@ const (
 	Level5
 	Level6
 	Level7
+	Level8
+	Level9
+	Level10
 )
 
 // ID Prefix Functions
@@ -67,23 +70,34 @@ func CategoryWithIDAndLevelPrefix(categoryID string, level int) string {
 	return "Category:" + categoryID + ":" + strconv.Itoa(level)
 }
 
-// Regex pattern shared by SplitPermission and SplitIdAndLevel
-var sharedPattern = regexp.MustCompile(`^([^:]+):([^:]+)(?::([^:]+))?`)
+// Regex pattern shared by SplitID and SplitIdAndLevel
+var sharedPattern = regexp.MustCompile(`^([^:]+):([^:]+)(?::([^:]+))?$`)
 
 // SplitID splits the permission into object and id.
+// For example, given "User:123", it returns "User", "123", nil.
 func SplitID(permission string) (string, string, error) {
 	matches := sharedPattern.FindStringSubmatch(permission)
-	if len(matches) != 3 && len(matches) != 4 { // Handles both cases
+	if len(matches) < 3 {
 		return "", "", errors.New("permission format is invalid")
 	}
-	return matches[1], matches[2], nil
+	object := matches[1]
+	id := matches[2]
+	return object, id, nil
 }
 
-// SplitIdAndLevel splits the role permission into prefix, id, and optionally level.
+// SplitIdAndLevel splits the role permission into prefix, id, and level.
+// For example, given "Group:456:2", it returns "Group", "456", "2", nil.
+// If the level is not provided, level will be an empty string.
 func SplitIdAndLevel(rolePermission string) (string, string, string, error) {
 	matches := sharedPattern.FindStringSubmatch(rolePermission)
-	if len(matches) != 4 {
+	if len(matches) < 3 {
 		return "", "", "", errors.New("role permission format is invalid")
 	}
-	return matches[1], matches[2], matches[3], nil
+	prefix := matches[1]
+	id := matches[2]
+	level := ""
+	if len(matches) >= 4 {
+		level = matches[3]
+	}
+	return prefix, id, level, nil
 }

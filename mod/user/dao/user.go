@@ -3,6 +3,8 @@ package dao
 import (
 	"context"
 	"errors"
+	"github.com/GoldenSheep402/Hermes/mod/casbinX/manager"
+	"github.com/GoldenSheep402/Hermes/mod/casbinX/rbacValues"
 	"github.com/GoldenSheep402/Hermes/mod/user/model"
 	"github.com/GoldenSheep402/Hermes/pkg/stdao"
 	"gorm.io/gorm"
@@ -45,6 +47,36 @@ func (u *user) NewUserWithBind(ctx context.Context, user *model.User, bind *mode
 
 	bind.UID = user.ID
 	if err := tx.Create(bind).Error; err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+
+	// Here regard new user as a normal
+	var normalGroup model.Group
+	if err := tx.Where("name = ?", "normalUser").First(&normalGroup).Error; err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+
+	memberShip := model.GroupMembership{
+		UID: user.ID,
+		GID: normalGroup.ID,
+	}
+
+	if err := tx.Create(&memberShip).Error; err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+
+	var adminGroup model.Group
+	if err := tx.Where("name = ?", "admin").First(&adminGroup).Error; err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+
+	// set admin has to permission to write
+	err := manager.CasbinManager.SetUserUnderGroup(user.ID, adminGroup.ID, rbacValues.Write)
+	if err != nil {
 		tx.Rollback()
 		return nil, err
 	}

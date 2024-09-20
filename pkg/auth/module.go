@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-var secret = []byte("todo")
+var secret = []byte("hermes-01J879JQ7CFP1SS0YERR410VDC")
 
 type Info struct {
 	UID            string
@@ -37,7 +37,7 @@ func GenToken(info Info, expire ...time.Duration) (token string, err error) {
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: time.Now().Add(expire[0]).Unix(),
 			IssuedAt:  time.Now().Unix(),
-			Issuer:    "jframe",
+			Issuer:    "hermes",
 		},
 	}
 	t := jwt.NewWithClaims(jwt.SigningMethodHS256, c)

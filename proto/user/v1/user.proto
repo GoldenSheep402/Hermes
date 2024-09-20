@@ -31,6 +31,7 @@ service UserService {
     };
   }
 
+  // GROUP
   rpc CreateGroup(CreateGroupRequest) returns (CreateGroupResponse) {
     option (google.api.http) = {
       post: "/gapi/group/v1/create"
@@ -84,7 +85,7 @@ message GetUserResponse {
 }
 
 message UpdateUserRequest {
-  string username = 1;
+  User user = 1;
 }
 
 message UpdateUserResponse {

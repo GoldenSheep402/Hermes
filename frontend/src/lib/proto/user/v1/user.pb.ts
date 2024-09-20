@@ -20,7 +20,7 @@ export type GetUserResponse = {
 }
 
 export type UpdateUserRequest = {
-  username?: string
+  user?: User
 }
 
 export type UpdateUserResponse = {

@@ -18,6 +18,7 @@
   "paths": {
     "/gapi/group/v1/create": {
       "post": {
+        "summary": "GROUP",
         "operationId": "UserService_CreateGroup",
         "responses": {
           "200": {
@@ -495,8 +496,8 @@
     "v1UpdateUserRequest": {
       "type": "object",
       "properties": {
-        "username": {
-          "type": "string"
+        "user": {
+          "$ref": "#/definitions/v1User"
         }
       }
     },

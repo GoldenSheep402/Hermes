@@ -45,5 +45,74 @@ func Init(DB *gorm.DB, rds *redis.Client) error {
 		return err
 	}
 
+	// err = DB.Transaction(func(tx *gorm.DB) error {
+	// 	presetGroups := []struct {
+	// 		Name        string
+	// 		Description string
+	// 		Level       int
+	// 	}{
+	// 		{
+	// 			Name:        "normalUser",
+	// 			Description: "normal user",
+	// 			Level:       rbacValues.Level10,
+	// 		},
+	// 		{
+	// 			Name:        "manager",
+	// 			Description: "manager user",
+	// 			Level:       rbacValues.Level1,
+	// 		},
+	// 		{
+	// 			Name:        "admin",
+	// 			Description: "admin",
+	// 			Level:       rbacValues.Level0,
+	// 		},
+	// 	}
+	//
+	// 	for _, pg := range presetGroups {
+	// 		var count int64
+	// 		if err := tx.Model(&model.Group{}).Where("name = ?", pg.Name).Count(&count).Error; err != nil {
+	// 			return err
+	// 		}
+	// 		var idMap map[string]string
+	// 		if count == 0 {
+	// 			group := model.Group{
+	// 				Name:        pg.Name,
+	// 				Description: pg.Description,
+	// 			}
+	// 			if err := tx.Create(&group).Error; err != nil {
+	// 				return err
+	// 			}
+	// 			groupMetadata := model.GroupMetadata{
+	// 				GID:         group.ID,
+	// 				Key:         "Level",
+	// 				Value:       strconv.Itoa(pg.Level),
+	// 				Type:        "number",
+	// 				Description: "It is the level of the group.",
+	// 				Order:       0,
+	// 			}
+	// 			if err := tx.Create(&groupMetadata).Error; err != nil {
+	// 				return err
+	// 			}
+	// 			idMap[pg.Name] = group.ID
+	// 		}
+	//
+	// 		err := manager.CasbinManager.SetSubgroup(idMap["admin"], idMap["manager"])
+	// 		if err != nil {
+	// 			return err
+	// 		}
+	//
+	// 		err = manager.CasbinManager.SetSubgroup(idMap["manager"], idMap["normalUser"])
+	// 		if err != nil {
+	// 			return err
+	// 		}
+	// 	}
+	//
+	// 	return nil
+	// })
+	//
+	// if err != nil {
+	// 	return err
+	// }
+
 	return nil
 }

@@ -2,7 +2,6 @@ package model
 
 import (
 	"github.com/GoldenSheep402/Hermes/pkg/stdao"
-	"github.com/oklog/ulid/v2"
 	"time"
 )
 
@@ -23,9 +22,4 @@ type Torrent struct {
 	PieceLength  uint64     `json:"piece_length"`
 	Private      *bool      `json:"private,omitempty"`
 	Source       *string    `json:"source,omitempty"`
-}
-
-func (t *Torrent) BeforeCreate() error {
-	t.ID = ulid.Make().String()
-	return nil
 }

@@ -1,4 +1,4 @@
-package manager
+package rbac
 
 import (
 	"github.com/GoldenSheep402/Hermes/mod/casbinX/rbacValues"
@@ -18,7 +18,7 @@ func Init(_ef *casbin.Enforcer) {
 func (c *casbinManager) SetUserUnderGroup(userID, groupID string, action string) error {
 	userString := rbacValues.UserIDPrefix(userID)
 	groupString := rbacValues.GroupIDPrefix(groupID)
-	_, err := c.Enforcer.AddPolicy(groupString, userString, action)
+	_, err := c.Enforcer.AddNamedPolicy("p", groupString, userString, action)
 	if err != nil {
 		return err
 	}
@@ -49,6 +49,30 @@ func (c *casbinManager) RemoveUserFromGroup(userID, groupID string) error {
 	return nil
 }
 
+func (c *casbinManager) SetUserToReadGroup(userID, groupID string) error {
+	userString := rbacValues.UserIDPrefix(userID)
+	groupString := rbacValues.GroupIDPrefix(groupID)
+
+	_, err := c.Enforcer.AddNamedPolicy("p", userString, groupString, rbacValues.Read)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (c *casbinManager) SetUserToWriteGroup(userID, groupID string) error {
+	userString := rbacValues.UserIDPrefix(userID)
+	groupString := rbacValues.GroupIDPrefix(groupID)
+
+	_, err := c.Enforcer.AddNamedPolicy("p", userString, groupString, rbacValues.Write)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (c *casbinManager) CheckUserToUserWritePermission(userID, userID2 string) (bool, error) {
 	userString := rbacValues.UserIDPrefix(userID)
 	userString2 := rbacValues.UserIDPrefix(userID2)
@@ -61,10 +85,36 @@ func (c *casbinManager) CheckUserToUserReadPermission(userID, userID2 string) (b
 	return c.Enforcer.Enforce(userString, userString2, rbacValues.Read)
 }
 
-func (c *casbinManager) CheckUserWritePermissionToUserInGroup(userID, groupID string) (bool, error) {
+func (c *casbinManager) SetUserWritePermissionToGroup(userID, groupID string) error {
+	userString := rbacValues.UserIDPrefix(userID)
+	groupString := rbacValues.GroupIDPrefix(groupID)
+	_, err := c.Enforcer.AddNamedPolicy("p", userString, groupString, rbacValues.Write)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c *casbinManager) CheckUserWritePermissionToGroup(userID, groupID string) (bool, error) {
 	userString := rbacValues.UserIDPrefix(userID)
 	groupString := rbacValues.GroupIDPrefix(groupID)
 	return c.Enforcer.Enforce(userString, groupString, rbacValues.Write)
+}
+
+func (c *casbinManager) SetUserReadPermissionToGroup(userID, groupID string) error {
+	userString := rbacValues.UserIDPrefix(userID)
+	groupString := rbacValues.GroupIDPrefix(groupID)
+	_, err := c.Enforcer.AddNamedPolicy("p", userString, groupString, rbacValues.Read)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c *casbinManager) CheckUserReadPermissionToGroup(userID, groupID string) (bool, error) {
+	userString := rbacValues.UserIDPrefix(userID)
+	groupString := rbacValues.GroupIDPrefix(groupID)
+	return c.Enforcer.Enforce(userString, groupString, rbacValues.Read)
 }
 
 // func (c *casbinManager) CheckUserReadPermissionToUserInGroup(userID, groupID string) (bool, error) {

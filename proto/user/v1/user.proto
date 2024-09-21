@@ -6,7 +6,7 @@ import "google/api/annotations.proto";
 
 message User {
   string id = 1;
-  string nickname = 2;
+  string name = 2;
   string role = 3;
 }
 
@@ -108,12 +108,14 @@ message Group {
 }
 
 message GroupMetaData {
-  string key = 1;
-  int32  order = 2;
-  string description = 3;
-  string type = 4;
-  string value = 5;
-  string defaultValue = 6;
+  string groupMetaDataOriginalID = 1;
+  string id = 2;
+  string key = 3;
+  int32  order = 4;
+  string description = 5;
+  string type = 6;
+  string value = 7;
+  string defaultValue = 8;
 }
 
 message CreateGroupRequest {

@@ -7,7 +7,7 @@
 import * as fm from "../../fetch.pb"
 export type User = {
   id?: string
-  nickname?: string
+  name?: string
   role?: string
 }
 
@@ -43,6 +43,8 @@ export type Group = {
 }
 
 export type GroupMetaData = {
+  groupMetaDataOriginalID?: string
+  id?: string
   key?: string
   order?: number
   description?: string

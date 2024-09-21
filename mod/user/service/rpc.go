@@ -2,13 +2,18 @@ package service
 
 import (
 	"context"
-	"github.com/GoldenSheep402/Hermes/mod/casbinX/manager"
+	"errors"
+	"github.com/GoldenSheep402/Hermes/mod/casbinX/rbac"
 	userDao "github.com/GoldenSheep402/Hermes/mod/user/dao"
+	"github.com/GoldenSheep402/Hermes/mod/user/model"
 	"github.com/GoldenSheep402/Hermes/pkg/ctxKey"
 	userV1 "github.com/GoldenSheep402/Hermes/pkg/proto/user/v1"
+	"github.com/GoldenSheep402/Hermes/pkg/stdao"
+	"github.com/GoldenSheep402/Hermes/pkg/utils/crypto"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"gorm.io/gorm"
 )
 
 var _ userV1.UserServiceServer = (*S)(nil)
@@ -37,7 +42,7 @@ func (s *S) GetUser(ctx context.Context, req *userV1.GetUserRequest) (*userV1.Ge
 		}
 
 		if !isAdmin {
-			isOk, err := manager.CasbinManager.CheckUserToUserReadPermission(UID, req.Id)
+			isOk, err := rbac.CasbinManager.CheckUserToUserReadPermission(UID, req.Id)
 			if err != nil {
 				return nil, status.Error(codes.Internal, "Internal error")
 			}
@@ -54,15 +59,16 @@ func (s *S) GetUser(ctx context.Context, req *userV1.GetUserRequest) (*userV1.Ge
 	}
 	resp := &userV1.GetUserResponse{
 		User: &userV1.User{
-			Id:       _user.ID,
-			Nickname: _user.Name,
+			Id:   _user.ID,
+			Name: _user.Name,
 		},
 	}
 
 	return resp, nil
 }
 
-func (S *S) UpdateUser(ctx context.Context, req *userV1.UpdateUserRequest) (resp *userV1.UpdateUserResponse, err error) {
+// UpdateUser updates a user's information based on the provided request, ensuring authentication, input validation, and authorization.
+func (s *S) UpdateUser(ctx context.Context, req *userV1.UpdateUserRequest) (*userV1.UpdateUserResponse, error) {
 	UID, ok := ctx.Value(ctxKey.UID).(string)
 	if !ok || UID == "" {
 		return nil, status.Error(codes.Unauthenticated, "Unauthenticated")
@@ -72,17 +78,343 @@ func (S *S) UpdateUser(ctx context.Context, req *userV1.UpdateUserRequest) (resp
 		return nil, status.Error(codes.InvalidArgument, "Id is empty")
 	}
 
-	// Check the permission
 	if req.User.Id != UID {
 		isAdmin, err := userDao.User.IsAdmin(ctx, UID)
 		if err != nil {
 			return nil, status.Error(codes.Internal, "Internal error")
 		}
-		// TODO: rbac
+
 		if !isAdmin {
+			isOk, err := rbac.CasbinManager.CheckUserToUserWritePermission(UID, req.User.Id)
+			if err != nil {
+				return nil, status.Error(codes.Internal, "Internal error")
+			}
+
+			if !isOk {
+				return nil, status.Error(codes.PermissionDenied, "Permission denied")
+			}
+		}
+	}
+
+	_user := model.User{}
+	_user.ID = req.User.Id
+	_user.Name = req.User.Name
+
+	err := userDao.User.UpdateInfo(ctx, _user)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "Internal error")
+	}
+
+	return &userV1.UpdateUserResponse{}, nil
+}
+
+// UpdatePassword updates a user's password based on the provided old and new password, ensuring the user is authenticated and the old password is correct.
+// It returns an error if the user is unauthenticated, the old password doesn't match, or there's an internal error during the update process.
+func (s *S) UpdatePassword(ctx context.Context, req *userV1.UpdatePasswordRequest) (*userV1.UpdatePasswordResponse, error) {
+	UID, ok := ctx.Value(ctxKey.UID).(string)
+	if !ok || UID == "" {
+		return nil, status.Error(codes.Unauthenticated, "Unauthenticated")
+	}
+
+	user := &model.User{}
+	if result := userDao.User.DB().WithContext(ctx).Where("id = ?", UID).First(user); result.Error != nil {
+		return nil, status.Error(codes.Internal, "Internal error")
+	}
+
+	if crypto.Md5CryptoWithSalt(req.OldPassword, user.Salt) != user.Password {
+		return nil, status.Error(codes.InvalidArgument, "Old password is incorrect")
+	}
+
+	newPassword := crypto.Md5CryptoWithSalt(req.NewPassword, user.Salt)
+	user.Password = newPassword
+
+	err := userDao.User.UpdateInfo(ctx, *user)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "Internal error")
+	}
+
+	return &userV1.UpdatePasswordResponse{}, nil
+}
+
+func (s *S) CreateGroup(ctx context.Context, req *userV1.CreateGroupRequest) (*userV1.CreateGroupResponse, error) {
+	UID, ok := ctx.Value(ctxKey.UID).(string)
+	if !ok || UID == "" {
+		return nil, status.Error(codes.Unauthenticated, "Unauthenticated")
+	}
+
+	var adminGroup model.Group
+	if err := userDao.Group.GetTxFromCtx(ctx).Where("name = ?", "admin").First(&adminGroup).Error; err != nil {
+		return nil, status.Error(codes.Internal, "Internal error")
+	}
+
+	var memberShop model.GroupMembership
+	if err := userDao.GroupMembership.GetTxFromCtx(ctx).Where("uid = ? AND gid = ?", UID, adminGroup.ID).First(&memberShop).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, status.Error(codes.PermissionDenied, "No permission")
+		} else {
+			return nil, status.Error(codes.Internal, "Internal error")
+		}
+	}
+
+	group := model.Group{
+		Name:        req.Group.Name,
+		Description: req.Group.Description,
+	}
+
+	metas := make([]model.GroupMetadata, len(req.Group.MetaData))
+	for i, meta := range req.Group.MetaData {
+		switch meta.Type {
+		case "string":
+			break
+		case "number":
+			break
+		default:
+			return nil, status.Error(codes.InvalidArgument, "Invalid metadata type")
+		}
+		metas[i] = model.GroupMetadata{
+			Key:         meta.Key,
+			Value:       meta.Value,
+			Order:       int(meta.Order),
+			Description: meta.Description,
+			Type:        meta.Type,
+		}
+	}
+
+	err := userDao.Group.Create(ctx, &group, metas, UID)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "Internal error")
+	}
+
+	// set group write permission
+	err = rbac.CasbinManager.SetUserWritePermissionToGroup(UID, group.ID)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "Internal error")
+	}
+
+	return &userV1.CreateGroupResponse{}, nil
+}
+
+func (s *S) GetGroup(ctx context.Context, req *userV1.GetGroupRequest) (*userV1.GetGroupResponse, error) {
+	UID, ok := ctx.Value(ctxKey.UID).(string)
+	if !ok || UID == "" {
+		return nil, status.Error(codes.Unauthenticated, "Unauthenticated")
+	}
+
+	if req.Id == "" {
+		return nil, status.Error(codes.InvalidArgument, "Id is empty")
+	}
+
+	isAdmin, err := userDao.User.IsAdmin(ctx, UID)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "Internal error")
+	}
+
+	if !isAdmin {
+		// check read permission
+		isOk, err := rbac.CasbinManager.CheckUserReadPermissionToGroup(UID, req.Id)
+		if err != nil {
+			return nil, status.Error(codes.Internal, "Internal error")
+		}
+
+		if !isOk {
 			return nil, status.Error(codes.PermissionDenied, "Permission denied")
 		}
 	}
 
+	group, metas, err := userDao.Group.Get(ctx, req.Id)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "Internal error")
+	}
+
+	resp := &userV1.GetGroupResponse{
+		Group: &userV1.Group{
+			Id:          group.ID,
+			Name:        group.ID,
+			Description: group.Description,
+		},
+	}
+
+	respMetas := make([]*userV1.GroupMetaData, len(metas))
+	for i, meta := range metas {
+		respMetas[i] = &userV1.GroupMetaData{
+			Key:         meta.Key,
+			Value:       meta.Value,
+			Order:       int32(meta.Order),
+			Description: meta.Description,
+			Type:        meta.Type,
+		}
+	}
+
+	resp.Group.MetaData = respMetas
+
 	return resp, nil
+}
+
+// UpdateGroup updates a group's information based on the provided request, ensuring the caller is authenticated, the request is valid, and has necessary permissions.
+// It returns an error if the user is unauthenticated, the group ID is empty, or the user lacks sufficient permissions to update the group.
+func (s *S) UpdateGroup(ctx context.Context, req *userV1.UpdateGroupRequest) (*userV1.UpdateGroupResponse, error) {
+	UID, ok := ctx.Value(ctxKey.UID).(string)
+	if !ok || UID == "" {
+		return nil, status.Error(codes.Unauthenticated, "Unauthenticated")
+	}
+
+	if req.Group.Id == "" {
+		return nil, status.Error(codes.InvalidArgument, "Id is empty")
+	}
+
+	isAdmin, err := userDao.User.IsAdmin(ctx, UID)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "Internal error")
+	}
+
+	if !isAdmin {
+		// check write permission
+		isOk, err := rbac.CasbinManager.CheckUserWritePermissionToGroup(UID, req.Group.Id)
+		if err != nil {
+			return nil, status.Error(codes.Internal, "Internal error")
+		}
+
+		if !isOk {
+			return nil, status.Error(codes.PermissionDenied, "Permission denied")
+		}
+	}
+
+	return &userV1.UpdateGroupResponse{}, nil
+}
+
+func (s *S) GroupAddUser(ctx context.Context, req *userV1.GroupAddUserRequest) (*userV1.GroupAddUserResponse, error) {
+	UID, ok := ctx.Value(ctxKey.UID).(string)
+	if !ok || UID == "" {
+		return nil, status.Error(codes.Unauthenticated, "Unauthenticated")
+	}
+
+	if req.GroupId == "" {
+		return nil, status.Error(codes.InvalidArgument, "GroupId is empty")
+	}
+
+	isAdmin, err := userDao.User.IsAdmin(ctx, UID)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "Internal error")
+	}
+
+	if !isAdmin {
+		// check write permission
+		isOk, err := rbac.CasbinManager.CheckUserWritePermissionToGroup(UID, req.GroupId)
+		if err != nil {
+			return nil, status.Error(codes.Internal, "Internal error")
+		}
+
+		if !isOk {
+			return nil, status.Error(codes.PermissionDenied, "Permission denied")
+		}
+	}
+
+	var metas []model.GroupMembershipMetadata
+	for i, _meta := range req.MetaData {
+		metas[i] = model.GroupMembershipMetadata{
+			GroupMetadataID: _meta.GroupMetaDataOriginalID,
+			Key:             _meta.Key,
+			Value:           _meta.Value,
+			Order:           int(_meta.Order),
+			Description:     _meta.Description,
+			Type:            _meta.Type,
+		}
+	}
+
+	err = userDao.Group.AddUser(ctx, req.GroupId, req.UserId, metas)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "Internal error")
+	}
+
+	err = rbac.CasbinManager.SetUserToReadGroup(req.UserId, req.GroupId)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "Internal error")
+	}
+
+	return &userV1.GroupAddUserResponse{}, nil
+}
+
+func (s *S) GroupRemoveUser(ctx context.Context, req *userV1.GroupRemoveUserRequest) (*userV1.GroupRemoveUserResponse, error) {
+	UID, ok := ctx.Value(ctxKey.UID).(string)
+	if !ok || UID == "" {
+		return nil, status.Error(codes.Unauthenticated, "Unauthenticated")
+	}
+
+	if req.GroupId == "" {
+		return nil, status.Error(codes.InvalidArgument, "GroupId is empty")
+	}
+
+	isAdmin, err := userDao.User.IsAdmin(ctx, UID)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "Internal error")
+	}
+
+	if !isAdmin {
+		// check write permission
+		isOk, err := rbac.CasbinManager.CheckUserWritePermissionToGroup(UID, req.GroupId)
+		if err != nil {
+			return nil, status.Error(codes.Internal, "Internal error")
+		}
+
+		if !isOk {
+			return nil, status.Error(codes.PermissionDenied, "Permission denied")
+		}
+	}
+
+	err = userDao.Group.RemoveUser(ctx, req.GroupId, req.UserId)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "Internal error")
+	}
+
+	return &userV1.GroupRemoveUserResponse{}, nil
+}
+
+func (s *S) GroupUserUpdate(ctx context.Context, req *userV1.GroupUserUpdateRequest) (*userV1.GroupUserUpdateResponse, error) {
+	UID, ok := ctx.Value(ctxKey.UID).(string)
+	if !ok || UID == "" {
+		return nil, status.Error(codes.Unauthenticated, "Unauthenticated")
+	}
+
+	if req.GroupId == "" {
+		return nil, status.Error(codes.InvalidArgument, "GroupId is empty")
+	}
+
+	isAdmin, err := userDao.User.IsAdmin(ctx, UID)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "Internal error")
+	}
+
+	if !isAdmin {
+		// check write permission
+		isOk, err := rbac.CasbinManager.CheckUserWritePermissionToGroup(UID, req.GroupId)
+		if err != nil {
+			return nil, status.Error(codes.Internal, "Internal error")
+		}
+
+		if !isOk {
+			return nil, status.Error(codes.PermissionDenied, "Permission denied")
+		}
+	}
+
+	var metas []model.GroupMembershipMetadata
+	for i, _meta := range req.MetaData {
+		metas[i] = model.GroupMembershipMetadata{
+			Model: stdao.Model{
+				ID: _meta.Id,
+			},
+			GroupMetadataID: _meta.GroupMetaDataOriginalID,
+			Key:             _meta.Key,
+			Value:           _meta.Value,
+			Order:           int(_meta.Order),
+			Description:     _meta.Description,
+			Type:            _meta.Type,
+		}
+	}
+
+	err = userDao.Group.UpdateUser(ctx, req.GroupId, req.UserId, metas)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "Internal error")
+	}
+
+	return &userV1.GroupUserUpdateResponse{}, nil
 }

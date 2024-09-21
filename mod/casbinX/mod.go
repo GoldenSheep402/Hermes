@@ -3,7 +3,7 @@ package casbinX
 import (
 	"fmt"
 	"github.com/GoldenSheep402/Hermes/core/kernel"
-	"github.com/GoldenSheep402/Hermes/mod/casbinX/manager"
+	"github.com/GoldenSheep402/Hermes/mod/casbinX/rbac"
 	"github.com/GoldenSheep402/Hermes/mod/casbinX/rbacValues"
 	"github.com/casbin/casbin/v2"
 	"github.com/casbin/casbin/v2/model"
@@ -46,7 +46,7 @@ func (m *Mod) Load(hub *kernel.Hub) error {
 	}
 	ef.EnableAutoSave(true)
 	m.ef = ef
-	manager.Init(m.ef)
+	rbac.Init(m.ef)
 	hub.Map(&m.ef)
 	return nil
 }

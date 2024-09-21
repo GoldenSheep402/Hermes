@@ -1,5 +1,5 @@
 // manager_test.go
-package manager
+package rbac
 
 import (
 	"testing"

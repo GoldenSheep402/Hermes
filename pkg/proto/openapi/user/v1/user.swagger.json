@@ -412,6 +412,12 @@
     "v1GroupMetaData": {
       "type": "object",
       "properties": {
+        "groupMetaDataOriginalID": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
         "key": {
           "type": "string"
         },
@@ -515,7 +521,7 @@
         "id": {
           "type": "string"
         },
-        "nickname": {
+        "name": {
           "type": "string"
         },
         "role": {

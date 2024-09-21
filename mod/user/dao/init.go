@@ -57,8 +57,8 @@ func Init(DB *gorm.DB, rds *redis.Client) error {
 	// 			Level:       rbacValues.Level10,
 	// 		},
 	// 		{
-	// 			Name:        "manager",
-	// 			Description: "manager user",
+	// 			Name:        "rbac",
+	// 			Description: "rbac user",
 	// 			Level:       rbacValues.Level1,
 	// 		},
 	// 		{
@@ -96,12 +96,12 @@ func Init(DB *gorm.DB, rds *redis.Client) error {
 	// 			idMap[pg.Name] = group.ID
 	// 		}
 	//
-	// 		err := manager.CasbinManager.SetSubgroup(idMap["admin"], idMap["manager"])
+	// 		err := rbac.CasbinManager.SetSubgroup(idMap["admin"], idMap["rbac"])
 	// 		if err != nil {
 	// 			return err
 	// 		}
 	//
-	// 		err = manager.CasbinManager.SetSubgroup(idMap["manager"], idMap["normalUser"])
+	// 		err = rbac.CasbinManager.SetSubgroup(idMap["rbac"], idMap["normalUser"])
 	// 		if err != nil {
 	// 			return err
 	// 		}

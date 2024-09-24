@@ -188,6 +188,12 @@
     "v1CategoryMetaData": {
       "type": "object",
       "properties": {
+        "id": {
+          "type": "string"
+        },
+        "categoryId": {
+          "type": "string"
+        },
         "key": {
           "type": "string"
         },

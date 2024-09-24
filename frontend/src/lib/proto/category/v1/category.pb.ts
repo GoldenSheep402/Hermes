@@ -13,6 +13,8 @@ export type Category = {
 }
 
 export type CategoryMetaData = {
+  id?: string
+  categoryId?: string
   key?: string
   order?: number
   description?: string

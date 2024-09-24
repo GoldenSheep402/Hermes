@@ -3,6 +3,7 @@ package torrent.v1;
 option go_package = "github.com/GoldenSheep402/Hermes/pkg/proto/go/torrent/v1;torrentV1";
 
 import "google/api/annotations.proto";
+import "category/v1/category.proto";
 
 message Torrent {
   bytes data = 1;
@@ -47,12 +48,14 @@ message GetTorrentV1Request {
   string id = 1;
 }
 message GetTorrentV1Response {
-  Torrent torrent = 1;
+  category.v1.Category category = 1;
+  Torrent torrent = 2;
 }
 
 // CreateTorrentV1
 message CreateTorrentV1Request {
-  Torrent torrent = 1;
+  category.v1.Category category = 1;
+  Torrent torrent = 2;
 }
 message CreateTorrentV1Response {
   string id = 1;

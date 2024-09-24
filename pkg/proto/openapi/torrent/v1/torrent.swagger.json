@@ -112,9 +112,63 @@
         }
       }
     },
+    "v1Category": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "metaData": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1CategoryMetaData"
+          }
+        }
+      }
+    },
+    "v1CategoryMetaData": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "categoryId": {
+          "type": "string"
+        },
+        "key": {
+          "type": "string"
+        },
+        "order": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "description": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        },
+        "defaultValue": {
+          "type": "string"
+        }
+      }
+    },
     "v1CreateTorrentV1Request": {
       "type": "object",
       "properties": {
+        "category": {
+          "$ref": "#/definitions/v1Category"
+        },
         "torrent": {
           "$ref": "#/definitions/v1Torrent"
         }
@@ -141,6 +195,9 @@
     "v1GetTorrentV1Response": {
       "type": "object",
       "properties": {
+        "category": {
+          "$ref": "#/definitions/v1Category"
+        },
         "torrent": {
           "$ref": "#/definitions/v1Torrent"
         }

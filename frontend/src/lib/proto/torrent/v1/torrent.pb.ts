@@ -4,6 +4,7 @@
 * This file is a generated Typescript file for GRPC Gateway, DO NOT MODIFY
 */
 
+import * as CategoryV1Category from "../../category/v1/category.pb"
 import * as fm from "../../fetch.pb"
 export type Torrent = {
   data?: Uint8Array
@@ -14,10 +15,12 @@ export type GetTorrentV1Request = {
 }
 
 export type GetTorrentV1Response = {
+  category?: CategoryV1Category.Category
   torrent?: Torrent
 }
 
 export type CreateTorrentV1Request = {
+  category?: CategoryV1Category.Category
   torrent?: Torrent
 }
 

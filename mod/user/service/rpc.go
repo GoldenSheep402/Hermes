@@ -85,14 +85,15 @@ func (s *S) UpdateUser(ctx context.Context, req *userV1.UpdateUserRequest) (*use
 		}
 
 		if !isAdmin {
-			isOk, err := rbac.CasbinManager.CheckUserToUserWritePermission(UID, req.User.Id)
-			if err != nil {
-				return nil, status.Error(codes.Internal, "Internal error")
-			}
-
-			if !isOk {
-				return nil, status.Error(codes.PermissionDenied, "Permission denied")
-			}
+			// TODO: rbac
+			// isOk, err := rbac.CasbinManager.CheckUserToUserWritePermission(UID, req.User.Id)
+			// if err != nil {
+			// 	return nil, status.Error(codes.Internal, "Internal error")
+			// }
+			//
+			// if !isOk {
+			// 	return nil, status.Error(codes.PermissionDenied, "Permission denied")
+			// }
 		}
 	}
 
@@ -142,6 +143,7 @@ func (s *S) CreateGroup(ctx context.Context, req *userV1.CreateGroupRequest) (*u
 		return nil, status.Error(codes.Unauthenticated, "Unauthenticated")
 	}
 
+	// check is in admin group
 	var adminGroup model.Group
 	if err := userDao.Group.GetTxFromCtx(ctx).Where("name = ?", "admin").First(&adminGroup).Error; err != nil {
 		return nil, status.Error(codes.Internal, "Internal error")
@@ -185,11 +187,12 @@ func (s *S) CreateGroup(ctx context.Context, req *userV1.CreateGroupRequest) (*u
 		return nil, status.Error(codes.Internal, "Internal error")
 	}
 
-	// set group write permission
-	err = rbac.CasbinManager.SetUserWritePermissionToGroup(UID, group.ID)
-	if err != nil {
-		return nil, status.Error(codes.Internal, "Internal error")
-	}
+	// TODO: rbac
+	// // set group write permission
+	// err = rbac.CasbinManager.SetUserWritePermissionToGroup(UID, group.ID)
+	// if err != nil {
+	// 	return nil, status.Error(codes.Internal, "Internal error")
+	// }
 
 	return &userV1.CreateGroupResponse{}, nil
 }
@@ -211,14 +214,24 @@ func (s *S) GetGroup(ctx context.Context, req *userV1.GetGroupRequest) (*userV1.
 
 	if !isAdmin {
 		// check read permission
-		isOk, err := rbac.CasbinManager.CheckUserReadPermissionToGroup(UID, req.Id)
+		ok, err := userDao.GroupMembership.Check(req.Id, UID)
 		if err != nil {
 			return nil, status.Error(codes.Internal, "Internal error")
 		}
 
-		if !isOk {
-			return nil, status.Error(codes.PermissionDenied, "Permission denied")
+		if !ok {
+			return nil, status.Error(codes.Unauthenticated, "No permission")
 		}
+
+		// TODO: rbac
+		// isOk, err := rbac.CasbinManager.CheckUserReadPermissionToGroup(UID, req.Id)
+		// if err != nil {
+		// 	return nil, status.Error(codes.Internal, "Internal error")
+		// }
+		//
+		// if !isOk {
+		// 	return nil, status.Error(codes.PermissionDenied, "Permission denied")
+		// }
 	}
 
 	group, metas, err := userDao.Group.Get(ctx, req.Id)
@@ -268,15 +281,17 @@ func (s *S) UpdateGroup(ctx context.Context, req *userV1.UpdateGroupRequest) (*u
 	}
 
 	if !isAdmin {
-		// check write permission
-		isOk, err := rbac.CasbinManager.CheckUserWritePermissionToGroup(UID, req.Group.Id)
-		if err != nil {
-			return nil, status.Error(codes.Internal, "Internal error")
-		}
+		// // check write permission
+		// isOk, err := rbac.CasbinManager.CheckUserWritePermissionToGroup(UID, req.Group.Id)
+		// if err != nil {
+		// 	return nil, status.Error(codes.Internal, "Internal error")
+		// }
+		//
+		// if !isOk {
+		// 	return nil, status.Error(codes.PermissionDenied, "Permission denied")
+		// }
 
-		if !isOk {
-			return nil, status.Error(codes.PermissionDenied, "Permission denied")
-		}
+		return nil, status.Error(codes.PermissionDenied, "You are not admin")
 	}
 
 	return &userV1.UpdateGroupResponse{}, nil
@@ -298,15 +313,17 @@ func (s *S) GroupAddUser(ctx context.Context, req *userV1.GroupAddUserRequest) (
 	}
 
 	if !isAdmin {
-		// check write permission
-		isOk, err := rbac.CasbinManager.CheckUserWritePermissionToGroup(UID, req.GroupId)
-		if err != nil {
-			return nil, status.Error(codes.Internal, "Internal error")
-		}
+		// // check write permission
+		// isOk, err := rbac.CasbinManager.CheckUserWritePermissionToGroup(UID, req.GroupId)
+		// if err != nil {
+		// 	return nil, status.Error(codes.Internal, "Internal error")
+		// }
+		//
+		// if !isOk {
+		// 	return nil, status.Error(codes.PermissionDenied, "Permission denied")
+		// }
 
-		if !isOk {
-			return nil, status.Error(codes.PermissionDenied, "Permission denied")
-		}
+		return nil, status.Error(codes.PermissionDenied, "You are not admin")
 	}
 
 	var metas []model.GroupMembershipMetadata
@@ -326,10 +343,11 @@ func (s *S) GroupAddUser(ctx context.Context, req *userV1.GroupAddUserRequest) (
 		return nil, status.Error(codes.Internal, "Internal error")
 	}
 
-	err = rbac.CasbinManager.SetUserToReadGroup(req.UserId, req.GroupId)
-	if err != nil {
-		return nil, status.Error(codes.Internal, "Internal error")
-	}
+	// TODO: rbac
+	// err = rbac.CasbinManager.SetUserToReadGroup(req.UserId, req.GroupId)
+	// if err != nil {
+	// 	return nil, status.Error(codes.Internal, "Internal error")
+	// }
 
 	return &userV1.GroupAddUserResponse{}, nil
 }
@@ -350,15 +368,18 @@ func (s *S) GroupRemoveUser(ctx context.Context, req *userV1.GroupRemoveUserRequ
 	}
 
 	if !isAdmin {
-		// check write permission
-		isOk, err := rbac.CasbinManager.CheckUserWritePermissionToGroup(UID, req.GroupId)
-		if err != nil {
-			return nil, status.Error(codes.Internal, "Internal error")
-		}
+		// TODO: rbac
+		// // check write permission
+		// isOk, err := rbac.CasbinManager.CheckUserWritePermissionToGroup(UID, req.GroupId)
+		// if err != nil {
+		// 	return nil, status.Error(codes.Internal, "Internal error")
+		// }
+		//
+		// if !isOk {
+		// 	return nil, status.Error(codes.PermissionDenied, "Permission denied")
+		// }
 
-		if !isOk {
-			return nil, status.Error(codes.PermissionDenied, "Permission denied")
-		}
+		return nil, status.Error(codes.PermissionDenied, "You are not admin")
 	}
 
 	err = userDao.Group.RemoveUser(ctx, req.GroupId, req.UserId)
@@ -369,6 +390,7 @@ func (s *S) GroupRemoveUser(ctx context.Context, req *userV1.GroupRemoveUserRequ
 	return &userV1.GroupRemoveUserResponse{}, nil
 }
 
+// GroupUserUpdate updates a user's metadata within a group, enforcing authentication, authorization, and validation checks.
 func (s *S) GroupUserUpdate(ctx context.Context, req *userV1.GroupUserUpdateRequest) (*userV1.GroupUserUpdateResponse, error) {
 	UID, ok := ctx.Value(ctxKey.UID).(string)
 	if !ok || UID == "" {
@@ -385,15 +407,17 @@ func (s *S) GroupUserUpdate(ctx context.Context, req *userV1.GroupUserUpdateRequ
 	}
 
 	if !isAdmin {
-		// check write permission
-		isOk, err := rbac.CasbinManager.CheckUserWritePermissionToGroup(UID, req.GroupId)
-		if err != nil {
-			return nil, status.Error(codes.Internal, "Internal error")
-		}
+		// // check write permission
+		// isOk, err := rbac.CasbinManager.CheckUserWritePermissionToGroup(UID, req.GroupId)
+		// if err != nil {
+		// 	return nil, status.Error(codes.Internal, "Internal error")
+		// }
+		//
+		// if !isOk {
+		// 	return nil, status.Error(codes.PermissionDenied, "Permission denied")
+		// }
 
-		if !isOk {
-			return nil, status.Error(codes.PermissionDenied, "Permission denied")
-		}
+		return nil, status.Error(codes.PermissionDenied, "You are not admin")
 	}
 
 	var metas []model.GroupMembershipMetadata

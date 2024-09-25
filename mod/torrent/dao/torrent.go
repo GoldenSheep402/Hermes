@@ -19,7 +19,7 @@ func (t *torrent) Init(db *gorm.DB) error {
 	return t.Std.Init(db)
 }
 
-func (t *torrent) Create(ctx context.Context, torrentBase *model.Torrent, files []model.File) (string, error) {
+func (t *torrent) Create(ctx context.Context, torrentBase *model.Torrent, files []model.File, metas []model.TorrentMetadata) (string, error) {
 	_ctx := t.SetTxToCtx(ctx, t.DB())
 	tx := t.GetTxFromCtx(_ctx).Begin()
 
@@ -34,13 +34,38 @@ func (t *torrent) Create(ctx context.Context, torrentBase *model.Torrent, files 
 		return "", status.Error(codes.Internal, "Internal error")
 	}
 
-	for i, _ := range files {
+	for i := range files {
 		files[i].TorrentID = torrentBase.ID
 	}
 
 	if err := tx.Model(&model.File{}).Create(files).Error; err != nil {
 		tx.Rollback()
 		return "", status.Error(codes.Internal, "Internal error")
+	}
+
+	for i := range metas {
+		metas[i].TorrentID = torrentBase.ID
+	}
+
+	metaIds := make([]string, 0, len(metas))
+	for i := range metas {
+		metaIds = append(metaIds, metas[i].MetadataID)
+	}
+
+	var metasBase []categoryModel.Metadata
+	if err := tx.Model(&categoryModel.Metadata{}).Where("id IN ?", metaIds).Find(&metasBase).Error; err != nil {
+		tx.Rollback()
+		switch {
+		case errors.Is(err, gorm.ErrRecordNotFound):
+			return "", status.Error(codes.NotFound, "Metadata not found")
+		default:
+			return "", status.Error(codes.Internal, "Internal error")
+		}
+	} else {
+		if err := tx.Model(&model.TorrentMetadata{}).Create(metas).Error; err != nil {
+			tx.Rollback()
+			return "", status.Error(codes.Internal, "Internal error")
+		}
 	}
 
 	if err := tx.Commit().Error; err != nil {

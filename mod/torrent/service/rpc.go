@@ -5,11 +5,16 @@ import (
 	"context"
 	"crypto/sha1"
 	"fmt"
+	"github.com/GoldenSheep402/Hermes/conf"
 	torrentDao "github.com/GoldenSheep402/Hermes/mod/torrent/dao"
 	torrentModel "github.com/GoldenSheep402/Hermes/mod/torrent/model"
+	userDao "github.com/GoldenSheep402/Hermes/mod/user/dao"
+	"github.com/GoldenSheep402/Hermes/pkg/ctxKey"
 	torrentV1 "github.com/GoldenSheep402/Hermes/pkg/proto/torrent/v1"
 	"github.com/anacrolix/torrent/bencode"
 	"go.uber.org/zap"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"strings"
 	"time"
 )
@@ -22,6 +27,12 @@ type S struct {
 }
 
 func (s *S) GetTorrentV1(ctx context.Context, req *torrentV1.GetTorrentV1Request) (*torrentV1.GetTorrentV1Response, error) {
+	UID, ok := ctx.Value(ctxKey.UID).(string)
+	if !ok || UID == "" {
+		return nil, status.Error(codes.Unauthenticated, "Unauthenticated")
+	}
+	// TODO: rbac
+
 	metadata, err := torrentDao.Torrent.GetTorrentMetadata(ctx, req.Id)
 	if err != nil {
 		return nil, err
@@ -45,10 +56,21 @@ func (s *S) GetTorrentV1(ctx context.Context, req *torrentV1.GetTorrentV1Request
 }
 
 func (s *S) CreateTorrentV1(ctx context.Context, req *torrentV1.CreateTorrentV1Request) (*torrentV1.CreateTorrentV1Response, error) {
+	UID, ok := ctx.Value(ctxKey.UID).(string)
+	if !ok || UID == "" {
+		return nil, status.Error(codes.Unauthenticated, "Unauthenticated")
+	}
+	// TODO: rbac
+
+	_, err := userDao.User.GetInfo(ctx, UID)
+	if err != nil {
+		return nil, err
+	}
+
 	// Here torrent.Data is byte[] type
 	decoder := bencode.NewDecoder(bytes.NewReader(req.Torrent.Data))
 	bencodeTorrent := &torrentModel.BencodeTorrent{}
-	err := decoder.Decode(bencodeTorrent)
+	err = decoder.Decode(bencodeTorrent)
 	if err != nil {
 		return nil, err
 	}
@@ -58,13 +80,17 @@ func (s *S) CreateTorrentV1(ctx context.Context, req *torrentV1.CreateTorrentV1R
 		return nil, err
 	}
 
+	trackerAddress := conf.Get().TrackerV1.Endpoint
+
 	now := time.Now()
-	isPrivate := false
+	isPrivate := true
 	var files []torrentModel.File
 	torrent := &torrentModel.Torrent{
-		InfoHash: fmt.Sprintf("%x", sha1.Sum(marshaledInfo)),
-		// CreatorID
-		Announce:     bencodeTorrent.Announce,
+		CategoryID: req.CategoryId,
+
+		InfoHash:     fmt.Sprintf("%x", sha1.Sum(marshaledInfo)),
+		CreatorID:    UID,
+		Announce:     trackerAddress,
 		CreatedBy:    bencodeTorrent.CreatedBy,
 		CreationDate: &now,
 		Name:         bencodeTorrent.Info.Name,
@@ -101,8 +127,18 @@ func (s *S) CreateTorrentV1(ctx context.Context, req *torrentV1.CreateTorrentV1R
 		}
 	}
 
+	metas := make([]torrentModel.TorrentMetadata, len(req.Metadata))
+	for i, meta := range req.Metadata {
+		metas[i] = torrentModel.TorrentMetadata{
+			CategoryID: req.CategoryId,
+			MetadataID: meta.Id,
+			Value:      meta.Value,
+		}
+	}
+
 	// Create the torrent
-	id, err := torrentDao.Torrent.Create(ctx, torrent, files)
+	// Link with files and metas
+	id, err := torrentDao.Torrent.Create(ctx, torrent, files, metas)
 	if err != nil {
 		return nil, err
 	}
@@ -113,7 +149,17 @@ func (s *S) CreateTorrentV1(ctx context.Context, req *torrentV1.CreateTorrentV1R
 }
 
 func (s *S) DownloadTorrentV1(ctx context.Context, req *torrentV1.DownloadTorrentV1Request) (*torrentV1.DownloadTorrentV1Response, error) {
-	// TODO: check
+	UID, ok := ctx.Value(ctxKey.UID).(string)
+	if !ok || UID == "" {
+		return nil, status.Error(codes.Unauthenticated, "Unauthenticated")
+	}
+	// TODO: rbac
+
+	_, err := userDao.User.GetInfo(ctx, UID)
+	if err != nil {
+		return nil, err
+	}
+
 	torrent, torrentFile, err := torrentDao.Torrent.Get(ctx, req.Id)
 	if err != nil {
 		return nil, err
@@ -167,18 +213,6 @@ func (s *S) DownloadTorrentV1(ctx context.Context, req *torrentV1.DownloadTorren
 	if err != nil {
 		return nil, err
 	}
-
-	// filePath := "/tmp/torrent_debug.torrent"
-	// file, err := os.Create(filePath)
-	// if err != nil {
-	// 	return nil, fmt.Errorf("failed to create file: %v", err)
-	// }
-	// defer file.Close()
-	//
-	// _, err = file.Write(buf.Bytes())
-	// if err != nil {
-	// 	return nil, fmt.Errorf("failed to write to file: %v", err)
-	// }
 
 	return &torrentV1.DownloadTorrentV1Response{
 		Data: buf.Bytes(),

@@ -22,28 +22,23 @@ func Registry(jinE *jin.Engine) {
 }
 
 func AnnounceWithKey(c *jin.Context) {
-	ctx := context.Background()
-
-	// TODO: implement
-	// key := c.Params("key")
-
 	type AnnounceRequest struct {
-		InfoHash      string // 必需
-		PeerID        string // 必需
-		Port          int    // 必需
-		Uploaded      int    // 必需
-		Downloaded    int    // 必需
-		Left          int    // 必需
-		Event         string // 可选
-		IP            string // 可选
-		NumWant       int    // 可选
-		Key           string // 可选
-		Compact       int    // 可选
-		NoPeerID      int    // 可选
-		TrackerID     string // 可选
-		Corrupt       int    // 非标准参数
-		SupportCrypto int    // 非标准参数
-		Redundant     int    // 非标准参数
+		InfoHash      string
+		PeerID        string
+		Port          int
+		Uploaded      int
+		Downloaded    int
+		Left          int
+		Event         string // omitempty
+		IP            string // omitempty
+		NumWant       int    // omitempty
+		Key           string // omitempty
+		Compact       int    // omitempty
+		NoPeerID      int    // omitempty
+		TrackerID     string // omitempty
+		Corrupt       int    // not standard
+		SupportCrypto int    // not standard
+		Redundant     int    // not standard
 	}
 
 	type AnnounceResponse struct {
@@ -62,6 +57,28 @@ func AnnounceWithKey(c *jin.Context) {
 		IP     string `bencode:"ip"`      // 对等节点的 IP 地址
 		Port   int    `bencode:"port"`    // 对等节点的端口号
 	}
+	// TODO: implement
+	key, ok := c.Params.Get("key")
+	if !ok {
+		message := AnnounceResponse{
+			WarningMessage: "Unauthorized access",
+		}
+
+		encodedResp, err := bencode.EncodeBytes(message)
+		if err != nil {
+			c.Writer.WriteString("Failed to encode response")
+			return
+		}
+
+		c.Writer.Header().Set("Content-Type", "text/plain")
+		c.Writer.WriteHeader(http.StatusOK)
+		c.Writer.Write(encodedResp)
+		return
+	}
+	fmt.Printf("key: %s\n", key)
+
+	ctx := context.Background()
+
 	req := &AnnounceRequest{}
 
 	infoHashDecode := c.Request.URL.Query().Get("info_hash")
@@ -88,19 +105,67 @@ func AnnounceWithKey(c *jin.Context) {
 
 	var err error
 	if req.Port, err = strconv.Atoi(portStr); err != nil {
-		c.Writer.WriteString("Invalid port")
+		message := AnnounceResponse{
+			WarningMessage: "Invalid Args",
+		}
+
+		encodedResp, err := bencode.EncodeBytes(message)
+		if err != nil {
+			c.Writer.WriteString("Failed to encode response")
+			return
+		}
+
+		c.Writer.Header().Set("Content-Type", "text/plain")
+		c.Writer.WriteHeader(http.StatusOK)
+		c.Writer.Write(encodedResp)
 		return
 	}
 	if req.Uploaded, err = strconv.Atoi(uploadedStr); err != nil {
-		c.Writer.WriteString("Invalid uploaded")
+		message := AnnounceResponse{
+			WarningMessage: "Invalid Args",
+		}
+
+		encodedResp, err := bencode.EncodeBytes(message)
+		if err != nil {
+			c.Writer.WriteString("Failed to encode response")
+			return
+		}
+
+		c.Writer.Header().Set("Content-Type", "text/plain")
+		c.Writer.WriteHeader(http.StatusOK)
+		c.Writer.Write(encodedResp)
 		return
 	}
 	if req.Downloaded, err = strconv.Atoi(downloadedStr); err != nil {
-		c.Writer.WriteString("Invalid downloaded")
+		message := AnnounceResponse{
+			WarningMessage: "Invalid Args",
+		}
+
+		encodedResp, err := bencode.EncodeBytes(message)
+		if err != nil {
+			c.Writer.WriteString("Failed to encode response")
+			return
+		}
+
+		c.Writer.Header().Set("Content-Type", "text/plain")
+		c.Writer.WriteHeader(http.StatusOK)
+		c.Writer.Write(encodedResp)
 		return
 	}
 	if req.Left, err = strconv.Atoi(leftStr); err != nil {
-		c.Writer.WriteString("Invalid left")
+		message := AnnounceResponse{
+			WarningMessage: "Invalid Args",
+		}
+
+		encodedResp, err := bencode.EncodeBytes(message)
+		if err != nil {
+			c.Writer.WriteString("Failed to encode response")
+			return
+		}
+
+		c.Writer.Header().Set("Content-Type", "text/plain")
+		c.Writer.WriteHeader(http.StatusOK)
+		c.Writer.Write(encodedResp)
 		return
 	}
 
@@ -128,7 +193,12 @@ func AnnounceWithKey(c *jin.Context) {
 	}
 
 	if req.IP == "" {
-		req.IP = c.Request.RemoteAddr
+		host, _, err := net.SplitHostPort(c.Request.RemoteAddr)
+		if err != nil {
+			host = c.Request.RemoteAddr
+		}
+
+		req.IP = host
 	}
 
 	switch req.Event {
@@ -221,4 +291,5 @@ func AnnounceWithKey(c *jin.Context) {
 	c.Writer.Header().Set("Content-Type", "text/plain")
 	c.Writer.WriteHeader(http.StatusOK)
 	c.Writer.Write(encodedResp)
+	return
 }

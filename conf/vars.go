@@ -30,4 +30,7 @@ type GlobalConfig struct {
 		DSN            string `yaml:"DSN"`
 	} `yaml:"Uptrace"`
 	SentryDsn string `yaml:"SentryDsn"`
+	TrackerV1 struct {
+		Endpoint string `yaml:"Endpoint"`
+	} `yaml:"TrackerV1"`
 }

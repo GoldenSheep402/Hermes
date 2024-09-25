@@ -66,7 +66,7 @@ func (p *peer) GetPeers(ctx context.Context, infoHash string, numWant int) ([]*m
 	if err != nil {
 		return nil, err
 	}
-	peers := make([]*model.Peer, 0, len(peersData))
+	peers := make([]*model.Peer, 0, numWant)
 	now := time.Now().Unix()
 	for peerID, data := range peersData {
 		parts := strings.Split(data, ":")

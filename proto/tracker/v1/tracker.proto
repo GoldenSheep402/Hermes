@@ -15,8 +15,8 @@ service TrackerService {
 
 message GetTrackerRequest {
   string key = 1;          // Unique identifier for the request
-  bytes info_hash = 2;    // Information hash for the torrent (Here is URL encoded)
-  bytes peer_id = 3;      // Unique identifier for the peer
+  string info_hash = 2;    // Information hash for the torrent (Here is URL encoded)
+  string peer_id = 3;      // Unique identifier for the peer
   int32 port = 4;         // Port number of the peer
   int64 uploaded = 5;    // Amount of data uploaded by the peer
   int64 downloaded = 6;  // Amount of data downloaded by the peer
@@ -32,6 +32,10 @@ message GetTrackerRequest {
 }
 
 message GetTrackerResponse {
+  string response = 1;  // Response message
+}
+
+message GetTrackerResponseDetail {
   string failure_reason = 1;        // Optional: Reason for failure
   string warning_message = 2;       // Optional: Warning message
   int32 interval = 3;               // Required: Update interval in seconds

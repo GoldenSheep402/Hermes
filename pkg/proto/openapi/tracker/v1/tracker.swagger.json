@@ -47,16 +47,14 @@
             "description": "Information hash for the torrent (Here is URL encoded)",
             "in": "query",
             "required": false,
-            "type": "string",
-            "format": "byte"
+            "type": "string"
           },
           {
             "name": "peerId",
             "description": "Unique identifier for the peer",
             "in": "query",
             "required": false,
-            "type": "string",
-            "format": "byte"
+            "type": "string"
           },
           {
             "name": "port",
@@ -191,69 +189,9 @@
     "v1GetTrackerResponse": {
       "type": "object",
       "properties": {
-        "failureReason": {
+        "response": {
           "type": "string",
-          "title": "Optional: Reason for failure"
-        },
-        "warningMessage": {
-          "type": "string",
-          "title": "Optional: Warning message"
-        },
-        "interval": {
-          "type": "integer",
-          "format": "int32",
-          "title": "Required: Update interval in seconds"
-        },
-        "minInterval": {
-          "type": "integer",
-          "format": "int32",
-          "title": "Optional: Minimum update interval in seconds"
-        },
-        "trackerId": {
-          "type": "string",
-          "title": "Optional: Identifier for the tracker"
-        },
-        "complete": {
-          "type": "integer",
-          "format": "int32",
-          "title": "Required: Number of complete torrents"
-        },
-        "incomplete": {
-          "type": "integer",
-          "format": "int32",
-          "title": "Required: Number of incomplete torrents"
-        },
-        "peers": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "$ref": "#/definitions/v1PeerInfo"
-          },
-          "title": "List of peers in non-compact mode"
-        },
-        "peersCompact": {
-          "type": "string",
-          "format": "byte",
-          "title": "List of peers in compact mode"
-        }
-      }
-    },
-    "v1PeerInfo": {
-      "type": "object",
-      "properties": {
-        "peerId": {
-          "type": "string",
-          "format": "byte",
-          "title": "Unique identifier for the peer"
-        },
-        "ip": {
-          "type": "string",
-          "title": "IP address of the peer"
-        },
-        "port": {
-          "type": "integer",
-          "format": "int32",
-          "title": "Port number of the peer"
+          "title": "Response message"
         }
       }
     }

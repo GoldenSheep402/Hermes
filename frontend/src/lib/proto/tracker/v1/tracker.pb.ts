@@ -7,8 +7,8 @@
 import * as fm from "../../fetch.pb"
 export type GetTrackerRequest = {
   key?: string
-  info_hash?: Uint8Array
-  peer_id?: Uint8Array
+  info_hash?: string
+  peer_id?: string
   port?: number
   uploaded?: string
   downloaded?: string
@@ -24,6 +24,10 @@ export type GetTrackerRequest = {
 }
 
 export type GetTrackerResponse = {
+  response?: string
+}
+
+export type GetTrackerResponseDetail = {
   failure_reason?: string
   warning_message?: string
   interval?: number

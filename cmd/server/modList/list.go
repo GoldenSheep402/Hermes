@@ -11,6 +11,7 @@ import (
 	"github.com/GoldenSheep402/Hermes/mod/pgsql"
 	"github.com/GoldenSheep402/Hermes/mod/rds"
 	"github.com/GoldenSheep402/Hermes/mod/torrent"
+	"github.com/GoldenSheep402/Hermes/mod/trackerV1"
 	"github.com/GoldenSheep402/Hermes/mod/user"
 )
 
@@ -27,4 +28,5 @@ var ModList = []kernel.Module{
 	&rds.Mod{},
 	&user.Mod{},
 	&torrent.Mod{},
+	&trackerV1.Mod{},
 }

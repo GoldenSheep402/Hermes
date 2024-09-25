@@ -4,10 +4,20 @@
 * This file is a generated Typescript file for GRPC Gateway, DO NOT MODIFY
 */
 
-import * as CategoryV1Category from "../../category/v1/category.pb"
 import * as fm from "../../fetch.pb"
 export type Torrent = {
   data?: Uint8Array
+}
+
+export type TorrentMetaData = {
+  id?: string
+  categoryId?: string
+  torrentId?: string
+  key?: string
+  order?: number
+  description?: string
+  type?: string
+  value?: string
 }
 
 export type GetTorrentV1Request = {
@@ -15,17 +25,25 @@ export type GetTorrentV1Request = {
 }
 
 export type GetTorrentV1Response = {
-  category?: CategoryV1Category.Category
-  torrent?: Torrent
+  metadata?: TorrentMetaData[]
 }
 
 export type CreateTorrentV1Request = {
-  category?: CategoryV1Category.Category
+  categoryId?: string
+  metadata?: TorrentMetaData[]
   torrent?: Torrent
 }
 
 export type CreateTorrentV1Response = {
   id?: string
+}
+
+export type DownloadTorrentV1Request = {
+  id?: string
+}
+
+export type DownloadTorrentV1Response = {
+  data?: Uint8Array
 }
 
 export class TorrentService {
@@ -34,5 +52,8 @@ export class TorrentService {
   }
   static CreateTorrentV1(req: CreateTorrentV1Request, initReq?: fm.InitReq): Promise<CreateTorrentV1Response> {
     return fm.fetchReq<CreateTorrentV1Request, CreateTorrentV1Response>(`/gapi/torrent/v1/create/v1`, {...initReq, method: "POST", body: JSON.stringify(req, fm.replacer)})
+  }
+  static DownloadTorrentV1(req: DownloadTorrentV1Request, initReq?: fm.InitReq): Promise<DownloadTorrentV1Response> {
+    return fm.fetchReq<DownloadTorrentV1Request, DownloadTorrentV1Response>(`/gapi/torrent/v1/download/v1`, {...initReq, method: "POST", body: JSON.stringify(req, fm.replacer)})
   }
 }

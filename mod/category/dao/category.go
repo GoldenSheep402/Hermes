@@ -112,7 +112,7 @@ func (c *category) Update(ctx context.Context, category *model.Category, categor
 		} else {
 			if err := tx.Model(&model.Metadata{}).
 				Where("id = ? AND category_id = ?", meta.ID, existingCategory.ID).
-				Select("default_value", "order").
+				Select("default_value", "order", "description").
 				Updates(meta).Error; err != nil {
 				tx.Rollback()
 				return err

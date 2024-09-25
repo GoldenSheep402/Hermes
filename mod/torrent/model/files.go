@@ -11,6 +11,7 @@ type File struct {
 	TorrentID string `json:"torrent_id"`
 	Length    uint64 `json:"length"`
 	Path      string `json:"path"`
+	PathUTF8  string `json:"path_utf_8"`
 }
 
 func (f *File) BeforeCreate(_ *gorm.DB) error {

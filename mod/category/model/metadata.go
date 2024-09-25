@@ -15,6 +15,7 @@ type Metadata struct {
 	Order        int    `json:"order"`
 	Key          string `json:"key"`
 	Type         string `json:"type"`
+	Description  string `json:"description"`
 	Value        string `json:"value"`
 	DefaultValue string `json:"default_value"`
 }

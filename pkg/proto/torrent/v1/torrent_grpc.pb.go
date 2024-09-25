@@ -19,8 +19,9 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	TorrentService_GetTorrentV1_FullMethodName    = "/torrent.v1.TorrentService/GetTorrentV1"
-	TorrentService_CreateTorrentV1_FullMethodName = "/torrent.v1.TorrentService/CreateTorrentV1"
+	TorrentService_GetTorrentV1_FullMethodName      = "/torrent.v1.TorrentService/GetTorrentV1"
+	TorrentService_CreateTorrentV1_FullMethodName   = "/torrent.v1.TorrentService/CreateTorrentV1"
+	TorrentService_DownloadTorrentV1_FullMethodName = "/torrent.v1.TorrentService/DownloadTorrentV1"
 )
 
 // TorrentServiceClient is the client API for TorrentService service.
@@ -43,6 +44,7 @@ type TorrentServiceClient interface {
 	// @Return CreateTorrentV1Response
 	// @Http POST /gapi/torrent/v1/info
 	CreateTorrentV1(ctx context.Context, in *CreateTorrentV1Request, opts ...grpc.CallOption) (*CreateTorrentV1Response, error)
+	DownloadTorrentV1(ctx context.Context, in *DownloadTorrentV1Request, opts ...grpc.CallOption) (*DownloadTorrentV1Response, error)
 }
 
 type torrentServiceClient struct {
@@ -73,6 +75,16 @@ func (c *torrentServiceClient) CreateTorrentV1(ctx context.Context, in *CreateTo
 	return out, nil
 }
 
+func (c *torrentServiceClient) DownloadTorrentV1(ctx context.Context, in *DownloadTorrentV1Request, opts ...grpc.CallOption) (*DownloadTorrentV1Response, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(DownloadTorrentV1Response)
+	err := c.cc.Invoke(ctx, TorrentService_DownloadTorrentV1_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // TorrentServiceServer is the server API for TorrentService service.
 // All implementations must embed UnimplementedTorrentServiceServer
 // for forward compatibility.
@@ -93,6 +105,7 @@ type TorrentServiceServer interface {
 	// @Return CreateTorrentV1Response
 	// @Http POST /gapi/torrent/v1/info
 	CreateTorrentV1(context.Context, *CreateTorrentV1Request) (*CreateTorrentV1Response, error)
+	DownloadTorrentV1(context.Context, *DownloadTorrentV1Request) (*DownloadTorrentV1Response, error)
 	mustEmbedUnimplementedTorrentServiceServer()
 }
 
@@ -108,6 +121,9 @@ func (UnimplementedTorrentServiceServer) GetTorrentV1(context.Context, *GetTorre
 }
 func (UnimplementedTorrentServiceServer) CreateTorrentV1(context.Context, *CreateTorrentV1Request) (*CreateTorrentV1Response, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateTorrentV1 not implemented")
+}
+func (UnimplementedTorrentServiceServer) DownloadTorrentV1(context.Context, *DownloadTorrentV1Request) (*DownloadTorrentV1Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DownloadTorrentV1 not implemented")
 }
 func (UnimplementedTorrentServiceServer) mustEmbedUnimplementedTorrentServiceServer() {}
 func (UnimplementedTorrentServiceServer) testEmbeddedByValue()                        {}
@@ -166,6 +182,24 @@ func _TorrentService_CreateTorrentV1_Handler(srv interface{}, ctx context.Contex
 	return interceptor(ctx, in, info, handler)
 }
 
+func _TorrentService_DownloadTorrentV1_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DownloadTorrentV1Request)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TorrentServiceServer).DownloadTorrentV1(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: TorrentService_DownloadTorrentV1_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TorrentServiceServer).DownloadTorrentV1(ctx, req.(*DownloadTorrentV1Request))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // TorrentService_ServiceDesc is the grpc.ServiceDesc for TorrentService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -180,6 +214,10 @@ var TorrentService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CreateTorrentV1",
 			Handler:    _TorrentService_CreateTorrentV1_Handler,
+		},
+		{
+			MethodName: "DownloadTorrentV1",
+			Handler:    _TorrentService_DownloadTorrentV1_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

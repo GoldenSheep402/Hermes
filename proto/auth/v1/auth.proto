@@ -1,6 +1,6 @@
 syntax = "proto3";
 package auth.v1;
-option go_package = "github.com/GoldenSheep402/Hermes/pkg/proto/go/auth/v1;authV1";
+option go_package = "github.com/GoldenSheep402/Hermes/pkg/proto/auth/v1;authV1";
 
 import "google/api/annotations.proto";
 

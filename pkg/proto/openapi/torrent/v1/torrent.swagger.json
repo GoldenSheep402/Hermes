@@ -49,6 +49,38 @@
         ]
       }
     },
+    "/gapi/torrent/v1/download/v1": {
+      "post": {
+        "operationId": "TorrentService_DownloadTorrentV1",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1DownloadTorrentV1Response"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1DownloadTorrentV1Request"
+            }
+          }
+        ],
+        "tags": [
+          "TorrentService"
+        ]
+      }
+    },
     "/gapi/torrent/v1/info/v1": {
       "post": {
         "summary": "GetTorrentV1\n@Description\nGet torrent by id, return torrent data\nThe file follows the torrent file format V1.\n@Param GetTorrentV1Request\n@Return GetTorrentV1Response\n@Http GET /gapi/torrent/v1/info",
@@ -112,34 +144,91 @@
         }
       }
     },
-    "v1Category": {
+    "v1CreateTorrentV1Request": {
+      "type": "object",
+      "properties": {
+        "categoryId": {
+          "type": "string"
+        },
+        "metadata": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1TorrentMetaData"
+          }
+        },
+        "torrent": {
+          "$ref": "#/definitions/v1Torrent"
+        }
+      },
+      "title": "CreateTorrentV1"
+    },
+    "v1CreateTorrentV1Response": {
       "type": "object",
       "properties": {
         "id": {
           "type": "string"
-        },
-        "name": {
+        }
+      }
+    },
+    "v1DownloadTorrentV1Request": {
+      "type": "object",
+      "properties": {
+        "id": {
           "type": "string"
-        },
-        "description": {
+        }
+      },
+      "title": "DownloadTorrentV1"
+    },
+    "v1DownloadTorrentV1Response": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "type": "string",
+          "format": "byte"
+        }
+      }
+    },
+    "v1GetTorrentV1Request": {
+      "type": "object",
+      "properties": {
+        "id": {
           "type": "string"
-        },
-        "metaData": {
+        }
+      },
+      "title": "GetTorrentV1"
+    },
+    "v1GetTorrentV1Response": {
+      "type": "object",
+      "properties": {
+        "metadata": {
           "type": "array",
           "items": {
             "type": "object",
-            "$ref": "#/definitions/v1CategoryMetaData"
+            "$ref": "#/definitions/v1TorrentMetaData"
           }
         }
       }
     },
-    "v1CategoryMetaData": {
+    "v1Torrent": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "type": "string",
+          "format": "byte"
+        }
+      }
+    },
+    "v1TorrentMetaData": {
       "type": "object",
       "properties": {
         "id": {
           "type": "string"
         },
         "categoryId": {
+          "type": "string"
+        },
+        "torrentId": {
           "type": "string"
         },
         "key": {
@@ -157,58 +246,6 @@
         },
         "value": {
           "type": "string"
-        },
-        "defaultValue": {
-          "type": "string"
-        }
-      }
-    },
-    "v1CreateTorrentV1Request": {
-      "type": "object",
-      "properties": {
-        "category": {
-          "$ref": "#/definitions/v1Category"
-        },
-        "torrent": {
-          "$ref": "#/definitions/v1Torrent"
-        }
-      },
-      "title": "CreateTorrentV1"
-    },
-    "v1CreateTorrentV1Response": {
-      "type": "object",
-      "properties": {
-        "id": {
-          "type": "string"
-        }
-      }
-    },
-    "v1GetTorrentV1Request": {
-      "type": "object",
-      "properties": {
-        "id": {
-          "type": "string"
-        }
-      },
-      "title": "GetTorrentV1"
-    },
-    "v1GetTorrentV1Response": {
-      "type": "object",
-      "properties": {
-        "category": {
-          "$ref": "#/definitions/v1Category"
-        },
-        "torrent": {
-          "$ref": "#/definitions/v1Torrent"
-        }
-      }
-    },
-    "v1Torrent": {
-      "type": "object",
-      "properties": {
-        "data": {
-          "type": "string",
-          "format": "byte"
         }
       }
     }

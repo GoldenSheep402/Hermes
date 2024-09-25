@@ -1,6 +1,6 @@
 syntax = "proto3";
 package tracker.v1;
-option go_package = "github.com/GoldenSheep402/Hermes/pkg/proto/go/trackerV1/v1;trackerV1";
+option go_package = "github.com/GoldenSheep402/Hermes/pkg/proto/trackerV1/v1;trackerV1";
 
 import "google/api/annotations.proto";
 

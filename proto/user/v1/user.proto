@@ -1,6 +1,6 @@
 syntax = "proto3";
 package user.v1;
-option go_package = "github.com/GoldenSheep402/Hermes/pkg/proto/go/user/v1;userV1";
+option go_package = "github.com/GoldenSheep402/Hermes/pkg/proto/user/v1;userV1";
 
 import "google/api/annotations.proto";
 

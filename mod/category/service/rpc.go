@@ -60,6 +60,7 @@ func (s *S) CreateCategory(ctx context.Context, req *categoryV1.CreateCategoryRe
 			Key:          meta.Key,
 			Type:         meta.Type,
 			Value:        meta.Value,
+			Description:  meta.Description,
 			DefaultValue: meta.DefaultValue,
 		}
 	}
@@ -95,6 +96,7 @@ func (s *S) GetCategory(ctx context.Context, req *categoryV1.GetCategoryRequest)
 			Key:          meta.Key,
 			Type:         meta.Type,
 			Value:        meta.Value,
+			Description:  meta.Description,
 			DefaultValue: meta.DefaultValue,
 		}
 	}
@@ -144,6 +146,7 @@ func (s *S) UpdateCategory(ctx context.Context, req *categoryV1.UpdateCategoryRe
 			Key:          meta.Key,
 			Type:         meta.Type,
 			Value:        meta.Value,
+			Description:  meta.Description,
 			DefaultValue: meta.DefaultValue,
 		}
 	}

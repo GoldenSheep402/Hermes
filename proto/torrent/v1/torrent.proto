@@ -1,13 +1,9 @@
 syntax = "proto3";
 package torrent.v1;
-option go_package = "github.com/GoldenSheep402/Hermes/pkg/proto/go/torrent/v1;torrentV1";
+option go_package = "github.com/GoldenSheep402/Hermes/pkg/proto/torrent/v1;torrentV1";
 
 import "google/api/annotations.proto";
 import "category/v1/category.proto";
-
-message Torrent {
-  bytes data = 1;
-}
 
 service TorrentService{
   /*
@@ -41,6 +37,28 @@ service TorrentService{
       body: "*"
     };
   }
+
+  rpc DownloadTorrentV1(DownloadTorrentV1Request) returns (DownloadTorrentV1Response) {
+    option (google.api.http) = {
+      post: "/gapi/torrent/v1/download/v1"
+      body: "*"
+    };
+  }
+}
+
+message Torrent {
+  bytes data = 1;
+}
+
+message TorrentMetaData {
+  string id = 1;
+  string categoryId = 2;
+  string torrentId = 3;
+  string key = 4;
+  int32  order = 5;
+  string description = 6;
+  string type = 7;
+  string value = 8;
 }
 
 // GetTorrentV1
@@ -48,15 +66,23 @@ message GetTorrentV1Request {
   string id = 1;
 }
 message GetTorrentV1Response {
-  category.v1.Category category = 1;
-  Torrent torrent = 2;
+  repeated TorrentMetaData metadata = 1;
 }
 
 // CreateTorrentV1
 message CreateTorrentV1Request {
-  category.v1.Category category = 1;
-  Torrent torrent = 2;
+  string categoryId = 1;
+  repeated TorrentMetaData metadata = 2;
+  Torrent torrent = 3;
 }
 message CreateTorrentV1Response {
   string id = 1;
+}
+
+// DownloadTorrentV1
+message DownloadTorrentV1Request{
+  string id = 1;
+}
+message DownloadTorrentV1Response{
+  bytes data = 1;
 }

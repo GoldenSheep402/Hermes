@@ -30,6 +30,7 @@ export type GetTorrentV1Response = {
 
 export type CreateTorrentV1Request = {
   categoryId?: string
+  name?: string
   metadata?: TorrentMetaData[]
   torrent?: Torrent
 }

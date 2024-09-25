@@ -72,8 +72,9 @@ message GetTorrentV1Response {
 // CreateTorrentV1
 message CreateTorrentV1Request {
   string categoryId = 1;
-  repeated TorrentMetaData metadata = 2;
-  Torrent torrent = 3;
+  string name = 2;
+  repeated TorrentMetaData metadata = 3;
+  Torrent torrent = 4;
 }
 message CreateTorrentV1Response {
   string id = 1;

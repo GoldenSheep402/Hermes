@@ -150,6 +150,9 @@
         "categoryId": {
           "type": "string"
         },
+        "name": {
+          "type": "string"
+        },
         "metadata": {
           "type": "array",
           "items": {

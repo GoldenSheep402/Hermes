@@ -103,6 +103,11 @@ func (s *S) CreateTorrentV1(ctx context.Context, req *torrentV1.CreateTorrentV1R
 		Md5sum:       bencodeTorrent.Info.Md5sum,
 	}
 
+	// TODO
+	if req.Name != "" {
+		torrent.Name = req.Name
+	}
+
 	// If the torrent is a single file torrent
 	if bencodeTorrent.Info.Files == nil {
 		path := strings.Join([]string{bencodeTorrent.Info.Name}, "/")

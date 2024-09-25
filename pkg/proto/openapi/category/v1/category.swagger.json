@@ -16,14 +16,14 @@
     "application/json"
   ],
   "paths": {
-    "/gapi/category/v1/info": {
-      "get": {
-        "operationId": "CategoryService_GetCategory",
+    "/gapi/category/v1/delete": {
+      "post": {
+        "operationId": "CategoryService_DeleteCategory",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1GetCategoryResponse"
+              "$ref": "#/definitions/v1DeleteCategoryResponse"
             }
           },
           "default": {
@@ -35,23 +35,27 @@
         },
         "parameters": [
           {
-            "name": "id",
-            "in": "query",
-            "required": false,
-            "type": "string"
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1DeleteCategoryRequest"
+            }
           }
         ],
         "tags": [
           "CategoryService"
         ]
-      },
-      "delete": {
-        "operationId": "CategoryService_DeleteCategory",
+      }
+    },
+    "/gapi/category/v1/info": {
+      "get": {
+        "operationId": "CategoryService_GetCategory",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1DeleteCategoryResponse"
+              "$ref": "#/definitions/v1GetCategoryResponse"
             }
           },
           "default": {
@@ -102,8 +106,42 @@
         "tags": [
           "CategoryService"
         ]
-      },
-      "put": {
+      }
+    },
+    "/gapi/category/v1/list": {
+      "post": {
+        "operationId": "CategoryService_GetCategoryList",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GetCategoryListResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1GetCategoryListRequest"
+            }
+          }
+        ],
+        "tags": [
+          "CategoryService"
+        ]
+      }
+    },
+    "/gapi/category/v1/update": {
+      "post": {
         "operationId": "CategoryService_UpdateCategory",
         "responses": {
           "200": {
@@ -227,8 +265,33 @@
     "v1CreateCategoryResponse": {
       "type": "object"
     },
+    "v1DeleteCategoryRequest": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        }
+      },
+      "title": "DeleteCategory"
+    },
     "v1DeleteCategoryResponse": {
       "type": "object"
+    },
+    "v1GetCategoryListRequest": {
+      "type": "object",
+      "title": "GetCategory"
+    },
+    "v1GetCategoryListResponse": {
+      "type": "object",
+      "properties": {
+        "category": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1Category"
+          }
+        }
+      }
     },
     "v1GetCategoryResponse": {
       "type": "object",

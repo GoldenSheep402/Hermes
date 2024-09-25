@@ -18,16 +18,24 @@ service CategoryService {
     };
   }
 
+  rpc GetCategoryList(GetCategoryListRequest) returns (GetCategoryListResponse) {
+    option (google.api.http) = {
+      post: "/gapi/category/v1/list"
+      body: "*"
+    };
+  }
+
   rpc UpdateCategory(UpdateCategoryRequest) returns (UpdateCategoryResponse) {
     option (google.api.http) = {
-      put: "/gapi/category/v1/info"
+      post: "/gapi/category/v1/update"
       body: "*"
     };
   }
 
   rpc DeleteCategory(DeleteCategoryRequest) returns (DeleteCategoryResponse) {
     option (google.api.http) = {
-      delete: "/gapi/category/v1/info"
+      post: "/gapi/category/v1/delete"
+      body: "*"
     };
   }
 
@@ -56,6 +64,12 @@ message GetCategoryRequest {
 }
 message GetCategoryResponse {
   Category category = 1;
+}
+
+// GetCategory
+message GetCategoryListRequest {}
+message GetCategoryListResponse {
+  repeated Category category = 1;
 }
 
 // CreateCategory

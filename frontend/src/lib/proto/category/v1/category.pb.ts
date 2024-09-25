@@ -31,6 +31,13 @@ export type GetCategoryResponse = {
   category?: Category
 }
 
+export type GetCategoryListRequest = {
+}
+
+export type GetCategoryListResponse = {
+  category?: Category[]
+}
+
 export type CreateCategoryRequest = {
   category?: Category
 }
@@ -59,10 +66,13 @@ export class CategoryService {
   static GetCategory(req: GetCategoryRequest, initReq?: fm.InitReq): Promise<GetCategoryResponse> {
     return fm.fetchReq<GetCategoryRequest, GetCategoryResponse>(`/gapi/category/v1/info?${fm.renderURLSearchParams(req, [])}`, {...initReq, method: "GET"})
   }
+  static GetCategoryList(req: GetCategoryListRequest, initReq?: fm.InitReq): Promise<GetCategoryListResponse> {
+    return fm.fetchReq<GetCategoryListRequest, GetCategoryListResponse>(`/gapi/category/v1/list`, {...initReq, method: "POST", body: JSON.stringify(req, fm.replacer)})
+  }
   static UpdateCategory(req: UpdateCategoryRequest, initReq?: fm.InitReq): Promise<UpdateCategoryResponse> {
-    return fm.fetchReq<UpdateCategoryRequest, UpdateCategoryResponse>(`/gapi/category/v1/info`, {...initReq, method: "PUT", body: JSON.stringify(req, fm.replacer)})
+    return fm.fetchReq<UpdateCategoryRequest, UpdateCategoryResponse>(`/gapi/category/v1/update`, {...initReq, method: "POST", body: JSON.stringify(req, fm.replacer)})
   }
   static DeleteCategory(req: DeleteCategoryRequest, initReq?: fm.InitReq): Promise<DeleteCategoryResponse> {
-    return fm.fetchReq<DeleteCategoryRequest, DeleteCategoryResponse>(`/gapi/category/v1/info`, {...initReq, method: "DELETE"})
+    return fm.fetchReq<DeleteCategoryRequest, DeleteCategoryResponse>(`/gapi/category/v1/delete`, {...initReq, method: "POST", body: JSON.stringify(req, fm.replacer)})
   }
 }

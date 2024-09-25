@@ -7,6 +7,7 @@ import (
 	"github.com/GoldenSheep402/Hermes/conf"
 	"github.com/GoldenSheep402/Hermes/core/kernel"
 	"github.com/GoldenSheep402/Hermes/mod/jinx/healthcheck"
+	"github.com/GoldenSheep402/Hermes/pkg/cors"
 	"github.com/juanjiTech/jin"
 	sentryjin "github.com/juanjiTech/sentry-jin"
 	"github.com/opentracing/opentracing-go"
@@ -34,13 +35,13 @@ func (m *Mod) Name() string {
 
 func (m *Mod) Init(hub *kernel.Hub) error {
 	m.j = jin.New()
-	// corsConf := cors.DefaultConfig()
-	// corsConf.AllowAllOrigins = true
-	// corsConf.AllowCredentials = true
-	// corsConf.AddAllowHeaders("Authorization")
+	corsConf := cors.DefaultConfig()
+	corsConf.AllowAllOrigins = true
+	corsConf.AllowCredentials = true
+	corsConf.AddAllowHeaders("Authorization")
 	m.j.Use(
 		jin.Recovery(),
-		// cors.New(corsConf),
+		cors.New(corsConf),
 	)
 	if conf.Get().SentryDsn != "" {
 		m.j.Use(sentryjin.New(sentryjin.Options{Repanic: true}))

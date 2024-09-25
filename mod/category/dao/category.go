@@ -77,6 +77,17 @@ func (c *category) Get(ctx context.Context, categoryId string) (*model.Category,
 	return category, categoryMetas, nil
 }
 
+func (c *category) GetList(ctx context.Context) ([]model.Category, error) {
+	_ctx := c.SetTxToCtx(ctx, c.DB())
+	db := c.GetTxFromCtx(_ctx)
+	var categories []model.Category
+	err := db.Model(&model.Category{}).Find(&categories).Error
+	if err != nil {
+		return nil, status.Error(codes.Internal, "Internal error")
+	}
+	return categories, nil
+}
+
 // Update updates a category and its associated metadata in the database within a transaction.
 // It ensures data consistency by rolling back the transaction if any operation fails.
 // Returns an error if the category is not found, or if there's an issue with the database operation.

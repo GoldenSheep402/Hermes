@@ -111,6 +111,31 @@ func (s *S) GetCategory(ctx context.Context, req *categoryV1.GetCategoryRequest)
 	}, nil
 }
 
+func (s *S) GetCategoryList(ctx context.Context, req *categoryV1.GetCategoryListRequest) (*categoryV1.GetCategoryListResponse, error) {
+	UID, ok := ctx.Value(ctxKey.UID).(string)
+	if !ok || UID == "" {
+		return nil, status.Error(codes.Unauthenticated, "Unauthenticated")
+	}
+
+	catgories, err := categoryDao.Category.GetList(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var resp categoryV1.GetCategoryListResponse
+	categoryList := make([]*categoryV1.Category, len(catgories))
+	for i, category := range catgories {
+		categoryList[i] = &categoryV1.Category{
+			Id:          category.ID,
+			Name:        category.Name,
+			Description: category.Description,
+		}
+	}
+
+	resp.Category = categoryList
+	return &resp, nil
+}
+
 func (s *S) UpdateCategory(ctx context.Context, req *categoryV1.UpdateCategoryRequest) (*categoryV1.UpdateCategoryResponse, error) {
 	UID, ok := ctx.Value(ctxKey.UID).(string)
 	if !ok || UID == "" {

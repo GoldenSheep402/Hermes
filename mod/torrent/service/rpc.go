@@ -62,7 +62,7 @@ func (s *S) CreateTorrentV1(ctx context.Context, req *torrentV1.CreateTorrentV1R
 	}
 	// TODO: rbac
 
-	_, err := userDao.User.GetInfo(ctx, UID)
+	user, err := userDao.User.GetInfo(ctx, UID)
 	if err != nil {
 		return nil, err
 	}
@@ -90,7 +90,7 @@ func (s *S) CreateTorrentV1(ctx context.Context, req *torrentV1.CreateTorrentV1R
 
 		InfoHash:     fmt.Sprintf("%x", sha1.Sum(marshaledInfo)),
 		CreatorID:    UID,
-		Announce:     trackerAddress,
+		Announce:     trackerAddress + "/tracker/announce/key/" + user.Key,
 		CreatedBy:    bencodeTorrent.CreatedBy,
 		CreationDate: &now,
 		Name:         bencodeTorrent.Info.Name,

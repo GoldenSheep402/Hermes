@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"encoding/binary"
 	"fmt"
 	"github.com/GoldenSheep402/Hermes/mod/trackerV1/dao"
@@ -9,7 +10,6 @@ import (
 	"github.com/zeebo/bencode"
 	"net"
 	"net/http"
-	"net/url"
 	"strconv"
 	"time"
 )
@@ -22,7 +22,7 @@ func Registry(jinE *jin.Engine) {
 }
 
 func AnnounceWithKey(c *jin.Context) {
-	ctx := c.Request.Context()
+	ctx := context.Background()
 
 	// TODO: implement
 	// key := c.Params("key")
@@ -64,7 +64,7 @@ func AnnounceWithKey(c *jin.Context) {
 	}
 	req := &AnnounceRequest{}
 
-	infoHash := c.Request.URL.Query().Get("info_hash")
+	infoHashDecode := c.Request.URL.Query().Get("info_hash")
 	req.PeerID = c.Request.URL.Query().Get("peer_id")
 	portStr := c.Request.URL.Query().Get("port")
 	uploadedStr := c.Request.URL.Query().Get("uploaded")
@@ -81,18 +81,12 @@ func AnnounceWithKey(c *jin.Context) {
 	supportCryptoStr := c.Request.URL.Query().Get("supportcrypto")
 	redundantStr := c.Request.URL.Query().Get("redundant")
 
-	var err error
-	decodedHash, err := url.QueryUnescape(infoHash)
-	if err != nil {
-		c.Writer.WriteString("info_hash decode error")
-		return
-	}
-
-	infoHashBytes := []byte(decodedHash)
+	infoHashBytes := []byte(infoHashDecode)
 	hexString := fmt.Sprintf("%x", infoHashBytes)
 
 	req.InfoHash = hexString
 
+	var err error
 	if req.Port, err = strconv.Atoi(portStr); err != nil {
 		c.Writer.WriteString("Invalid port")
 		return

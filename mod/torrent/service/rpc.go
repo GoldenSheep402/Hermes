@@ -141,15 +141,15 @@ func (s *S) CreateTorrentV1(ctx context.Context, req *torrentV1.CreateTorrentV1R
 		torrent.Name = req.Name
 	}
 
-	if bencodeTorrent.Info.NameUTF8 != nil {
-		if *bencodeTorrent.Info.NameUTF8 == "" {
-			torrent.NameUTF8 = torrent.Name
-		} else {
-			torrent.NameUTF8 = *bencodeTorrent.Info.NameUTF8
-		}
-	} else {
-		torrent.NameUTF8 = torrent.Name
-	}
+	//if bencodeTorrent.Info.NameUTF8 != nil {
+	//	if *bencodeTorrent.Info.NameUTF8 == "" {
+	//		torrent.NameUTF8 = torrent.Name
+	//	} else {
+	//		torrent.NameUTF8 = *bencodeTorrent.Info.NameUTF8
+	//	}
+	//} else {
+	//	torrent.NameUTF8 = torrent.Name
+	//}
 
 	// If the torrent is a single file torrent
 	if bencodeTorrent.Info.Files == nil {
@@ -179,14 +179,8 @@ func (s *S) CreateTorrentV1(ctx context.Context, req *torrentV1.CreateTorrentV1R
 			}
 
 			pathUTF8 := ""
-			if torrent.NameUTF8 == "" {
-				if bencodeTorrent.Info.NameUTF8 == nil {
-					pathUTF8 = strings.Join(fileInfo.Path, "/")
-				} else {
-					pathUTF8 = strings.Join([]string{*bencodeTorrent.Info.NameUTF8}, "/")
-				}
-			} else {
-				pathUTF8 = strings.Join(fileInfo.PathUTF8, "/")
+			if bencodeTorrent.Info.NameUTF8 != nil {
+				pathUTF8 = strings.Join([]string{*bencodeTorrent.Info.NameUTF8}, "/")
 			}
 			files = append(files, torrentModel.File{
 				TorrentID: torrent.InfoHash,
@@ -246,8 +240,15 @@ func (s *S) DownloadTorrentV1(ctx context.Context, req *torrentV1.DownloadTorren
 				}
 				files := make([]torrentModel.FileInfo, len(torrentFile))
 				for i, file := range torrentFile {
-					path := strings.Split(file.Path, "/")
-					pathUTF8 := strings.Split(file.PathUTF8, "/")
+					var path []string
+					if file.Path != "" {
+						path = strings.Split(file.Path, "/")
+					}
+
+					var pathUTF8 []string
+					if file.PathUTF8 != "" {
+						pathUTF8 = strings.Split(file.PathUTF8, "/")
+					}
 
 					files[i] = torrentModel.FileInfo{
 						Length:   file.Length,
@@ -258,7 +259,6 @@ func (s *S) DownloadTorrentV1(ctx context.Context, req *torrentV1.DownloadTorren
 				return &files
 			}(),
 			Name:        torrent.Name,
-			NameUTF8:    &torrent.NameUTF8,
 			Length:      torrent.Length,
 			Md5sum:      torrent.Md5sum,
 			Pieces:      string(torrent.Pieces),
@@ -276,6 +276,16 @@ func (s *S) DownloadTorrentV1(ctx context.Context, req *torrentV1.DownloadTorren
 			Source: torrent.Source,
 		},
 	}
+
+	if torrent.NameUTF8 != "" {
+		_torrentFull.Info.NameUTF8 = &torrent.NameUTF8
+	}
+
+	marshaledInfo, err := bencode.Marshal(_torrentFull.Info)
+	if err != nil {
+		return nil, err
+	}
+	hash := fmt.Sprintf("%x", sha1.Sum(marshaledInfo))
 
 	var buf bytes.Buffer
 	encoder := bencode.NewEncoder(&buf)

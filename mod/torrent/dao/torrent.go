@@ -62,10 +62,13 @@ func (t *torrent) Create(ctx context.Context, torrentBase *model.Torrent, files 
 			return "", status.Error(codes.Internal, "Internal error")
 		}
 	} else {
-		if err := tx.Model(&model.TorrentMetadata{}).Create(metas).Error; err != nil {
-			tx.Rollback()
-			return "", status.Error(codes.Internal, "Internal error")
+		for i := range metas {
+			if err := tx.Model(&model.TorrentMetadata{}).Create(i).Error; err != nil {
+				tx.Rollback()
+				return "", status.Error(codes.Internal, "Internal error")
+			}
 		}
+
 	}
 
 	if err := tx.Commit().Error; err != nil {
@@ -83,15 +86,15 @@ func (t *torrent) Get(ctx context.Context, torrentID string) (*model.Torrent, []
 	}
 
 	var files []model.File
-	if err := db.Model(&model.File{}).Where("torrent_id = ?", torrentID).Find(&files).Error; err != nil {
+	if err := db.Model(&model.File{}).Where("torrent_id = ?", torrentID).Order("id ASC").Find(&files).Error; err != nil {
 		return nil, nil, status.Error(codes.Internal, "Internal error")
 	}
 
-	for i := range files {
-		if files[i].PathUTF8 == "" {
-			files[i].PathUTF8 = files[i].Path
-		}
-	}
+	//for i := range files {
+	//	if files[i].PathUTF8 == "" {
+	//		files[i].PathUTF8 = files[i].Path
+	//	}
+	//}
 
 	return &torrent, files, nil
 }

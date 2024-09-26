@@ -54,11 +54,10 @@
 import { ref, reactive } from 'vue';
 import useLoading from '@/hooks/loading';
 import {AuthService} from "@/services/grpc.ts";
-import {RegisterRequest} from "@/lib/proto/gen/proto/auth/v1/auth_service.pb.ts";
 import {Message} from "@arco-design/web-vue";
 import { useRouter } from 'vue-router';
+import {RegisterWithEmailRequest} from "@/lib/proto/auth/v1/auth.pb.ts";
 const errorMessage = ref('');
-const { loading, setLoading } = useLoading();
 
 const router = useRouter();
 

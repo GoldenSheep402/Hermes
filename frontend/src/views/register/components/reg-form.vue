@@ -65,18 +65,18 @@ const router = useRouter();
 
 const userInfo = reactive({
   email: '',
+  username: '',
   password: '',
 });
 
 
 const reg = () => {
-  console.log({userInfo})
-  const req = ref<RegisterRequest>({
+  const req = ref<RegisterWithEmailRequest>({
     email: userInfo.email,
-    name: userInfo.email,
+    username: userInfo.email,
     password: userInfo.password,
   });
-  AuthService.Register(req.value).then((res) => {
+  AuthService.RegisterWithEmail(req.value).then((res) => {
     Message.success('注册成功');
   }).catch((err) => {
     Message.error(err.message);

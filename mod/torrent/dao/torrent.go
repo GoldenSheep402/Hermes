@@ -156,3 +156,26 @@ func (t *torrent) GetTorrentMetadata(ctx context.Context, torrentID string) ([]c
 
 	return result, nil
 }
+
+func (t *torrent) GetTorrentList(ctx context.Context, categoryID string, torrentId string, limit int) ([]model.Torrent, error) {
+	db := t.GetTxFromCtx(ctx).WithContext(ctx)
+	var torrents []model.Torrent
+	if categoryID != "" {
+		db = db.Where("category_id = ?", categoryID)
+	}
+	if torrentId != "" {
+		db = db.Where("id < ?", torrentId)
+	}
+	if limit <= 0 || limit > 1000 {
+		db = db.Limit(1000)
+	} else {
+		db = db.Limit(limit)
+	}
+
+	db = db.Order("created_at DESC")
+	if err := db.Find(&torrents).Error; err != nil {
+		return nil, status.Error(codes.Internal, "Internal error")
+	}
+
+	return torrents, nil
+}

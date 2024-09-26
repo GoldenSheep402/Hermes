@@ -62,14 +62,14 @@ export type DownloadTorrentV1Request = {
 }
 
 export type DownloadTorrentV1Response = {
-  data?: Uint8Array
+  data?: string
 }
 
 export class TorrentService {
   static GetTorrentV1(req: GetTorrentV1Request, initReq?: fm.InitReq): Promise<GetTorrentV1Response> {
     return fm.fetchReq<GetTorrentV1Request, GetTorrentV1Response>(`/gapi/torrent/v1/info/v1`, {...initReq, method: "POST", body: JSON.stringify(req, fm.replacer)})
   }
-  static GetTorrentV1ListList(req: GetTorrentV1ListRequest, initReq?: fm.InitReq): Promise<GetTorrentV1ListResponse> {
+  static GetTorrentV1List(req: GetTorrentV1ListRequest, initReq?: fm.InitReq): Promise<GetTorrentV1ListResponse> {
     return fm.fetchReq<GetTorrentV1ListRequest, GetTorrentV1ListResponse>(`/gapi/torrent/v1/list/v1`, {...initReq, method: "POST", body: JSON.stringify(req, fm.replacer)})
   }
   static CreateTorrentV1(req: CreateTorrentV1Request, initReq?: fm.InitReq): Promise<CreateTorrentV1Response> {

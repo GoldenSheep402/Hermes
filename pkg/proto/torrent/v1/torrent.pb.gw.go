@@ -57,7 +57,7 @@ func local_request_TorrentService_GetTorrentV1_0(ctx context.Context, marshaler 
 
 }
 
-func request_TorrentService_GetTorrentV1ListList_0(ctx context.Context, marshaler runtime.Marshaler, client TorrentServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_TorrentService_GetTorrentV1List_0(ctx context.Context, marshaler runtime.Marshaler, client TorrentServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq GetTorrentV1ListRequest
 	var metadata runtime.ServerMetadata
 
@@ -65,12 +65,12 @@ func request_TorrentService_GetTorrentV1ListList_0(ctx context.Context, marshale
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.GetTorrentV1ListList(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.GetTorrentV1List(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
-func local_request_TorrentService_GetTorrentV1ListList_0(ctx context.Context, marshaler runtime.Marshaler, server TorrentServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func local_request_TorrentService_GetTorrentV1List_0(ctx context.Context, marshaler runtime.Marshaler, server TorrentServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq GetTorrentV1ListRequest
 	var metadata runtime.ServerMetadata
 
@@ -78,7 +78,7 @@ func local_request_TorrentService_GetTorrentV1ListList_0(ctx context.Context, ma
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := server.GetTorrentV1ListList(ctx, &protoReq)
+	msg, err := server.GetTorrentV1List(ctx, &protoReq)
 	return msg, metadata, err
 
 }
@@ -167,7 +167,7 @@ func RegisterTorrentServiceHandlerServer(ctx context.Context, mux *runtime.Serve
 
 	})
 
-	mux.Handle("POST", pattern_TorrentService_GetTorrentV1ListList_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("POST", pattern_TorrentService_GetTorrentV1List_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
@@ -175,12 +175,12 @@ func RegisterTorrentServiceHandlerServer(ctx context.Context, mux *runtime.Serve
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/torrent.v1.TorrentService/GetTorrentV1ListList", runtime.WithHTTPPathPattern("/gapi/torrent/v1/list/v1"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/torrent.v1.TorrentService/GetTorrentV1List", runtime.WithHTTPPathPattern("/gapi/torrent/v1/list/v1"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_TorrentService_GetTorrentV1ListList_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_TorrentService_GetTorrentV1List_0(annotatedContext, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
@@ -188,7 +188,7 @@ func RegisterTorrentServiceHandlerServer(ctx context.Context, mux *runtime.Serve
 			return
 		}
 
-		forward_TorrentService_GetTorrentV1ListList_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_TorrentService_GetTorrentV1List_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -305,25 +305,25 @@ func RegisterTorrentServiceHandlerClient(ctx context.Context, mux *runtime.Serve
 
 	})
 
-	mux.Handle("POST", pattern_TorrentService_GetTorrentV1ListList_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("POST", pattern_TorrentService_GetTorrentV1List_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/torrent.v1.TorrentService/GetTorrentV1ListList", runtime.WithHTTPPathPattern("/gapi/torrent/v1/list/v1"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/torrent.v1.TorrentService/GetTorrentV1List", runtime.WithHTTPPathPattern("/gapi/torrent/v1/list/v1"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_TorrentService_GetTorrentV1ListList_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_TorrentService_GetTorrentV1List_0(annotatedContext, inboundMarshaler, client, req, pathParams)
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
 			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_TorrentService_GetTorrentV1ListList_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_TorrentService_GetTorrentV1List_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -377,7 +377,7 @@ func RegisterTorrentServiceHandlerClient(ctx context.Context, mux *runtime.Serve
 var (
 	pattern_TorrentService_GetTorrentV1_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 2}, []string{"gapi", "torrent", "v1", "info"}, ""))
 
-	pattern_TorrentService_GetTorrentV1ListList_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 2}, []string{"gapi", "torrent", "v1", "list"}, ""))
+	pattern_TorrentService_GetTorrentV1List_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 2}, []string{"gapi", "torrent", "v1", "list"}, ""))
 
 	pattern_TorrentService_CreateTorrentV1_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 2}, []string{"gapi", "torrent", "v1", "create"}, ""))
 
@@ -387,7 +387,7 @@ var (
 var (
 	forward_TorrentService_GetTorrentV1_0 = runtime.ForwardResponseMessage
 
-	forward_TorrentService_GetTorrentV1ListList_0 = runtime.ForwardResponseMessage
+	forward_TorrentService_GetTorrentV1List_0 = runtime.ForwardResponseMessage
 
 	forward_TorrentService_CreateTorrentV1_0 = runtime.ForwardResponseMessage
 

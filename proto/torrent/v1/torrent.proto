@@ -22,7 +22,7 @@ service TorrentService{
     };
   }
 
-  rpc GetTorrentV1ListList(GetTorrentV1ListRequest) returns (GetTorrentV1ListResponse) {
+  rpc GetTorrentV1List(GetTorrentV1ListRequest) returns (GetTorrentV1ListResponse) {
     option (google.api.http) = {
       post: "/gapi/torrent/v1/list/v1"
       body: "*"
@@ -109,5 +109,5 @@ message DownloadTorrentV1Request{
   string id = 1;
 }
 message DownloadTorrentV1Response{
-  bytes data = 1;
+  string data = 1;
 }

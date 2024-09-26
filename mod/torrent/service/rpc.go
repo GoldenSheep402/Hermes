@@ -4,8 +4,10 @@ import (
 	"bytes"
 	"context"
 	"crypto/sha1"
+	"encoding/base64"
 	"fmt"
 	"github.com/GoldenSheep402/Hermes/conf"
+	categoryDao "github.com/GoldenSheep402/Hermes/mod/category/dao"
 	torrentDao "github.com/GoldenSheep402/Hermes/mod/torrent/dao"
 	torrentModel "github.com/GoldenSheep402/Hermes/mod/torrent/model"
 	userDao "github.com/GoldenSheep402/Hermes/mod/user/dao"
@@ -51,6 +53,36 @@ func (s *S) GetTorrentV1(ctx context.Context, req *torrentV1.GetTorrentV1Request
 			Type:        _meta.Type,
 			Value:       _meta.Value,
 		})
+	}
+
+	return &resp, nil
+}
+
+func (s *S) GetTorrentV1List(ctx context.Context, req *torrentV1.GetTorrentV1ListRequest) (*torrentV1.GetTorrentV1ListResponse, error) {
+	UID, ok := ctx.Value(ctxKey.UID).(string)
+	if !ok || UID == "" {
+		return nil, status.Error(codes.Unauthenticated, "Unauthenticated")
+	}
+
+	// TODO: rbac
+	torrents, err := torrentDao.Torrent.GetTorrentList(ctx, req.CategoryId, req.Id, int(req.Limit))
+	if err != nil {
+		return nil, err
+	}
+
+	var resp torrentV1.GetTorrentV1ListResponse
+	for _, _torrent := range torrents {
+		resp.Torrents = append(resp.Torrents, &torrentV1.TorrentBasic{
+			Id:   _torrent.ID,
+			Name: _torrent.Name,
+			// Description:  _torrent.Description,
+			CategoryId: _torrent.CategoryID,
+		})
+		category, _, err := categoryDao.Category.Get(ctx, _torrent.CategoryID)
+		if err != nil {
+			return nil, err
+		}
+		resp.Torrents[len(resp.Torrents)-1].CategoryName = category.Name
 	}
 
 	return &resp, nil
@@ -265,7 +297,9 @@ func (s *S) DownloadTorrentV1(ctx context.Context, req *torrentV1.DownloadTorren
 		return nil, fmt.Errorf("failed to write to file: %v", err)
 	}
 
+	base64Data := base64.StdEncoding.EncodeToString(buf.Bytes())
+
 	return &torrentV1.DownloadTorrentV1Response{
-		Data: buf.Bytes(),
+		Data: base64Data,
 	}, nil
 }

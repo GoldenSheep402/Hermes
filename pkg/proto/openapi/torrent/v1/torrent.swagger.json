@@ -116,7 +116,7 @@
     },
     "/gapi/torrent/v1/list/v1": {
       "post": {
-        "operationId": "TorrentService_GetTorrentV1ListList",
+        "operationId": "TorrentService_GetTorrentV1List",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -219,8 +219,7 @@
       "type": "object",
       "properties": {
         "data": {
-          "type": "string",
-          "format": "byte"
+          "type": "string"
         }
       }
     },

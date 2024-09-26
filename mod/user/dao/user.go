@@ -5,6 +5,7 @@ import (
 	"errors"
 	"github.com/GoldenSheep402/Hermes/mod/user/model"
 	"github.com/GoldenSheep402/Hermes/pkg/stdao"
+	"github.com/oklog/ulid/v2"
 	"gorm.io/gorm"
 )
 
@@ -30,6 +31,7 @@ func (u *user) NewUserWithBind(ctx context.Context, user *model.User, bind *mode
 		}
 	}()
 
+	user.ID = ulid.Make().String()
 	if err := tx.Create(user).Error; err != nil {
 		tx.Rollback()
 		return nil, err

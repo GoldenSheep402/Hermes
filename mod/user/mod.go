@@ -13,6 +13,7 @@ import (
 	"github.com/GoldenSheep402/Hermes/mod/user/service"
 	"github.com/GoldenSheep402/Hermes/pkg/colorful"
 	userV1 "github.com/GoldenSheep402/Hermes/pkg/proto/user/v1"
+	"github.com/GoldenSheep402/Hermes/pkg/stdao"
 	"github.com/GoldenSheep402/Hermes/pkg/utils/crypto"
 	"github.com/oklog/ulid/v2"
 	"github.com/redis/go-redis/v9"
@@ -152,6 +153,7 @@ func (m *Mod) Start(h *kernel.Hub) error {
 
 				// Create the admin user
 				adminUser = model.User{
+					Model:    stdao.Model{ID: ulid.Make().String()},
 					Name:     m.config.AdminName,
 					IsAdmin:  true,
 					Salt:     salt,

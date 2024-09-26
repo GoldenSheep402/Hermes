@@ -59,6 +59,7 @@ const categoryFullInfo = ref<CategoryBase[]>([]);
 const torrentName = ref("");
 
 const sendFile = () => {
+  console.log("sned")
   const req = ref<CreateTorrentV1Request>({});
   req.value.name = torrentName.value;
   req.value.categoryId = checkedID.value;
@@ -74,7 +75,7 @@ const sendFile = () => {
           req.value.metadata!!.push({
             id: categoryFullInfo.value[i].metaData!![j].id,
             categoryId: checkedID.value,
-            value: categoryFullInfo.value[i].metaData!![j].value,
+            value: categoryFullInfo.value[i].metaData!![j].value?.toString(),
           });
         }
       }

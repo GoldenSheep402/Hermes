@@ -11,7 +11,7 @@ import { UserState } from './types';
 import useAppStore from '../app';
 import {AuthService, UserService} from "@/services/grpc.ts";
 
-const useUserStore = defineStore('cert', {
+const useUserStore = defineStore('hermes', {
   state: (): UserState => ({
     token:  undefined,
     _refreshToken: undefined,

@@ -28,7 +28,7 @@ function createProxy<T>(service: T): T {
 						};
 						const token = useUserStore().token;
 						if (token){
-							prefix.headers["Authorization"] = `Bearer ${token}`
+							prefix.headers["Authorization"] = `bearer ${token}`
 						}else {
 							delete prefix.headers["Authorization"]
 						}

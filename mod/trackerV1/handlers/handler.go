@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"context"
-	"encoding/binary"
 	"fmt"
 	"github.com/GoldenSheep402/Hermes/mod/trackerV1/dao"
 	"github.com/GoldenSheep402/Hermes/mod/trackerV1/model"
@@ -243,6 +242,7 @@ func AnnounceWithKey(c *jin.Context) {
 	peers, err := dao.Peer.GetPeers(ctx, hexString, req.NumWant)
 	var completed, incompleted int
 	for _, peer := range peers {
+		fmt.Printf("Peer: %v\n", peer)
 		if peer.Status == 0 {
 			completed++
 		}
@@ -254,41 +254,43 @@ func AnnounceWithKey(c *jin.Context) {
 		Incomplete: incompleted,
 	}
 
-	if req.Compact == 1 {
-		var peersData []byte
-		for _, peer := range peers {
-			ip := net.ParseIP(peer.IP).To4()
-			if ip == nil {
-				continue
-			}
-			portBytes := make([]byte, 2)
-			binary.BigEndian.PutUint16(portBytes, uint16(peer.Port))
-			peersData = append(peersData, ip...)
-			peersData = append(peersData, portBytes...)
+	//if req.Compact == 1 {
+	//	var peersData []byte
+	//	for _, peer := range peers {
+	//		ip := net.ParseIP(peer.IP).To4()
+	//		if ip == nil {
+	//			continue
+	//		}
+	//		portBytes := make([]byte, 2)
+	//		binary.BigEndian.PutUint16(portBytes, uint16(peer.Port))
+	//		peersData = append(peersData, ip...)
+	//		peersData = append(peersData, portBytes...)
+	//	}
+	//	responseStruct.Peers = peersData
+	//} else {
+	var peersList []Peer
+	for _, peer := range peers {
+		if req.NoPeerID == 1 {
+			peer.PeerID = ""
 		}
-		responseStruct.Peers = peersData
-	} else {
-		var peersList []Peer
-		for _, peer := range peers {
-			if req.NoPeerID == 1 {
-				peer.PeerID = ""
-			}
-			var _peer = &Peer{
-				PeerID: peer.PeerID,
-				IP:     peer.IP,
-				Port:   peer.Port,
-			}
+		var _peer = &Peer{
+			PeerID: peer.PeerID,
+			IP:     peer.IP,
+			Port:   peer.Port,
+		}
 
-			peersList = append(peersList, *_peer)
-		}
-		responseStruct.Peers = peersList
+		peersList = append(peersList, *_peer)
 	}
+	responseStruct.Peers = peersList
+	//}
 
 	encodedResp, err := bencode.EncodeBytes(responseStruct)
 	if err != nil {
 		c.Writer.WriteString("Failed to encode response")
 		return
 	}
+
+	fmt.Printf("Response: %v\n", responseStruct)
 
 	c.Writer.Header().Set("Content-Type", "text/plain")
 	c.Writer.WriteHeader(http.StatusOK)

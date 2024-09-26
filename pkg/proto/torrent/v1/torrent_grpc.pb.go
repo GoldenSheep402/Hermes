@@ -19,9 +19,10 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	TorrentService_GetTorrentV1_FullMethodName      = "/torrent.v1.TorrentService/GetTorrentV1"
-	TorrentService_CreateTorrentV1_FullMethodName   = "/torrent.v1.TorrentService/CreateTorrentV1"
-	TorrentService_DownloadTorrentV1_FullMethodName = "/torrent.v1.TorrentService/DownloadTorrentV1"
+	TorrentService_GetTorrentV1_FullMethodName         = "/torrent.v1.TorrentService/GetTorrentV1"
+	TorrentService_GetTorrentV1ListList_FullMethodName = "/torrent.v1.TorrentService/GetTorrentV1ListList"
+	TorrentService_CreateTorrentV1_FullMethodName      = "/torrent.v1.TorrentService/CreateTorrentV1"
+	TorrentService_DownloadTorrentV1_FullMethodName    = "/torrent.v1.TorrentService/DownloadTorrentV1"
 )
 
 // TorrentServiceClient is the client API for TorrentService service.
@@ -36,6 +37,7 @@ type TorrentServiceClient interface {
 	// @Return GetTorrentV1Response
 	// @Http GET /gapi/torrent/v1/info
 	GetTorrentV1(ctx context.Context, in *GetTorrentV1Request, opts ...grpc.CallOption) (*GetTorrentV1Response, error)
+	GetTorrentV1ListList(ctx context.Context, in *GetTorrentV1ListRequest, opts ...grpc.CallOption) (*GetTorrentV1ListResponse, error)
 	// CreateTorrentV1
 	// @Description
 	// Create torrent, return torrent id
@@ -59,6 +61,16 @@ func (c *torrentServiceClient) GetTorrentV1(ctx context.Context, in *GetTorrentV
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(GetTorrentV1Response)
 	err := c.cc.Invoke(ctx, TorrentService_GetTorrentV1_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *torrentServiceClient) GetTorrentV1ListList(ctx context.Context, in *GetTorrentV1ListRequest, opts ...grpc.CallOption) (*GetTorrentV1ListResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetTorrentV1ListResponse)
+	err := c.cc.Invoke(ctx, TorrentService_GetTorrentV1ListList_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -97,6 +109,7 @@ type TorrentServiceServer interface {
 	// @Return GetTorrentV1Response
 	// @Http GET /gapi/torrent/v1/info
 	GetTorrentV1(context.Context, *GetTorrentV1Request) (*GetTorrentV1Response, error)
+	GetTorrentV1ListList(context.Context, *GetTorrentV1ListRequest) (*GetTorrentV1ListResponse, error)
 	// CreateTorrentV1
 	// @Description
 	// Create torrent, return torrent id
@@ -118,6 +131,9 @@ type UnimplementedTorrentServiceServer struct{}
 
 func (UnimplementedTorrentServiceServer) GetTorrentV1(context.Context, *GetTorrentV1Request) (*GetTorrentV1Response, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetTorrentV1 not implemented")
+}
+func (UnimplementedTorrentServiceServer) GetTorrentV1ListList(context.Context, *GetTorrentV1ListRequest) (*GetTorrentV1ListResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetTorrentV1ListList not implemented")
 }
 func (UnimplementedTorrentServiceServer) CreateTorrentV1(context.Context, *CreateTorrentV1Request) (*CreateTorrentV1Response, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateTorrentV1 not implemented")
@@ -160,6 +176,24 @@ func _TorrentService_GetTorrentV1_Handler(srv interface{}, ctx context.Context, 
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(TorrentServiceServer).GetTorrentV1(ctx, req.(*GetTorrentV1Request))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _TorrentService_GetTorrentV1ListList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetTorrentV1ListRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TorrentServiceServer).GetTorrentV1ListList(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: TorrentService_GetTorrentV1ListList_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TorrentServiceServer).GetTorrentV1ListList(ctx, req.(*GetTorrentV1ListRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -210,6 +244,10 @@ var TorrentService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetTorrentV1",
 			Handler:    _TorrentService_GetTorrentV1_Handler,
+		},
+		{
+			MethodName: "GetTorrentV1ListList",
+			Handler:    _TorrentService_GetTorrentV1ListList_Handler,
 		},
 		{
 			MethodName: "CreateTorrentV1",

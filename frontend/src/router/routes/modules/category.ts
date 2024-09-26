@@ -9,7 +9,7 @@ const CATEGORY: AppRouteRecordRaw = {
 		label: '类别',
 		requiresAuth: true,
 		icon: 'icon-apps',
-		order: 1,
+		order: 2,
 	},
 	children: [
 		{

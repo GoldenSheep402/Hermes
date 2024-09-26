@@ -22,6 +22,13 @@ service TorrentService{
     };
   }
 
+  rpc GetTorrentV1ListList(GetTorrentV1ListRequest) returns (GetTorrentV1ListResponse) {
+    option (google.api.http) = {
+      post: "/gapi/torrent/v1/list/v1"
+      body: "*"
+    };
+  }
+
     /*
      CreateTorrentV1
      @Description
@@ -67,6 +74,23 @@ message GetTorrentV1Request {
 }
 message GetTorrentV1Response {
   repeated TorrentMetaData metadata = 1;
+}
+
+// GetTorrentV1List
+message GetTorrentV1ListRequest {
+  string categoryId = 1;
+  string id = 2;
+  int64 limit = 11;
+}
+message GetTorrentV1ListResponse {
+  repeated TorrentBasic torrents = 1;
+}
+message TorrentBasic {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+  string categoryId = 4;
+  string categoryName = 5;
 }
 
 // CreateTorrentV1

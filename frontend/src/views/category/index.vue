@@ -13,6 +13,7 @@ interface Category {
 interface CategoryMetadata {
   order: number;
   type: string;
+  key: string;
   description: string;
   DefaultValue: string;
 }
@@ -41,6 +42,7 @@ function handleAdd() {
   categoryMetadatas.value.push({
     order: categoryMetadatas.value.length + 1,
     type: "string",
+    key: "默认key",
     description: "类别名称",
     DefaultValue: "默认值",
   });
@@ -59,14 +61,13 @@ function createCategory() {
 
   for (let i = 0; i < categoryMetadatas.value.length; i++) {
     req.value.category!!.metaData!!.push({
+      key: categoryMetadatas.value[i].key,
       order: categoryMetadatas.value[i].order,
       type: categoryMetadatas.value[i].type,
       description: categoryMetadatas.value[i].description,
       defaultValue: categoryMetadatas.value[i].DefaultValue,
     });
   }
-
-  console.log(req);
 
   CategoryService.CreateCategory(req.value).then((res) => {
     handleNotification("success", "成功", "添加类别成功");
@@ -88,6 +89,7 @@ const categoryMetadatas = ref<CategoryMetadata[]>([]);
 categoryMetadatas.value.push({
   order: 1,
   type: "string",
+  key: "默认key",
   description: "类别名称",
   DefaultValue: "",
 });
@@ -177,6 +179,9 @@ onMounted(() => {
                       <a-radio value="number">数字</a-radio>
                       <a-radio value="switch">开关</a-radio>
                     </a-radio-group>
+                  </a-form-item>
+                  <a-form-item field="key" label="键">
+                    <a-input v-model="meta.key"></a-input>
                   </a-form-item>
                   <a-form-item field="description" label="描述">
                     <a-input v-model="meta.description"/>

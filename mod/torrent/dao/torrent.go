@@ -87,6 +87,12 @@ func (t *torrent) Get(ctx context.Context, torrentID string) (*model.Torrent, []
 		return nil, nil, status.Error(codes.Internal, "Internal error")
 	}
 
+	for i := range files {
+		if files[i].PathUTF8 == "" {
+			files[i].PathUTF8 = files[i].Path
+		}
+	}
+
 	return &torrent, files, nil
 }
 

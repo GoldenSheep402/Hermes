@@ -9,7 +9,7 @@ const USERINFO: AppRouteRecordRaw = {
 		label: '用户',
 		requiresAuth: true,
 		icon: 'icon-command',
-		order: 3,
+		order: 10,
 		hideInMenu: true,
 	},
 	children: [

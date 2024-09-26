@@ -9,7 +9,7 @@ const TORRENT: AppRouteRecordRaw = {
 		label: '种子',
 		requiresAuth: true,
 		icon: 'icon-relation',
-		order: 4,
+		order: 3,
 	},
 	children: [
 		{

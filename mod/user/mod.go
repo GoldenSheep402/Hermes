@@ -14,6 +14,7 @@ import (
 	"github.com/GoldenSheep402/Hermes/pkg/colorful"
 	userV1 "github.com/GoldenSheep402/Hermes/pkg/proto/user/v1"
 	"github.com/GoldenSheep402/Hermes/pkg/utils/crypto"
+	"github.com/oklog/ulid/v2"
 	"github.com/redis/go-redis/v9"
 	"google.golang.org/grpc"
 	"gorm.io/gorm"
@@ -155,6 +156,7 @@ func (m *Mod) Start(h *kernel.Hub) error {
 					IsAdmin:  true,
 					Salt:     salt,
 					Password: crypto.Md5CryptoWithSalt(m.config.AdminPassword, salt),
+					Key:      ulid.Make().String(),
 				}
 				if err := tx.Create(&adminUser).Error; err != nil {
 					return err

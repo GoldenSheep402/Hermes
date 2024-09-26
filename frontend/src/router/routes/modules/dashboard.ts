@@ -9,7 +9,7 @@ const DASHBOARD: AppRouteRecordRaw = {
     label: '仪表盘',
     requiresAuth: true,
     icon: 'icon-dashboard',
-    order: 0,
+    order: 1,
   },
   children: [
     {

@@ -28,6 +28,24 @@ export type GetTorrentV1Response = {
   metadata?: TorrentMetaData[]
 }
 
+export type GetTorrentV1ListRequest = {
+  categoryId?: string
+  id?: string
+  limit?: string
+}
+
+export type GetTorrentV1ListResponse = {
+  torrents?: TorrentBasic[]
+}
+
+export type TorrentBasic = {
+  id?: string
+  name?: string
+  description?: string
+  categoryId?: string
+  categoryName?: string
+}
+
 export type CreateTorrentV1Request = {
   categoryId?: string
   name?: string
@@ -50,6 +68,9 @@ export type DownloadTorrentV1Response = {
 export class TorrentService {
   static GetTorrentV1(req: GetTorrentV1Request, initReq?: fm.InitReq): Promise<GetTorrentV1Response> {
     return fm.fetchReq<GetTorrentV1Request, GetTorrentV1Response>(`/gapi/torrent/v1/info/v1`, {...initReq, method: "POST", body: JSON.stringify(req, fm.replacer)})
+  }
+  static GetTorrentV1ListList(req: GetTorrentV1ListRequest, initReq?: fm.InitReq): Promise<GetTorrentV1ListResponse> {
+    return fm.fetchReq<GetTorrentV1ListRequest, GetTorrentV1ListResponse>(`/gapi/torrent/v1/list/v1`, {...initReq, method: "POST", body: JSON.stringify(req, fm.replacer)})
   }
   static CreateTorrentV1(req: CreateTorrentV1Request, initReq?: fm.InitReq): Promise<CreateTorrentV1Response> {
     return fm.fetchReq<CreateTorrentV1Request, CreateTorrentV1Response>(`/gapi/torrent/v1/create/v1`, {...initReq, method: "POST", body: JSON.stringify(req, fm.replacer)})

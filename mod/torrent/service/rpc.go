@@ -15,6 +15,7 @@ import (
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"os"
 	"strings"
 	"time"
 )
@@ -93,14 +94,14 @@ func (s *S) CreateTorrentV1(ctx context.Context, req *torrentV1.CreateTorrentV1R
 		Announce:     trackerAddress + "/tracker/announce/key/" + user.Key,
 		CreatedBy:    bencodeTorrent.CreatedBy,
 		CreationDate: &now,
-		Name:         bencodeTorrent.Info.Name,
-		NameUTF8:     *bencodeTorrent.Info.NameUTF8,
-		Length:       bencodeTorrent.Info.Length,
-		Pieces:       []byte(bencodeTorrent.Info.Pieces),
-		PieceLength:  bencodeTorrent.Info.PieceLength,
-		Private:      &isPrivate,
-		Source:       bencodeTorrent.Info.Source,
-		Md5sum:       bencodeTorrent.Info.Md5sum,
+		// Name:         bencodeTorrent.Info.Name,
+		// NameUTF8:     *bencodeTorrent.Info.NameUTF8,
+		Length:      bencodeTorrent.Info.Length,
+		Pieces:      []byte(bencodeTorrent.Info.Pieces),
+		PieceLength: bencodeTorrent.Info.PieceLength,
+		Private:     &isPrivate,
+		Source:      bencodeTorrent.Info.Source,
+		Md5sum:      bencodeTorrent.Info.Md5sum,
 	}
 
 	// TODO
@@ -108,10 +109,27 @@ func (s *S) CreateTorrentV1(ctx context.Context, req *torrentV1.CreateTorrentV1R
 		torrent.Name = req.Name
 	}
 
+	if bencodeTorrent.Info.NameUTF8 != nil {
+		if *bencodeTorrent.Info.NameUTF8 == "" {
+			torrent.NameUTF8 = torrent.Name
+		} else {
+			torrent.NameUTF8 = *bencodeTorrent.Info.NameUTF8
+		}
+	} else {
+		torrent.NameUTF8 = torrent.Name
+	}
+
 	// If the torrent is a single file torrent
 	if bencodeTorrent.Info.Files == nil {
-		path := strings.Join([]string{bencodeTorrent.Info.Name}, "/")
-		pathUTF8 := strings.Join([]string{*bencodeTorrent.Info.NameUTF8}, "/")
+		path := ""
+		if torrent.Name != "" {
+			path = strings.Join([]string{bencodeTorrent.Info.Name}, "/")
+		}
+
+		pathUTF8 := ""
+		if torrent.NameUTF8 != "" {
+			pathUTF8 = strings.Join([]string{*bencodeTorrent.Info.NameUTF8}, "/")
+		}
 
 		files = append(files, torrentModel.File{
 			TorrentID: torrent.InfoHash,
@@ -121,8 +139,23 @@ func (s *S) CreateTorrentV1(ctx context.Context, req *torrentV1.CreateTorrentV1R
 		})
 	} else {
 		for _, fileInfo := range *bencodeTorrent.Info.Files {
-			path := strings.Join(fileInfo.Path, "/")
-			pathUTF8 := strings.Join(fileInfo.PathUTF8, "/")
+			path := ""
+			if torrent.Name == "" {
+				path = strings.Join(fileInfo.Path, "/")
+			} else {
+				path = strings.Join(fileInfo.Path, "/")
+			}
+
+			pathUTF8 := ""
+			if torrent.NameUTF8 == "" {
+				if bencodeTorrent.Info.NameUTF8 == nil {
+					pathUTF8 = strings.Join(fileInfo.Path, "/")
+				} else {
+					pathUTF8 = strings.Join([]string{*bencodeTorrent.Info.NameUTF8}, "/")
+				}
+			} else {
+				pathUTF8 = strings.Join(fileInfo.PathUTF8, "/")
+			}
 			files = append(files, torrentModel.File{
 				TorrentID: torrent.InfoHash,
 				Length:    fileInfo.Length,
@@ -160,7 +193,7 @@ func (s *S) DownloadTorrentV1(ctx context.Context, req *torrentV1.DownloadTorren
 	}
 	// TODO: rbac
 
-	_, err := userDao.User.GetInfo(ctx, UID)
+	user, err := userDao.User.GetInfo(ctx, UID)
 	if err != nil {
 		return nil, err
 	}
@@ -171,7 +204,7 @@ func (s *S) DownloadTorrentV1(ctx context.Context, req *torrentV1.DownloadTorren
 	}
 
 	_torrentFull := &torrentModel.BencodeTorrent{
-		Announce:  torrent.Announce,
+		Announce:  conf.Get().TrackerV1.Endpoint + user.Key,
 		CreatedBy: torrent.CreatedBy,
 		CreatedAt: func(i int64) *int { v := int(i); return &v }(torrent.CreatedAt.Unix()),
 		Info: torrentModel.BencodeInfo{
@@ -217,6 +250,19 @@ func (s *S) DownloadTorrentV1(ctx context.Context, req *torrentV1.DownloadTorren
 	err = encoder.Encode(_torrentFull)
 	if err != nil {
 		return nil, err
+	}
+
+	filePath := "/tmp/torrent_debug.torrent"
+	file, err := os.Create(filePath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create file: %v", err)
+	}
+	defer file.Close()
+
+	// 将编码后的数据写入文件
+	_, err = file.Write(buf.Bytes())
+	if err != nil {
+		return nil, fmt.Errorf("failed to write to file: %v", err)
 	}
 
 	return &torrentV1.DownloadTorrentV1Response{

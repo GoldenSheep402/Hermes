@@ -113,6 +113,38 @@
           "TorrentService"
         ]
       }
+    },
+    "/gapi/torrent/v1/list/v1": {
+      "post": {
+        "operationId": "TorrentService_GetTorrentV1ListList",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GetTorrentV1ListResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1GetTorrentV1ListRequest"
+            }
+          }
+        ],
+        "tags": [
+          "TorrentService"
+        ]
+      }
     }
   },
   "definitions": {
@@ -192,6 +224,34 @@
         }
       }
     },
+    "v1GetTorrentV1ListRequest": {
+      "type": "object",
+      "properties": {
+        "categoryId": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "limit": {
+          "type": "string",
+          "format": "int64"
+        }
+      },
+      "title": "GetTorrentV1List"
+    },
+    "v1GetTorrentV1ListResponse": {
+      "type": "object",
+      "properties": {
+        "torrents": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1TorrentBasic"
+          }
+        }
+      }
+    },
     "v1GetTorrentV1Request": {
       "type": "object",
       "properties": {
@@ -219,6 +279,26 @@
         "data": {
           "type": "string",
           "format": "byte"
+        }
+      }
+    },
+    "v1TorrentBasic": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "categoryId": {
+          "type": "string"
+        },
+        "categoryName": {
+          "type": "string"
         }
       }
     },

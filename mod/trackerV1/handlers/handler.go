@@ -42,20 +42,20 @@ func AnnounceWithKey(c *jin.Context) {
 	}
 
 	type AnnounceResponse struct {
-		FailureReason  string      `bencode:"failure reason,omitempty"`  // 可选
-		WarningMessage string      `bencode:"warning message,omitempty"` // 可选
-		Interval       int         `bencode:"interval"`                  // 必需
-		MinInterval    int         `bencode:"min interval,omitempty"`    // 可选
-		TrackerID      string      `bencode:"tracker id,omitempty"`      // 可选
-		Complete       int         `bencode:"complete"`                  // 必需
-		Incomplete     int         `bencode:"incomplete"`                // 必需
-		Peers          interface{} `bencode:"peers"`                     // 必需
+		FailureReason  string      `bencode:"failure reason,omitempty"`
+		WarningMessage string      `bencode:"warning message,omitempty"`
+		Interval       int         `bencode:"interval"`
+		MinInterval    int         `bencode:"min interval,omitempty"`
+		TrackerID      string      `bencode:"tracker id,omitempty"`
+		Complete       int         `bencode:"complete"`
+		Incomplete     int         `bencode:"incomplete"`
+		Peers          interface{} `bencode:"peers"`
 	}
 
 	type Peer struct {
-		PeerID string `bencode:"peer id"` // 对等节点的唯一标识符
-		IP     string `bencode:"ip"`      // 对等节点的 IP 地址
-		Port   int    `bencode:"port"`    // 对等节点的端口号
+		PeerID string `bencode:"peer id"`
+		IP     string `bencode:"ip"`
+		Port   int    `bencode:"port"`
 	}
 	// TODO: implement
 	key, ok := c.Params.Get("key")
@@ -75,6 +75,8 @@ func AnnounceWithKey(c *jin.Context) {
 		c.Writer.Write(encodedResp)
 		return
 	}
+
+	// TODO: key check
 	fmt.Printf("key: %s\n", key)
 
 	ctx := context.Background()

@@ -286,6 +286,7 @@ func (s *S) DownloadTorrentV1(ctx context.Context, req *torrentV1.DownloadTorren
 		return nil, err
 	}
 	hash := fmt.Sprintf("%x", sha1.Sum(marshaledInfo))
+	fmt.Println(hash)
 
 	var buf bytes.Buffer
 	encoder := bencode.NewEncoder(&buf)
@@ -301,7 +302,6 @@ func (s *S) DownloadTorrentV1(ctx context.Context, req *torrentV1.DownloadTorren
 	}
 	defer file.Close()
 
-	// 将编码后的数据写入文件
 	_, err = file.Write(buf.Bytes())
 	if err != nil {
 		return nil, fmt.Errorf("failed to write to file: %v", err)

@@ -126,7 +126,7 @@ func (s *S) CreateTorrentV1(ctx context.Context, req *torrentV1.CreateTorrentV1R
 		Announce:     trackerAddress + "/tracker/announce/key/" + user.Key,
 		CreatedBy:    bencodeTorrent.CreatedBy,
 		CreationDate: &now,
-		// Name:         bencodeTorrent.Info.Name,
+		Name:         bencodeTorrent.Info.Name,
 		// NameUTF8:     *bencodeTorrent.Info.NameUTF8,
 		Length:      bencodeTorrent.Info.Length,
 		Pieces:      []byte(bencodeTorrent.Info.Pieces),
@@ -137,19 +137,17 @@ func (s *S) CreateTorrentV1(ctx context.Context, req *torrentV1.CreateTorrentV1R
 	}
 
 	// TODO
-	if req.Name != "" {
-		torrent.Name = req.Name
-	}
+	// if req.Name != "" {
+	// 	torrent.Name = req.Name
+	// }
 
-	//if bencodeTorrent.Info.NameUTF8 != nil {
-	//	if *bencodeTorrent.Info.NameUTF8 == "" {
-	//		torrent.NameUTF8 = torrent.Name
-	//	} else {
-	//		torrent.NameUTF8 = *bencodeTorrent.Info.NameUTF8
-	//	}
-	//} else {
-	//	torrent.NameUTF8 = torrent.Name
-	//}
+	if bencodeTorrent.Info.NameUTF8 != nil {
+		if *bencodeTorrent.Info.NameUTF8 == "" {
+			torrent.NameUTF8 = ""
+		} else {
+			torrent.NameUTF8 = *bencodeTorrent.Info.NameUTF8
+		}
+	}
 
 	// If the torrent is a single file torrent
 	if bencodeTorrent.Info.Files == nil {

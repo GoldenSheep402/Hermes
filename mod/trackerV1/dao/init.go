@@ -6,11 +6,17 @@ import (
 )
 
 var (
-	Peer = &peer{}
+	Peer      = &peer{}
+	TrackerV1 = &trackerV1{}
 )
 
 func Init(db *gorm.DB, rds *redis.Client) error {
 	err := Peer.Init(db, rds)
+	if err != nil {
+		return err
+	}
+
+	err = TrackerV1.Init(rds)
 	if err != nil {
 		return err
 	}

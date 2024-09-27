@@ -32,6 +32,7 @@ func (u *user) NewUserWithBind(ctx context.Context, user *model.User, bind *mode
 	}()
 
 	user.ID = ulid.Make().String()
+	user.Key = ulid.Make().String()
 	if err := tx.Create(user).Error; err != nil {
 		tx.Rollback()
 		return nil, err

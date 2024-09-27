@@ -2,8 +2,10 @@ package handlers
 
 import (
 	"context"
+	"encoding/binary"
 	"fmt"
 	"github.com/GoldenSheep402/Hermes/mod/trackerV1/dao"
+	trackerV1Dao "github.com/GoldenSheep402/Hermes/mod/trackerV1/dao"
 	"github.com/GoldenSheep402/Hermes/mod/trackerV1/model"
 	"github.com/juanjiTech/jin"
 	"github.com/zeebo/bencode"
@@ -77,6 +79,7 @@ func AnnounceWithKey(c *jin.Context) {
 
 	// TODO: key check
 	fmt.Printf("key: %s\n", key)
+	trackerV1Dao.Peer.GetPeers(context.Background(), "infoHash", 50)
 
 	ctx := context.Background()
 
@@ -254,35 +257,35 @@ func AnnounceWithKey(c *jin.Context) {
 		Incomplete: incompleted,
 	}
 
-	//if req.Compact == 1 {
-	//	var peersData []byte
-	//	for _, peer := range peers {
-	//		ip := net.ParseIP(peer.IP).To4()
-	//		if ip == nil {
-	//			continue
-	//		}
-	//		portBytes := make([]byte, 2)
-	//		binary.BigEndian.PutUint16(portBytes, uint16(peer.Port))
-	//		peersData = append(peersData, ip...)
-	//		peersData = append(peersData, portBytes...)
-	//	}
-	//	responseStruct.Peers = peersData
-	//} else {
-	var peersList []Peer
-	for _, peer := range peers {
-		if req.NoPeerID == 1 {
-			peer.PeerID = ""
+	if req.Compact == 1 {
+		var peersData []byte
+		for _, peer := range peers {
+			ip := net.ParseIP(peer.IP).To4()
+			if ip == nil {
+				continue
+			}
+			portBytes := make([]byte, 2)
+			binary.BigEndian.PutUint16(portBytes, uint16(peer.Port))
+			peersData = append(peersData, ip...)
+			peersData = append(peersData, portBytes...)
 		}
-		var _peer = &Peer{
-			PeerID: peer.PeerID,
-			IP:     peer.IP,
-			Port:   peer.Port,
-		}
+		responseStruct.Peers = peersData
+	} else {
+		var peersList []Peer
+		for _, peer := range peers {
+			if req.NoPeerID == 1 {
+				peer.PeerID = ""
+			}
+			var _peer = &Peer{
+				PeerID: peer.PeerID,
+				IP:     peer.IP,
+				Port:   peer.Port,
+			}
 
-		peersList = append(peersList, *_peer)
+			peersList = append(peersList, *_peer)
+		}
+		responseStruct.Peers = peersList
 	}
-	responseStruct.Peers = peersList
-	//}
 
 	encodedResp, err := bencode.EncodeBytes(responseStruct)
 	if err != nil {

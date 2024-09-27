@@ -7,6 +7,7 @@ import (
 	"github.com/GoldenSheep402/Hermes/mod/trackerV1/dao"
 	trackerV1Dao "github.com/GoldenSheep402/Hermes/mod/trackerV1/dao"
 	"github.com/GoldenSheep402/Hermes/mod/trackerV1/model"
+	"github.com/GoldenSheep402/Hermes/mod/trackerV1/model/trackerV1Values"
 	"github.com/juanjiTech/jin"
 	"github.com/zeebo/bencode"
 	"net"
@@ -23,6 +24,7 @@ func Registry(jinE *jin.Engine) {
 }
 
 func AnnounceWithKey(c *jin.Context) {
+	ctx := context.Background()
 	type AnnounceRequest struct {
 		InfoHash      string
 		PeerID        string
@@ -77,14 +79,42 @@ func AnnounceWithKey(c *jin.Context) {
 		return
 	}
 
-	// TODO: key check
-	fmt.Printf("key: %s\n", key)
-	trackerV1Dao.Peer.GetPeers(context.Background(), "infoHash", 50)
+	status, err := trackerV1Dao.TrackerV1.CheckKey(ctx, key)
+	if err != nil {
+		message := AnnounceResponse{
+			WarningMessage: "Unauthorized access",
+		}
 
-	ctx := context.Background()
+		encodedResp, err := bencode.EncodeBytes(message)
+		if err != nil {
+			c.Writer.WriteString("Failed to encode response")
+			return
+		}
+
+		c.Writer.Header().Set("Content-Type", "text/plain")
+		c.Writer.WriteHeader(http.StatusOK)
+		c.Writer.Write(encodedResp)
+		return
+	}
+
+	if status != trackerV1Values.OK {
+		message := AnnounceResponse{
+			WarningMessage: "You are banned",
+		}
+
+		encodedResp, err := bencode.EncodeBytes(message)
+		if err != nil {
+			c.Writer.WriteString("Failed to encode response")
+			return
+		}
+
+		c.Writer.Header().Set("Content-Type", "text/plain")
+		c.Writer.WriteHeader(http.StatusOK)
+		c.Writer.Write(encodedResp)
+		return
+	}
 
 	req := &AnnounceRequest{}
-
 	infoHashDecode := c.Request.URL.Query().Get("info_hash")
 	req.PeerID = c.Request.URL.Query().Get("peer_id")
 	portStr := c.Request.URL.Query().Get("port")
@@ -107,7 +137,6 @@ func AnnounceWithKey(c *jin.Context) {
 
 	req.InfoHash = hexString
 
-	var err error
 	if req.Port, err = strconv.Atoi(portStr); err != nil {
 		message := AnnounceResponse{
 			WarningMessage: "Invalid Args",

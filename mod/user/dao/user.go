@@ -124,10 +124,10 @@ func (u *user) GetList(ctx context.Context) ([]*model.User, error) {
 }
 
 func (u *user) CheckKey(ctx context.Context, key string) (*model.User, error) {
-	var _user *model.User
-	if err := u.DB().WithContext(ctx).Where("key = ?", key).First(_user).Error; err != nil {
+	var _user model.User
+	if err := u.DB().WithContext(ctx).Model(&model.User{}).Where("key = ?", key).First(&_user).Error; err != nil {
 		return nil, err
 	}
 
-	return _user, nil
+	return &_user, nil
 }

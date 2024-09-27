@@ -49,19 +49,19 @@ func (p *peer) Init(db *gorm.DB, rds *redis.Client) error {
 
 // AddPeer adds a peer to the torrent.
 func (p *peer) AddPeer(ctx context.Context, infoHash string, peerData *model.Peer) error {
-	key := "torrent:" + infoHash
+	key := "Torrent:" + infoHash
 	field := peerData.PeerID
 	value := peerData.IP + ":" + strconv.Itoa(peerData.Port) + ":" + strconv.FormatInt(time.Now().Unix(), 10)
 	err := p.rds.HSet(ctx, key, field, value).Err()
 	if err != nil {
 		return err
 	}
-	return p.rds.Expire(ctx, key, time.Hour).Err()
+	return p.rds.Expire(ctx, key, 24*time.Hour).Err()
 }
 
 // GetPeers returns a list of peers for the torrent.
 func (p *peer) GetPeers(ctx context.Context, infoHash string, numWant int) ([]*model.Peer, error) {
-	key := "torrent:" + infoHash
+	key := "Torrent:" + infoHash
 	peersData, err := p.rds.HGetAll(ctx, key).Result()
 	if err != nil {
 		return nil, err
@@ -90,11 +90,22 @@ func (p *peer) GetPeers(ctx context.Context, infoHash string, numWant int) ([]*m
 			break
 		}
 	}
+
+	err = p.rds.Expire(ctx, key, 24*time.Hour).Err()
+	if err != nil {
+		return nil, err
+	}
+
 	return peers, nil
 }
 
 // RemovePeer removes a peer from the torrent.
 func (p *peer) RemovePeer(ctx context.Context, infoHash string, peerID string) error {
-	key := "torrent:" + infoHash
+	key := "Torrent:" + infoHash
+	err := p.rds.Expire(ctx, key, 24*time.Hour).Err()
+	if err != nil {
+		return err
+	}
+
 	return p.rds.HDel(ctx, key, peerID).Err()
 }

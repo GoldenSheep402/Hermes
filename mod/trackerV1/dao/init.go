@@ -8,6 +8,8 @@ import (
 var (
 	Peer      = &peer{}
 	TrackerV1 = &trackerV1{}
+	Sum       = &sum{}
+	SingleSum = &singleSum{}
 )
 
 func Init(db *gorm.DB, rds *redis.Client) error {
@@ -17,6 +19,16 @@ func Init(db *gorm.DB, rds *redis.Client) error {
 	}
 
 	err = TrackerV1.Init(rds)
+	if err != nil {
+		return err
+	}
+
+	err = Sum.Init(db, rds)
+	if err != nil {
+		return err
+	}
+
+	err = SingleSum.Init(db, rds)
 	if err != nil {
 		return err
 	}

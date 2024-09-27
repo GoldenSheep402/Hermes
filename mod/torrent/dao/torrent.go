@@ -15,6 +15,10 @@ type torrent struct {
 	stdao.Std[*model.Torrent]
 }
 
+var (
+	ErrTorrentHashAlreadyExists = status.Error(codes.AlreadyExists, "TorrentHash already exists")
+)
+
 func (t *torrent) Init(db *gorm.DB) error {
 	return t.Std.Init(db)
 }
@@ -28,6 +32,11 @@ func (t *torrent) Create(ctx context.Context, torrentBase *model.Torrent, files 
 			tx.Rollback()
 		}
 	}()
+
+	if err := tx.Model(&model.Torrent{}).Where("info_hash = ?", torrentBase.InfoHash).First(&model.Torrent{}).Error; err == nil {
+		tx.Rollback()
+		return "", ErrTorrentHashAlreadyExists
+	}
 
 	if err := tx.Model(&model.Torrent{}).Create(torrentBase).Error; err != nil {
 		tx.Rollback()
@@ -178,4 +187,16 @@ func (t *torrent) GetTorrentList(ctx context.Context, categoryID string, torrent
 	}
 
 	return torrents, nil
+}
+
+// GetTorrentByHash get torrent by hash
+// TODO: add cache
+func (t *torrent) GetTorrentByHash(ctx context.Context, hash string) (*model.Torrent, error) {
+	db := t.GetTxFromCtx(ctx).WithContext(ctx)
+	var torrent model.Torrent
+	if err := db.Model(&model.Torrent{}).Where("info_hash = ?", hash).First(&torrent).Error; err != nil {
+		return nil, status.Error(codes.NotFound, "Torrent not found")
+	}
+
+	return &torrent, nil
 }

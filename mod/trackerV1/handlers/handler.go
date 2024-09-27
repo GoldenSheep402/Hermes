@@ -60,7 +60,7 @@ func AnnounceWithKey(c *jin.Context) {
 		IP     string `bencode:"ip"`
 		Port   int    `bencode:"port"`
 	}
-	// TODO: implement
+	// TODO: KEY check
 	key, ok := c.Params.Get("key")
 	if !ok {
 		message := AnnounceResponse{
@@ -79,7 +79,7 @@ func AnnounceWithKey(c *jin.Context) {
 		return
 	}
 
-	status, err := trackerV1Dao.TrackerV1.CheckKey(ctx, key)
+	status, UID, err := trackerV1Dao.TrackerV1.CheckKey(ctx, key)
 	if err != nil {
 		message := AnnounceResponse{
 			WarningMessage: "Unauthorized access",
@@ -134,6 +134,24 @@ func AnnounceWithKey(c *jin.Context) {
 
 	infoHashBytes := []byte(infoHashDecode)
 	hexString := fmt.Sprintf("%x", infoHashBytes)
+	// Set hash -> TorrentID in redis
+	torrentID, err := trackerV1Dao.TrackerV1.GetTorrentID(ctx, hexString)
+	if err != nil {
+		message := AnnounceResponse{
+			WarningMessage: "Unknown info_hash",
+		}
+
+		encodedResp, err := bencode.EncodeBytes(message)
+		if err != nil {
+			c.Writer.WriteString("Failed to encode response")
+			return
+		}
+
+		c.Writer.Header().Set("Content-Type", "text/plain")
+		c.Writer.WriteHeader(http.StatusOK)
+		c.Writer.Write(encodedResp)
+		return
+	}
 
 	req.InfoHash = hexString
 
@@ -242,14 +260,14 @@ func AnnounceWithKey(c *jin.Context) {
 			Port:   req.Port,
 		}
 
-		err := dao.Peer.AddPeer(ctx, hexString, peer)
+		err := dao.Peer.AddPeer(ctx, torrentID, peer)
 
 		if err != nil {
 			c.Writer.WriteString("Failed to add peer")
 			return
 		}
 	case "stopped":
-		err := dao.Peer.RemovePeer(ctx, hexString, req.PeerID)
+		err := dao.Peer.RemovePeer(ctx, torrentID, req.PeerID)
 		if err != nil {
 			c.Writer.WriteString("Failed to remove peer")
 			return
@@ -263,7 +281,7 @@ func AnnounceWithKey(c *jin.Context) {
 			Status:   0,
 		}
 
-		err := dao.Peer.AddPeer(ctx, hexString, peer)
+		err := dao.Peer.AddPeer(ctx, torrentID, peer)
 		if err != nil {
 			c.Writer.WriteString("Failed to add peer")
 			return
@@ -271,7 +289,7 @@ func AnnounceWithKey(c *jin.Context) {
 	default:
 	}
 
-	peers, err := dao.Peer.GetPeers(ctx, hexString, req.NumWant)
+	peers, err := dao.Peer.GetPeers(ctx, torrentID, req.NumWant)
 	var completed, incompleted int
 	for _, peer := range peers {
 		fmt.Printf("Peer: %v\n", peer)
@@ -322,7 +340,29 @@ func AnnounceWithKey(c *jin.Context) {
 		return
 	}
 
-	fmt.Printf("Response: %v\n", responseStruct)
+	uploadBytes, err := strconv.ParseInt(uploadedStr, 10, 64)
+	if err != nil {
+		c.Writer.WriteString("Failed to parse uploaded")
+		return
+	}
+	downloadBytes, err := strconv.ParseInt(downloadedStr, 10, 64)
+	if err != nil {
+		c.Writer.WriteString("Failed to parse downloaded")
+		return
+	}
+
+	uploadMB := uploadBytes / (1024 * 1024)
+	downloadMB := downloadBytes / (1024 * 1024)
+
+	if err := trackerV1Dao.TrackerV1.HandelDownloadAndUpload(ctx, torrentID, UID, uploadMB, downloadMB); err != nil {
+		c.Writer.WriteString("Failed to update download and upload")
+		return
+	}
+
+	//if err := trackerV1Dao.SingleSum.UpdateSingleSum(ctx, hexString, UID, uploadMB, downloadMB); err != nil {
+	//	c.Writer.WriteString("Failed to update single sum")
+	//	return
+	//}
 
 	c.Writer.Header().Set("Content-Type", "text/plain")
 	c.Writer.WriteHeader(http.StatusOK)

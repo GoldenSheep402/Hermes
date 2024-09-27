@@ -5,6 +5,7 @@ import (
 	"context"
 	"crypto/sha1"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"github.com/GoldenSheep402/Hermes/conf"
 	categoryDao "github.com/GoldenSheep402/Hermes/mod/category/dao"
@@ -202,6 +203,12 @@ func (s *S) CreateTorrentV1(ctx context.Context, req *torrentV1.CreateTorrentV1R
 	// Link with files and metas
 	id, err := torrentDao.Torrent.Create(ctx, torrent, files, metas)
 	if err != nil {
+		switch {
+		case errors.Is(err, torrentDao.ErrTorrentHashAlreadyExists):
+			return nil, status.Error(codes.AlreadyExists, "TorrentHash already exists")
+		default:
+			return nil, err
+		}
 		return nil, err
 	}
 

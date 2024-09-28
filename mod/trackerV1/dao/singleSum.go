@@ -23,7 +23,7 @@ func (ss *singleSum) Init(db *gorm.DB, rds *redis.Client) error {
 	return nil
 }
 
-func (ss *singleSum) UpdateSingleSum(ctx context.Context, uid, torrentID string, Upload int64, Download int64) error {
+func (ss *singleSum) UpdateSingleSum(ctx context.Context, torrentID, uid string, Upload int64, Download int64) error {
 	db := ss.DB().WithContext(ctx)
 	var singleSum model.SingleSum
 

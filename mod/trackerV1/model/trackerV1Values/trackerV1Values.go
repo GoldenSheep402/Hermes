@@ -15,5 +15,5 @@ const (
 	Downloading = iota
 	Seeding
 	Finished
-	Stoped
+	Stopped
 )

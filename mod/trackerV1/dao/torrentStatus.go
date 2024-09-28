@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/GoldenSheep402/Hermes/mod/trackerV1/model"
-	"github.com/GoldenSheep402/Hermes/mod/trackerV1/model/trackerV1Values"
 	"github.com/GoldenSheep402/Hermes/pkg/stdao"
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
@@ -68,17 +67,6 @@ func (tsr *torrentStatus) IncrementUploadAndDownload(ctx context.Context, torren
 	err = tsr.rds.Expire(ctx, key, 24*time.Hour).Err()
 	if err != nil {
 		return fmt.Errorf("failed to set expiration for torrent status: %v", err)
-	}
-
-	seedingKey := "TorrentSeeding:" + torrentID
-	// Handle seeding count
-	switch status {
-	case trackerV1Values.Downloading:
-		tsr.rds.HSet(ctx, seedingKey, userID, trackerV1Values.Downloading)
-	case trackerV1Values.Seeding:
-		tsr.rds.HSet(ctx, seedingKey, userID, trackerV1Values.Seeding)
-	case trackerV1Values.Finished:
-		tsr.rds.HSet(ctx, seedingKey, userID, trackerV1Values.Finished)
 	}
 
 	return nil

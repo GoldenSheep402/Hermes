@@ -255,7 +255,12 @@ func AnnounceWithKey(c *jin.Context) {
 	var peerStatus int
 	switch req.Event {
 	case "started", "":
-		peerStatus = trackerV1Values.Downloading
+		if req.Left == 0 {
+			peerStatus = trackerV1Values.Seeding
+		} else {
+			peerStatus = trackerV1Values.Downloading
+		}
+
 		peer := &model.Peer{
 			PeerID: req.PeerID,
 			IP:     req.IP,
@@ -269,7 +274,7 @@ func AnnounceWithKey(c *jin.Context) {
 			return
 		}
 	case "stopped":
-		peerStatus = trackerV1Values.Stoped
+		peerStatus = trackerV1Values.Stopped
 		err := dao.Peer.RemovePeer(ctx, torrentID, req.PeerID)
 		if err != nil {
 			c.Writer.WriteString("Failed to remove peer")

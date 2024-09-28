@@ -46,24 +46,6 @@ func (t *trackerV1) CheckKey(ctx context.Context, key string) (string, string, e
 		}
 	}
 
-	//if errors.Is(err, redis.Nil) {
-	//	_user, err := userDao.User.CheckKey(ctx, key)
-	//	if err != nil {
-	//		return "", "", err
-	//	}
-	//
-	//	// TODO: status check
-	//	_, err = t.SetKeyWithTTL(ctx, key, _user.ID+":"+trackerV1Values.OK, trackerV1Values.TTL)
-	//	if err != nil {
-	//		return "", _user.ID, nil
-	//	}
-	//	return trackerV1Values.OK, _user.ID, nil
-	//}
-
-	//if err != nil {
-	//return "", _user.ID, nil
-	//}
-
 	parts := strings.Split(val, ":")
 	if len(parts) != 2 {
 		return "", _user.ID, fmt.Errorf("unknown key status: %s", val)
@@ -95,6 +77,7 @@ func (t *trackerV1) SetKeyWithTTL(ctx context.Context, key string, value string,
 }
 
 // HandelDownloadAndUpload Handel download and upload.
+// Upload:Download
 func (t *trackerV1) HandelDownloadAndUpload(ctx context.Context, torrentID, userID string, status int, uploadMB, downloadMB int64) error {
 	// key: torrent:ID
 	key := "TorrentSum:" + torrentID
@@ -103,18 +86,6 @@ func (t *trackerV1) HandelDownloadAndUpload(ctx context.Context, torrentID, user
 	if err != nil {
 		return fmt.Errorf("failed to check hash existence in redis: %v", err)
 	}
-
-	//uploadBytes, err := strconv.ParseInt(uploadStr, 10, 64)
-	//if err != nil {
-	//	return fmt.Errorf("failed to parse uploaded data: %v", err)
-	//}
-	//downloadBytes, err := strconv.ParseInt(downloadStr, 10, 64)
-	//if err != nil {
-	//	return fmt.Errorf("failed to parse downloaded data: %v", err)
-	//}
-
-	//uploadMB := float64(uploadBytes) / (1024 * 1024)
-	//downloadMB := float64(downloadBytes) / (1024 * 1024)
 
 	if exists {
 		oldData, err := t.rds.HGet(ctx, key, userID).Result()
@@ -131,11 +102,22 @@ func (t *trackerV1) HandelDownloadAndUpload(ctx context.Context, torrentID, user
 		oldDownloadMB, _ := strconv.ParseInt(parts[1], 64, 10)
 
 		if uploadMB > oldUploadMB || downloadMB > oldDownloadMB {
+			data := fmt.Sprintf("%v:%v", uploadMB, downloadMB)
+
+			err = t.rds.HSet(ctx, key, userID, data).Err()
+			if err != nil {
+				return fmt.Errorf("failed to set user data in redis: %v", err)
+			}
+
 			if err := SingleSum.UpdateSingleSum(ctx, torrentID, userID, uploadMB, downloadMB); err != nil {
 				return fmt.Errorf("failed to update single sum: %v", err)
 			}
 
 			if err := TorrentStatus.IncrementUploadAndDownload(ctx, torrentID, userID, status, uploadMB, downloadMB); err != nil {
+				return fmt.Errorf("failed to update torrent status: %v", err)
+			}
+
+			if err := t.HandleClientStatus(ctx, torrentID, userID, status); err != nil {
 				return fmt.Errorf("failed to update torrent status: %v", err)
 			}
 		}
@@ -164,6 +146,27 @@ func (t *trackerV1) HandelDownloadAndUpload(ctx context.Context, torrentID, user
 		return fmt.Errorf("failed to update torrent status: %v", err)
 	}
 
+	if err := t.HandleClientStatus(ctx, torrentID, userID, status); err != nil {
+		return fmt.Errorf("failed to update torrent status: %v", err)
+	}
+
+	return nil
+}
+
+func (t *trackerV1) HandleClientStatus(ctx context.Context, torrentID, userID string, status int) error {
+	seedingKey := "TorrentSeeding:" + torrentID
+	// Handle seeding count
+	switch status {
+	case trackerV1Values.Downloading:
+		t.rds.HSet(ctx, seedingKey, userID, trackerV1Values.Downloading)
+	case trackerV1Values.Seeding:
+		t.rds.HSet(ctx, seedingKey, userID, trackerV1Values.Seeding)
+	case trackerV1Values.Finished:
+		t.rds.HSet(ctx, seedingKey, userID, trackerV1Values.Finished)
+	case trackerV1Values.Stopped:
+		t.rds.HSet(ctx, seedingKey, userID, trackerV1Values.Stopped)
+
+	}
 	return nil
 }
 

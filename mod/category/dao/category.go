@@ -187,3 +187,14 @@ func (c *category) Delete(ctx context.Context, categoryId string) error {
 
 	return nil
 }
+
+func (c *category) CheckByID(ctx context.Context, categoryId string) (bool, error) {
+	_ctx := c.SetTxToCtx(ctx, c.DB())
+	db := c.GetTxFromCtx(_ctx)
+	var count int64
+	err := db.Model(&model.Category{}).Where("id = ?", categoryId).Count(&count).Error
+	if err != nil {
+		return false, status.Error(codes.Internal, "Internal error")
+	}
+	return count > 0, nil
+}

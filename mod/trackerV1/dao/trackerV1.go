@@ -95,7 +95,7 @@ func (t *trackerV1) SetKeyWithTTL(ctx context.Context, key string, value string,
 }
 
 // HandelDownloadAndUpload Handel download and upload.
-func (t *trackerV1) HandelDownloadAndUpload(ctx context.Context, torrentID, userID string, uploadMB, downloadMB int64) error {
+func (t *trackerV1) HandelDownloadAndUpload(ctx context.Context, torrentID, userID string, status int, uploadMB, downloadMB int64) error {
 	// key: torrent:ID
 	key := "TorrentSum:" + torrentID
 
@@ -134,6 +134,10 @@ func (t *trackerV1) HandelDownloadAndUpload(ctx context.Context, torrentID, user
 			if err := SingleSum.UpdateSingleSum(ctx, torrentID, userID, uploadMB, downloadMB); err != nil {
 				return fmt.Errorf("failed to update single sum: %v", err)
 			}
+
+			if err := TorrentStatus.IncrementUploadAndDownload(ctx, torrentID, userID, status, uploadMB, downloadMB); err != nil {
+				return fmt.Errorf("failed to update torrent status: %v", err)
+			}
 		}
 
 		// no update
@@ -154,6 +158,10 @@ func (t *trackerV1) HandelDownloadAndUpload(ctx context.Context, torrentID, user
 
 	if err := SingleSum.UpdateSingleSum(ctx, torrentID, userID, uploadMB, downloadMB); err != nil {
 		return fmt.Errorf("failed to update single sum: %v", err)
+	}
+
+	if err := TorrentStatus.IncrementUploadAndDownload(ctx, torrentID, userID, status, uploadMB, downloadMB); err != nil {
+		return fmt.Errorf("failed to update torrent status: %v", err)
 	}
 
 	return nil

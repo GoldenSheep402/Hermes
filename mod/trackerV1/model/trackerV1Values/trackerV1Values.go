@@ -10,3 +10,10 @@ const (
 const (
 	TTL = 10 * time.Minute
 )
+
+const (
+	Downloading = iota
+	Seeding
+	Finished
+	Stoped
+)

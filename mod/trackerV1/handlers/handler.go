@@ -252,8 +252,10 @@ func AnnounceWithKey(c *jin.Context) {
 		req.IP = host
 	}
 
+	var peerStatus int
 	switch req.Event {
 	case "started", "":
+		peerStatus = trackerV1Values.Downloading
 		peer := &model.Peer{
 			PeerID: req.PeerID,
 			IP:     req.IP,
@@ -267,12 +269,14 @@ func AnnounceWithKey(c *jin.Context) {
 			return
 		}
 	case "stopped":
+		peerStatus = trackerV1Values.Stoped
 		err := dao.Peer.RemovePeer(ctx, torrentID, req.PeerID)
 		if err != nil {
 			c.Writer.WriteString("Failed to remove peer")
 			return
 		}
 	case "completed":
+		peerStatus = trackerV1Values.Seeding
 		peer := &model.Peer{
 			PeerID:   req.PeerID,
 			IP:       req.IP,
@@ -287,6 +291,8 @@ func AnnounceWithKey(c *jin.Context) {
 			return
 		}
 	default:
+		c.Writer.WriteString("Invalid event")
+		return
 	}
 
 	peers, err := dao.Peer.GetPeers(ctx, torrentID, req.NumWant)
@@ -354,15 +360,10 @@ func AnnounceWithKey(c *jin.Context) {
 	uploadMB := uploadBytes / (1024 * 1024)
 	downloadMB := downloadBytes / (1024 * 1024)
 
-	if err := trackerV1Dao.TrackerV1.HandelDownloadAndUpload(ctx, torrentID, UID, uploadMB, downloadMB); err != nil {
+	if err := trackerV1Dao.TrackerV1.HandelDownloadAndUpload(ctx, torrentID, UID, peerStatus, uploadMB, downloadMB); err != nil {
 		c.Writer.WriteString("Failed to update download and upload")
 		return
 	}
-
-	//if err := trackerV1Dao.SingleSum.UpdateSingleSum(ctx, hexString, UID, uploadMB, downloadMB); err != nil {
-	//	c.Writer.WriteString("Failed to update single sum")
-	//	return
-	//}
 
 	c.Writer.Header().Set("Content-Type", "text/plain")
 	c.Writer.WriteHeader(http.StatusOK)

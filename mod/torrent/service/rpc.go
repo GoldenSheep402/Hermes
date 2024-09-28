@@ -96,6 +96,16 @@ func (s *S) CreateTorrentV1(ctx context.Context, req *torrentV1.CreateTorrentV1R
 	}
 	// TODO: rbac
 
+	// Check Category
+	ok, err := categoryDao.Category.CheckByID(ctx, req.CategoryId)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "Invalid Category ID")
+	}
+
+	if !ok {
+		return nil, status.Error(codes.InvalidArgument, "Invalid Category ID")
+	}
+
 	user, err := userDao.User.GetInfo(ctx, UID)
 	if err != nil {
 		return nil, err
@@ -115,13 +125,11 @@ func (s *S) CreateTorrentV1(ctx context.Context, req *torrentV1.CreateTorrentV1R
 	}
 
 	trackerAddress := conf.Get().TrackerV1.Endpoint
-
 	now := time.Now()
 	isPrivate := true
 	var files []torrentModel.File
 	torrent := &torrentModel.Torrent{
-		CategoryID: req.CategoryId,
-
+		CategoryID:   req.CategoryId,
 		InfoHash:     fmt.Sprintf("%x", sha1.Sum(marshaledInfo)),
 		CreatorID:    UID,
 		Announce:     trackerAddress + "/tracker/announce/key/" + user.Key,

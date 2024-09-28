@@ -6,10 +6,11 @@ import (
 )
 
 var (
-	Peer      = &peer{}
-	TrackerV1 = &trackerV1{}
-	Sum       = &sum{}
-	SingleSum = &singleSum{}
+	Peer          = &peer{}
+	TrackerV1     = &trackerV1{}
+	Sum           = &sum{}
+	SingleSum     = &singleSum{}
+	TorrentStatus = &torrentStatus{}
 )
 
 func Init(db *gorm.DB, rds *redis.Client) error {
@@ -29,6 +30,11 @@ func Init(db *gorm.DB, rds *redis.Client) error {
 	}
 
 	err = SingleSum.Init(db, rds)
+	if err != nil {
+		return err
+	}
+
+	err = TorrentStatus.Init(db, rds)
 	if err != nil {
 		return err
 	}

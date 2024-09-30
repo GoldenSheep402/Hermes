@@ -5,6 +5,16 @@
 */
 
 import * as fm from "../../fetch.pb"
+export type GetTorrentDownloadingStatusRequest = {
+  torrentId?: string
+}
+
+export type GetTorrentDownloadingStatusResponse = {
+  downloading?: number
+  finished?: number
+  seeding?: number
+}
+
 export type GetTrackerRequest = {
   key?: string
   info_hash?: string
@@ -46,7 +56,7 @@ export type PeerInfo = {
 }
 
 export class TrackerService {
-  static GetTracker(req: GetTrackerRequest, initReq?: fm.InitReq): Promise<GetTrackerResponse> {
-    return fm.fetchReq<GetTrackerRequest, GetTrackerResponse>(`/trackerV1/${req["key"]}?${fm.renderURLSearchParams(req, ["key"])}`, {...initReq, method: "GET"})
+  static GetTorrentDownloadingStatus(req: GetTorrentDownloadingStatusRequest, initReq?: fm.InitReq): Promise<GetTorrentDownloadingStatusResponse> {
+    return fm.fetchReq<GetTorrentDownloadingStatusRequest, GetTorrentDownloadingStatusResponse>(`/gapi/trackerV1/v1/status`, {...initReq, method: "POST", body: JSON.stringify(req, fm.replacer)})
   }
 }

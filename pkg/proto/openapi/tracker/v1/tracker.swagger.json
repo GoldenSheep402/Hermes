@@ -16,15 +16,14 @@
     "application/json"
   ],
   "paths": {
-    "/trackerV1/{key}": {
-      "get": {
-        "summary": "GetTracker",
-        "operationId": "TrackerService_GetTracker",
+    "/gapi/trackerV1/v1/status": {
+      "post": {
+        "operationId": "TrackerService_GetTorrentDownloadingStatus",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1GetTrackerResponse"
+              "$ref": "#/definitions/v1GetTorrentDownloadingStatusResponse"
             }
           },
           "default": {
@@ -36,119 +35,12 @@
         },
         "parameters": [
           {
-            "name": "key",
-            "description": "Unique identifier for the request",
-            "in": "path",
+            "name": "body",
+            "in": "body",
             "required": true,
-            "type": "string"
-          },
-          {
-            "name": "infoHash",
-            "description": "Information hash for the torrent (Here is URL encoded)",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "peerId",
-            "description": "Unique identifier for the peer",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "port",
-            "description": "Port number of the peer",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int32"
-          },
-          {
-            "name": "uploaded",
-            "description": "Amount of data uploaded by the peer",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "format": "int64"
-          },
-          {
-            "name": "downloaded",
-            "description": "Amount of data downloaded by the peer",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "format": "int64"
-          },
-          {
-            "name": "left",
-            "description": "Amount of data left to download",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "format": "int64"
-          },
-          {
-            "name": "event",
-            "description": "Event type (e.g., started, stopped, completed)",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "ip",
-            "description": "IP address of the peer",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "numWant",
-            "description": "Number of peers the client wants to receive",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int32"
-          },
-          {
-            "name": "compact",
-            "description": "Compact mode flag (0 for full, 1 for compact)",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int32"
-          },
-          {
-            "name": "noPeerId",
-            "description": "Flag indicating whether to send peer IDs (0 or 1)",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int32"
-          },
-          {
-            "name": "corrupt",
-            "description": "Number of corrupt pieces",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int32"
-          },
-          {
-            "name": "supportCrypto",
-            "description": "Flag indicating support for encryption (0 or 1)",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int32"
-          },
-          {
-            "name": "redundant",
-            "description": "Number of redundant pieces",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int32"
+            "schema": {
+              "$ref": "#/definitions/v1GetTorrentDownloadingStatusRequest"
+            }
           }
         ],
         "tags": [
@@ -186,12 +78,28 @@
         }
       }
     },
-    "v1GetTrackerResponse": {
+    "v1GetTorrentDownloadingStatusRequest": {
       "type": "object",
       "properties": {
-        "response": {
-          "type": "string",
-          "title": "Response message"
+        "torrentId": {
+          "type": "string"
+        }
+      }
+    },
+    "v1GetTorrentDownloadingStatusResponse": {
+      "type": "object",
+      "properties": {
+        "downloading": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "finished": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "seeding": {
+          "type": "integer",
+          "format": "int32"
         }
       }
     }

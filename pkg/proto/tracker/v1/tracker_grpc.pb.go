@@ -19,15 +19,14 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	TrackerService_GetTracker_FullMethodName = "/tracker.v1.TrackerService/GetTracker"
+	TrackerService_GetTorrentDownloadingStatus_FullMethodName = "/tracker.v1.TrackerService/GetTorrentDownloadingStatus"
 )
 
 // TrackerServiceClient is the client API for TrackerService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type TrackerServiceClient interface {
-	// GetTracker
-	GetTracker(ctx context.Context, in *GetTrackerRequest, opts ...grpc.CallOption) (*GetTrackerResponse, error)
+	GetTorrentDownloadingStatus(ctx context.Context, in *GetTorrentDownloadingStatusRequest, opts ...grpc.CallOption) (*GetTorrentDownloadingStatusResponse, error)
 }
 
 type trackerServiceClient struct {
@@ -38,10 +37,10 @@ func NewTrackerServiceClient(cc grpc.ClientConnInterface) TrackerServiceClient {
 	return &trackerServiceClient{cc}
 }
 
-func (c *trackerServiceClient) GetTracker(ctx context.Context, in *GetTrackerRequest, opts ...grpc.CallOption) (*GetTrackerResponse, error) {
+func (c *trackerServiceClient) GetTorrentDownloadingStatus(ctx context.Context, in *GetTorrentDownloadingStatusRequest, opts ...grpc.CallOption) (*GetTorrentDownloadingStatusResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(GetTrackerResponse)
-	err := c.cc.Invoke(ctx, TrackerService_GetTracker_FullMethodName, in, out, cOpts...)
+	out := new(GetTorrentDownloadingStatusResponse)
+	err := c.cc.Invoke(ctx, TrackerService_GetTorrentDownloadingStatus_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -52,8 +51,7 @@ func (c *trackerServiceClient) GetTracker(ctx context.Context, in *GetTrackerReq
 // All implementations must embed UnimplementedTrackerServiceServer
 // for forward compatibility.
 type TrackerServiceServer interface {
-	// GetTracker
-	GetTracker(context.Context, *GetTrackerRequest) (*GetTrackerResponse, error)
+	GetTorrentDownloadingStatus(context.Context, *GetTorrentDownloadingStatusRequest) (*GetTorrentDownloadingStatusResponse, error)
 	mustEmbedUnimplementedTrackerServiceServer()
 }
 
@@ -64,8 +62,8 @@ type TrackerServiceServer interface {
 // pointer dereference when methods are called.
 type UnimplementedTrackerServiceServer struct{}
 
-func (UnimplementedTrackerServiceServer) GetTracker(context.Context, *GetTrackerRequest) (*GetTrackerResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetTracker not implemented")
+func (UnimplementedTrackerServiceServer) GetTorrentDownloadingStatus(context.Context, *GetTorrentDownloadingStatusRequest) (*GetTorrentDownloadingStatusResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetTorrentDownloadingStatus not implemented")
 }
 func (UnimplementedTrackerServiceServer) mustEmbedUnimplementedTrackerServiceServer() {}
 func (UnimplementedTrackerServiceServer) testEmbeddedByValue()                        {}
@@ -88,20 +86,20 @@ func RegisterTrackerServiceServer(s grpc.ServiceRegistrar, srv TrackerServiceSer
 	s.RegisterService(&TrackerService_ServiceDesc, srv)
 }
 
-func _TrackerService_GetTracker_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetTrackerRequest)
+func _TrackerService_GetTorrentDownloadingStatus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetTorrentDownloadingStatusRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(TrackerServiceServer).GetTracker(ctx, in)
+		return srv.(TrackerServiceServer).GetTorrentDownloadingStatus(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: TrackerService_GetTracker_FullMethodName,
+		FullMethod: TrackerService_GetTorrentDownloadingStatus_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TrackerServiceServer).GetTracker(ctx, req.(*GetTrackerRequest))
+		return srv.(TrackerServiceServer).GetTorrentDownloadingStatus(ctx, req.(*GetTorrentDownloadingStatusRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -114,8 +112,8 @@ var TrackerService_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*TrackerServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "GetTracker",
-			Handler:    _TrackerService_GetTracker_Handler,
+			MethodName: "GetTorrentDownloadingStatus",
+			Handler:    _TrackerService_GetTorrentDownloadingStatus_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

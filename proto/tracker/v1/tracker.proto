@@ -5,13 +5,24 @@ option go_package = "github.com/GoldenSheep402/Hermes/pkg/proto/trackerV1/v1;tra
 import "google/api/annotations.proto";
 
 service TrackerService {
-  // GetTracker
-  rpc GetTracker(GetTrackerRequest) returns (GetTrackerResponse) {
+  rpc GetTorrentDownloadingStatus(GetTorrentDownloadingStatusRequest) returns (GetTorrentDownloadingStatusResponse) {
     option (google.api.http) = {
-      get: "/trackerV1/{key}"  // Using path parameter {key}
+      post: "/gapi/trackerV1/v1/status"
+      body: "*"
     };
   }
 }
+
+message GetTorrentDownloadingStatusRequest{
+  string torrentId = 1;
+}
+
+message GetTorrentDownloadingStatusResponse{
+  int32 downloading = 1;
+  int32 finished = 2;
+  int32 seeding = 3;
+}
+
 
 message GetTrackerRequest {
   string key = 1;          // Unique identifier for the request

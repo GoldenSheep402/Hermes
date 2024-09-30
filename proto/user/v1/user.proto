@@ -78,7 +78,8 @@ service UserService {
   rpc GetUserPassKey(GetUserRequest) returns (GetUserResponse) {
     option (google.api.http) = {
       post: "/gapi/user/v1/passkey"
-      body: "*"    };
+      body: "*"
+    };
   }
 }
 

@@ -16,4 +16,5 @@ const (
 	Seeding
 	Finished
 	Stopped
+	ReadySeeding
 )

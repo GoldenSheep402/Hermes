@@ -56,12 +56,11 @@ const checkedID = ref('');
 const categoryFullInfo = ref<CategoryBase[]>([]);
 
 
-const torrentName = ref("");
+const torrentComment = ref("");
 
 const sendFile = () => {
-  console.log("sned")
   const req = ref<CreateTorrentV1Request>({});
-  req.value.name = torrentName.value;
+  req.value.comment = torrentComment.value;
   req.value.categoryId = checkedID.value;
 
   if (!req.value.metadata) {
@@ -112,7 +111,6 @@ function handleFileChange(fileList: FileItem[], file: FileItem) {
     reader.readAsArrayBuffer(fileObj);
   }
 }
-
 
 onMounted(() => {
   console.log('onMounted');
@@ -180,20 +178,18 @@ onMounted(() => {
 
       <div class="flex flex-col space-y-4">
         <div class="flex items-center">
-          <div class="w-25 text-gray-700 font-semibold">
-            种子名称:
+          <div class="w-25 font-semibold text-[--color-text-1]">
+            Comment:
           </div>
-          <a-input v-model="torrentName" class="flex-grow" placeholder="请输入种子名称"></a-input>
+          <a-input v-model="torrentComment" class="flex-grow" placeholder="请输入Comment"></a-input>
           <a-button type="primary" @click="sendFile" class="ml-5">发布</a-button>
         </div>
-
 
         <a-upload
             :auto-upload="false"
             :file-list="fileList"
             @change="handleFileChange"
         >
-
         </a-upload>
       </div>
     </div>

@@ -18,7 +18,6 @@ import (
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"os"
 	"strings"
 	"time"
 )
@@ -124,25 +123,33 @@ func (s *S) CreateTorrentV1(ctx context.Context, req *torrentV1.CreateTorrentV1R
 		return nil, err
 	}
 
+	var comment string
+	if req.Name != "" {
+		comment = req.Comment
+	} else {
+		comment = *bencodeTorrent.Comment
+	}
+
 	trackerAddress := conf.Get().TrackerV1.Endpoint
 	now := time.Now()
 	isPrivate := true
 	var files []torrentModel.File
 	torrent := &torrentModel.Torrent{
-		CategoryID:   req.CategoryId,
+		CategoryID: req.CategoryId,
+
 		InfoHash:     fmt.Sprintf("%x", sha1.Sum(marshaledInfo)),
 		CreatorID:    UID,
 		Announce:     trackerAddress + "/tracker/announce/key/" + user.Key,
 		CreatedBy:    bencodeTorrent.CreatedBy,
 		CreationDate: &now,
+		Comment:      &comment,
 		Name:         bencodeTorrent.Info.Name,
-		// NameUTF8:     *bencodeTorrent.Info.NameUTF8,
-		Length:      bencodeTorrent.Info.Length,
-		Pieces:      []byte(bencodeTorrent.Info.Pieces),
-		PieceLength: bencodeTorrent.Info.PieceLength,
-		Private:     &isPrivate,
-		Source:      bencodeTorrent.Info.Source,
-		Md5sum:      bencodeTorrent.Info.Md5sum,
+		Length:       bencodeTorrent.Info.Length,
+		Pieces:       []byte(bencodeTorrent.Info.Pieces),
+		PieceLength:  bencodeTorrent.Info.PieceLength,
+		Private:      &isPrivate,
+		Source:       bencodeTorrent.Info.Source,
+		Md5sum:       bencodeTorrent.Info.Md5sum,
 	}
 
 	// TODO
@@ -160,23 +167,25 @@ func (s *S) CreateTorrentV1(ctx context.Context, req *torrentV1.CreateTorrentV1R
 
 	// If the torrent is a single file torrent
 	if bencodeTorrent.Info.Files == nil {
-		path := ""
-		if torrent.Name != "" {
-			path = strings.Join([]string{bencodeTorrent.Info.Name}, "/")
-		}
-
-		pathUTF8 := ""
-		if torrent.NameUTF8 != "" {
-			pathUTF8 = strings.Join([]string{*bencodeTorrent.Info.NameUTF8}, "/")
-		}
-
-		files = append(files, torrentModel.File{
-			TorrentID: torrent.InfoHash,
-			Length:    *torrent.Length,
-			Path:      path,
-			PathUTF8:  pathUTF8,
-		})
+		torrent.IsSingleFile = true
+		//path := ""
+		//if torrent.Name != "" {
+		//	path = strings.Join([]string{bencodeTorrent.Info.Name}, "/")
+		//}
+		//
+		//pathUTF8 := ""
+		//if torrent.NameUTF8 != "" {
+		//	pathUTF8 = strings.Join([]string{*bencodeTorrent.Info.NameUTF8}, "/")
+		//}
+		//
+		//files = append(files, torrentModel.File{
+		//	TorrentID: torrent.InfoHash,
+		//	Length:    *torrent.Length,
+		//	Path:      path,
+		//	PathUTF8:  pathUTF8,
+		//})
 	} else {
+		torrent.IsSingleFile = false
 		for _, fileInfo := range *bencodeTorrent.Info.Files {
 			path := ""
 			if torrent.Name == "" {
@@ -245,6 +254,7 @@ func (s *S) DownloadTorrentV1(ctx context.Context, req *torrentV1.DownloadTorren
 	_torrentFull := &torrentModel.BencodeTorrent{
 		Announce:  conf.Get().TrackerV1.Endpoint + user.Key,
 		CreatedBy: torrent.CreatedBy,
+		Comment:   torrent.Comment,
 		CreatedAt: func(i int64) *int { v := int(i); return &v }(torrent.CreatedAt.Unix()),
 		Info: torrentModel.BencodeInfo{
 			Files: func() *[]torrentModel.FileInfo {
@@ -308,17 +318,17 @@ func (s *S) DownloadTorrentV1(ctx context.Context, req *torrentV1.DownloadTorren
 		return nil, err
 	}
 
-	filePath := "/tmp/torrent_debug.torrent"
-	file, err := os.Create(filePath)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create file: %v", err)
-	}
-	defer file.Close()
+	//filePath := "/tmp/torrent_debug.torrent"
+	//file, err := os.Create(filePath)
+	//if err != nil {
+	//	return nil, fmt.Errorf("failed to create file: %v", err)
+	//}
+	//defer file.Close()
 
-	_, err = file.Write(buf.Bytes())
-	if err != nil {
-		return nil, fmt.Errorf("failed to write to file: %v", err)
-	}
+	//_, err = file.Write(buf.Bytes())
+	//if err != nil {
+	//	return nil, fmt.Errorf("failed to write to file: %v", err)
+	//}
 
 	base64Data := base64.StdEncoding.EncodeToString(buf.Bytes())
 

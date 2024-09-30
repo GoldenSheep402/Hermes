@@ -10,6 +10,7 @@ import (
 	"github.com/GoldenSheep402/Hermes/mod/trackerV1/model/trackerV1Values"
 	"github.com/juanjiTech/jin"
 	"github.com/zeebo/bencode"
+	"log"
 	"net"
 	"net/http"
 	"strconv"
@@ -255,7 +256,9 @@ func AnnounceWithKey(c *jin.Context) {
 	var peerStatus int
 	switch req.Event {
 	case "started", "":
-		if req.Left == 0 {
+		if req.Left == 0 && req.Uploaded == 0 && req.Left == 0 {
+			peerStatus = trackerV1Values.ReadySeeding
+		} else if req.Left == 0 && req.Uploaded > 0 {
 			peerStatus = trackerV1Values.Seeding
 		} else {
 			peerStatus = trackerV1Values.Downloading
@@ -362,13 +365,15 @@ func AnnounceWithKey(c *jin.Context) {
 		return
 	}
 
-	uploadMB := uploadBytes / (1024 * 1024)
-	downloadMB := downloadBytes / (1024 * 1024)
+	uploadMB := uploadBytes >> 20
+	downloadMB := downloadBytes >> 20
 
-	if err := trackerV1Dao.TrackerV1.HandelDownloadAndUpload(ctx, torrentID, UID, peerStatus, uploadMB, downloadMB); err != nil {
-		c.Writer.WriteString("Failed to update download and upload")
-		return
-	}
+	// TODO: lock on redis to avoid race condition
+	go func() {
+		if err := trackerV1Dao.TrackerV1.HandelDownloadAndUpload(ctx, torrentID, UID, peerStatus, uploadMB, downloadMB); err != nil {
+			log.Printf("Failed to update download and upload: %v", err)
+		}
+	}()
 
 	c.Writer.Header().Set("Content-Type", "text/plain")
 	c.Writer.WriteHeader(http.StatusOK)

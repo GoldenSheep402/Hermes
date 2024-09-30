@@ -43,13 +43,15 @@ func (t *torrent) Create(ctx context.Context, torrentBase *model.Torrent, files 
 		return "", status.Error(codes.Internal, "Internal error")
 	}
 
-	for i := range files {
-		files[i].TorrentID = torrentBase.ID
-	}
+	if files != nil {
+		for i := range files {
+			files[i].TorrentID = torrentBase.ID
+		}
 
-	if err := tx.Model(&model.File{}).Create(files).Error; err != nil {
-		tx.Rollback()
-		return "", status.Error(codes.Internal, "Internal error")
+		if err := tx.Model(&model.File{}).Create(files).Error; err != nil {
+			tx.Rollback()
+			return "", status.Error(codes.Internal, "Internal error")
+		}
 	}
 
 	for i := range metas {

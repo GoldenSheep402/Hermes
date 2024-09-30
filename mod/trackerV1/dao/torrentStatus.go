@@ -28,7 +28,7 @@ func (tsr *torrentStatus) Init(db *gorm.DB, rds *redis.Client) error {
 }
 
 func (tsr *torrentStatus) IncrementUploadAndDownload(ctx context.Context, torrentID, userID string, status int, uploadInc, downloadInc int64) error {
-	key := "TorrentStatus:" + torrentID
+	key := TorrentStatusKey(torrentID)
 
 	exists, err := tsr.rds.Exists(ctx, key).Result()
 	if err != nil {
@@ -37,9 +37,6 @@ func (tsr *torrentStatus) IncrementUploadAndDownload(ctx context.Context, torren
 
 	if exists == 0 {
 		err := tsr.LoadInitialData(ctx, torrentID)
-		//if err != nil {
-		//	return fmt.Errorf("failed to load initial data: %v", err)
-		//}
 		if err != nil {
 			switch {
 			case errors.Is(err, gorm.ErrRecordNotFound):
@@ -74,7 +71,7 @@ func (tsr *torrentStatus) IncrementUploadAndDownload(ctx context.Context, torren
 
 // LoadInitialData loads initial data from db and set into redis for a torrent
 func (tsr *torrentStatus) LoadInitialData(ctx context.Context, torrentID string) error {
-	key := "TorrentStatus:" + torrentID
+	key := TorrentStatusKey(torrentID)
 
 	ts, err := tsr.GetFromDbByTID(ctx, torrentID)
 	if err != nil {
@@ -107,6 +104,10 @@ func (tsr *torrentStatus) LoadInitialData(ctx context.Context, torrentID string)
 	}
 
 	return nil
+}
+
+func TorrentStatusKey(torrentID string) string {
+	return "TorrentStatus/" + torrentID
 }
 
 func (tsr *torrentStatus) GetFromDbByTID(ctx context.Context, torrentID string) (*model.TorrentStatus, error) {

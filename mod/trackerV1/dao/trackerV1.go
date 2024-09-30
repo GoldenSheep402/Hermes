@@ -23,6 +23,7 @@ func (t *trackerV1) Init(rds *redis.Client) error {
 	return nil
 }
 
+// CheckKey Check key and set into redis
 func (t *trackerV1) CheckKey(ctx context.Context, key string) (string, string, error) {
 	val, err := t.rds.Get(ctx, key).Result()
 	var _user userModel.User
@@ -36,7 +37,7 @@ func (t *trackerV1) CheckKey(ctx context.Context, key string) (string, string, e
 			}
 
 			// TODO: status check
-			_, err = t.SetKeyWithTTL(ctx, key, _user.ID+":"+trackerV1Values.OK, trackerV1Values.TTL)
+			_, err = t.SetKeyWithTTL(ctx, key, _user.ID+"/"+trackerV1Values.OK, trackerV1Values.TTL)
 			if err != nil {
 				return "", _user.ID, nil
 			}
@@ -46,7 +47,7 @@ func (t *trackerV1) CheckKey(ctx context.Context, key string) (string, string, e
 		}
 	}
 
-	parts := strings.Split(val, ":")
+	parts := strings.Split(val, "/")
 	if len(parts) != 2 {
 		return "", _user.ID, fmt.Errorf("unknown key status: %s", val)
 	}
@@ -79,71 +80,101 @@ func (t *trackerV1) SetKeyWithTTL(ctx context.Context, key string, value string,
 // HandelDownloadAndUpload Handel download and upload.
 // Upload:Download
 func (t *trackerV1) HandelDownloadAndUpload(ctx context.Context, torrentID, userID string, status int, uploadMB, downloadMB int64) error {
-	// key: torrent:ID
-	key := "TorrentSum:" + torrentID
+	switch status {
+	case trackerV1Values.Downloading:
+		t.HandleDownloading(ctx, torrentID, userID, status, uploadMB, downloadMB)
+	case trackerV1Values.ReadySeeding:
+		t.HandleReadySeeding(ctx, torrentID, userID, status, uploadMB, downloadMB)
+	case trackerV1Values.Seeding:
+		t.HandleSeeding(ctx, torrentID, userID, status, uploadMB, downloadMB)
+	case trackerV1Values.Stopped:
+		t.HandleStop(ctx, torrentID, userID, status, uploadMB, downloadMB)
+	}
 
-	exists, err := t.rds.HExists(ctx, key, userID).Result()
+	return nil
+}
+
+// HandleDownloading Handle downloading.
+// If it is downloading
+func (t *trackerV1) HandleDownloading(ctx context.Context, torrentID, userID string, status int, uploadMB, downloadMB int64) error {
+	key := TorrentSumKey(torrentID, userID)
+
+	exists, err := t.rds.Exists(ctx, key).Result()
 	if err != nil {
 		return fmt.Errorf("failed to check hash existence in redis: %v", err)
 	}
 
-	if exists {
-		oldData, err := t.rds.HGet(ctx, key, userID).Result()
+	// if exist and the value is greater than old, update
+	if exists != 0 {
+		oldData, err := t.rds.Get(ctx, key).Result()
 		if err != nil {
 			return fmt.Errorf("failed to get old user data in redis: %v", err)
 		}
 
 		parts := strings.Split(oldData, ":")
 		if len(parts) != 2 {
-			return fmt.Errorf("invalid old data format for userID %s", userID)
+			return fmt.Errorf("invalid old data format for key %s/%s", torrentID, userID)
 		}
 
-		oldUploadMB, _ := strconv.ParseInt(parts[0], 64, 10)
-		oldDownloadMB, _ := strconv.ParseInt(parts[1], 64, 10)
+		oldUploadMB, _ := strconv.ParseInt(parts[0], 10, 64)
+		oldDownloadMB, _ := strconv.ParseInt(parts[1], 10, 64)
 
-		if uploadMB > oldUploadMB || downloadMB > oldDownloadMB {
+		// is smaller it is reset
+		uploadSmaller := uploadMB < oldUploadMB
+		downloadSmaller := downloadMB < oldDownloadMB
+		if uploadSmaller || downloadSmaller {
+			if uploadSmaller {
+				err = SingleSum.IncreaseSingleSum(ctx, torrentID, userID, uploadMB, 0)
+				if err != nil {
+					return fmt.Errorf("failed to increase single sum: %v", err)
+				}
+			}
+
+			if downloadSmaller {
+				err = SingleSum.IncreaseSingleSum(ctx, torrentID, userID, 0, downloadMB)
+				if err != nil {
+					return fmt.Errorf("failed to increase single sum: %v", err)
+				}
+			}
+
 			data := fmt.Sprintf("%v:%v", uploadMB, downloadMB)
-
-			err = t.rds.HSet(ctx, key, userID, data).Err()
+			err = t.rds.Set(ctx, key, data, 24*time.Hour).Err()
 			if err != nil {
 				return fmt.Errorf("failed to set user data in redis: %v", err)
 			}
-
-			if err := SingleSum.UpdateSingleSum(ctx, torrentID, userID, uploadMB, downloadMB); err != nil {
-				return fmt.Errorf("failed to update single sum: %v", err)
+		} else {
+			// the new data is greater than old data, refresh data in redis
+			// THERE MIGHT BE SOME BUG HERE
+			data := fmt.Sprintf("%v:%v", uploadMB, downloadMB)
+			uploadToIncrease := uploadMB - oldUploadMB
+			downloadToIncrease := downloadMB - oldDownloadMB
+			if uploadToIncrease < 0 {
+				uploadToIncrease = 0
 			}
-
-			if err := TorrentStatus.IncrementUploadAndDownload(ctx, torrentID, userID, status, uploadMB, downloadMB); err != nil {
-				return fmt.Errorf("failed to update torrent status: %v", err)
+			if downloadToIncrease < 0 {
+				downloadToIncrease = 0
 			}
-
-			if err := t.HandleClientStatus(ctx, torrentID, userID, status); err != nil {
-				return fmt.Errorf("failed to update torrent status: %v", err)
+			err = SingleSum.IncreaseSingleSum(ctx, torrentID, userID, uploadToIncrease, downloadToIncrease)
+			if err != nil {
+				return fmt.Errorf("failed to increase single sum: %v", err)
+			}
+			err = t.rds.Set(ctx, key, data, 24*time.Hour).Err()
+			if err != nil {
+				return fmt.Errorf("failed to set user data in redis: %v", err)
 			}
 		}
+	} else {
+		// no exist
+		data := fmt.Sprintf("%v:%v", uploadMB, downloadMB)
 
-		// no update
-		return nil
-	}
+		err = t.rds.Set(ctx, key, data, 24*time.Hour).Err()
+		if err != nil {
+			return fmt.Errorf("failed to set user data in redis: %v", err)
+		}
 
-	data := fmt.Sprintf("%v:%v", uploadMB, downloadMB)
-
-	err = t.rds.HSet(ctx, key, userID, data).Err()
-	if err != nil {
-		return fmt.Errorf("failed to set user data in redis: %v", err)
-	}
-
-	err = t.rds.Expire(ctx, key, 24*time.Hour).Err()
-	if err != nil {
-		return fmt.Errorf("failed to set expiration in redis: %v", err)
-	}
-
-	if err := SingleSum.UpdateSingleSum(ctx, torrentID, userID, uploadMB, downloadMB); err != nil {
-		return fmt.Errorf("failed to update single sum: %v", err)
-	}
-
-	if err := TorrentStatus.IncrementUploadAndDownload(ctx, torrentID, userID, status, uploadMB, downloadMB); err != nil {
-		return fmt.Errorf("failed to update torrent status: %v", err)
+		if err := SingleSum.IncreaseSingleSum(ctx, torrentID, userID, uploadMB, downloadMB); err != nil {
+			return fmt.Errorf("failed to update single sum: %v", err)
+		}
 	}
 
 	if err := t.HandleClientStatus(ctx, torrentID, userID, status); err != nil {
@@ -154,17 +185,17 @@ func (t *trackerV1) HandelDownloadAndUpload(ctx context.Context, torrentID, user
 }
 
 func (t *trackerV1) HandleClientStatus(ctx context.Context, torrentID, userID string, status int) error {
-	seedingKey := "TorrentSeeding:" + torrentID
+	seedingKey := TorrentSeedingKey(torrentID, userID)
 	// Handle seeding count
 	switch status {
 	case trackerV1Values.Downloading:
-		t.rds.HSet(ctx, seedingKey, userID, trackerV1Values.Downloading)
+		t.rds.Set(ctx, seedingKey, trackerV1Values.Downloading, 24*time.Hour)
 	case trackerV1Values.Seeding:
-		t.rds.HSet(ctx, seedingKey, userID, trackerV1Values.Seeding)
+		t.rds.Set(ctx, seedingKey, trackerV1Values.Seeding, 24*time.Hour)
 	case trackerV1Values.Finished:
-		t.rds.HSet(ctx, seedingKey, userID, trackerV1Values.Finished)
+		t.rds.Set(ctx, seedingKey, trackerV1Values.Finished, 24*time.Hour)
 	case trackerV1Values.Stopped:
-		t.rds.HSet(ctx, seedingKey, userID, trackerV1Values.Stopped)
+		t.rds.Set(ctx, seedingKey, trackerV1Values.Stopped, 1*time.Hour)
 
 	}
 	return nil
@@ -198,4 +229,287 @@ func (t *trackerV1) GetTorrentID(ctx context.Context, hash string) (string, erro
 	}
 
 	return id, nil
+}
+
+// HandleReadySeeding Handle ready seeding.
+// If the key is exist, set the value to 0:0 and set the old value to db
+func (t *trackerV1) HandleReadySeeding(ctx context.Context, torrentID, userID string, status int, uploadMB, downloadMB int64) error {
+	key := TorrentSumKey(torrentID, userID)
+	exists, err := t.rds.Exists(ctx, key).Result()
+	if err != nil {
+		return fmt.Errorf("failed to check hash existence in redis: %v", err)
+	}
+
+	// exist
+	if exists != 0 {
+		oldData, err := t.rds.Get(ctx, key).Result()
+		if err != nil {
+			return fmt.Errorf("failed to get old user data in redis: %v", err)
+		}
+
+		parts := strings.Split(oldData, ":")
+		if len(parts) != 2 {
+			return fmt.Errorf("invalid old data format for key %s/%s", torrentID, userID)
+		}
+
+		oldUploadMB, _ := strconv.ParseInt(parts[0], 10, 64)
+		oldDownloadMB, _ := strconv.ParseInt(parts[1], 10, 64)
+
+		// is smaller it is reset
+		uploadSmaller := uploadMB < oldUploadMB
+		downloadSmaller := downloadMB < oldDownloadMB
+		if uploadSmaller || downloadSmaller {
+			//if uploadSmaller {
+			//	err = SingleSum.IncreaseSingleSum(ctx, torrentID, userID, uploadMB, 0)
+			//	if err != nil {
+			//		return fmt.Errorf("failed to increase single sum: %v", err)
+			//	}
+			//}
+			//
+			//if downloadSmaller {
+			//	err = SingleSum.IncreaseSingleSum(ctx, torrentID, userID, 0, downloadMB)
+			//	if err != nil {
+			//		return fmt.Errorf("failed to increase single sum: %v", err)
+			//	}
+			//}
+
+			data := fmt.Sprintf("%v:%v", uploadMB, downloadMB)
+			err = t.rds.Set(ctx, key, data, 24*time.Hour).Err()
+			if err != nil {
+				return fmt.Errorf("failed to set user data in redis: %v", err)
+			}
+		} else {
+			// the new data is greater than old data, refresh data in redis
+			// THERE MIGHT BE SOME BUG HERE
+			data := fmt.Sprintf("%v:%v", uploadMB, downloadMB)
+			uploadToIncrease := uploadMB - oldUploadMB
+			downloadToIncrease := downloadMB - oldDownloadMB
+			if uploadToIncrease < 0 {
+				uploadToIncrease = 0
+			}
+			if downloadToIncrease < 0 {
+				downloadToIncrease = 0
+			}
+			err = SingleSum.IncreaseSingleSum(ctx, torrentID, userID, uploadToIncrease, downloadToIncrease)
+			if err != nil {
+				return fmt.Errorf("failed to increase single sum: %v", err)
+			}
+			err = t.rds.Set(ctx, key, data, 24*time.Hour).Err()
+			if err != nil {
+				return fmt.Errorf("failed to set user data in redis: %v", err)
+			}
+		}
+	} else {
+		// not exist
+		err = SingleSum.IncreaseSingleSum(ctx, torrentID, userID, uploadMB, downloadMB)
+		if err != nil {
+			return fmt.Errorf("failed to increase single sum: %v", err)
+		}
+
+		data := fmt.Sprintf("%v:%v", uploadMB, downloadMB)
+		err = t.rds.Set(ctx, key, data, 24*time.Hour).Err()
+		if err != nil {
+			return fmt.Errorf("failed to set user data in redis: %v", err)
+		}
+	}
+
+	if err := t.HandleClientStatus(ctx, torrentID, userID, status); err != nil {
+		return fmt.Errorf("failed to update torrent status: %v", err)
+	}
+
+	return nil
+}
+
+// HandleSeeding Handle seeding.
+func (t *trackerV1) HandleSeeding(ctx context.Context, torrentID, userID string, status int, uploadMB, downloadMB int64) error {
+	key := TorrentSumKey(torrentID, userID)
+	exists, err := t.rds.Exists(ctx, key).Result()
+	if err != nil {
+		return fmt.Errorf("failed to check hash existence in redis: %v", err)
+	}
+
+	// if exist and the value is greater than old, update
+	// if not exist, set the value to db and reset the value
+	if exists != 0 {
+		oldData, err := t.rds.Get(ctx, key).Result()
+		if err != nil {
+			return fmt.Errorf("failed to get old user data in redis: %v", err)
+		}
+
+		parts := strings.Split(oldData, ":")
+		if len(parts) != 2 {
+			return fmt.Errorf("invalid old data format for key %s/%s", torrentID, userID)
+		}
+
+		oldUploadMB, _ := strconv.ParseInt(parts[0], 10, 64)
+		oldDownloadMB, _ := strconv.ParseInt(parts[1], 10, 64)
+
+		// is smaller it is reset
+		uploadSmaller := uploadMB < oldUploadMB
+		downloadSmaller := downloadMB < oldDownloadMB
+		if uploadSmaller || downloadSmaller {
+			//if uploadSmaller {
+			//	err = SingleSum.IncreaseSingleSum(ctx, torrentID, userID, uploadMB, 0)
+			//	if err != nil {
+			//		return fmt.Errorf("failed to increase single sum: %v", err)
+			//	}
+			//}
+			//
+			//if downloadSmaller {
+			//	err = SingleSum.IncreaseSingleSum(ctx, torrentID, userID, 0, downloadMB)
+			//	if err != nil {
+			//		return fmt.Errorf("failed to increase single sum: %v", err)
+			//	}
+			//}
+
+			data := fmt.Sprintf("%v:%v", uploadMB, downloadMB)
+			err = t.rds.Set(ctx, key, data, 24*time.Hour).Err()
+			if err != nil {
+				return fmt.Errorf("failed to set user data in redis: %v", err)
+			}
+		} else {
+			// the new data is greater than old data, refresh data in redis
+			// THERE MIGHT BE SOME BUG HERE
+			data := fmt.Sprintf("%v:%v", uploadMB, downloadMB)
+
+			parts := strings.Split(oldData, ":")
+			if len(parts) != 2 {
+				return fmt.Errorf("invalid old data format for key %s/%s", torrentID, userID)
+			}
+
+			_oldUploadMB, _ := strconv.ParseInt(parts[0], 10, 64)
+			_oldDownloadMB, _ := strconv.ParseInt(parts[1], 10, 64)
+
+			uploadToIncrease := uploadMB - _oldUploadMB
+			downloadToIncrease := downloadMB - _oldDownloadMB
+			if uploadToIncrease < 0 {
+				uploadToIncrease = 0
+			}
+			if downloadToIncrease < 0 {
+				downloadToIncrease = 0
+			}
+			err = SingleSum.IncreaseSingleSum(ctx, torrentID, userID, uploadToIncrease, downloadToIncrease)
+			if err != nil {
+				return fmt.Errorf("failed to increase single sum: %v", err)
+			}
+			err = t.rds.Set(ctx, key, data, 24*time.Hour).Err()
+			if err != nil {
+				return fmt.Errorf("failed to set user data in redis: %v", err)
+			}
+		}
+	} else {
+		// not exist
+		err = SingleSum.IncreaseSingleSum(ctx, torrentID, userID, uploadMB, downloadMB)
+		if err != nil {
+			return fmt.Errorf("failed to increase single sum: %v", err)
+		}
+
+		data := fmt.Sprintf("%v:%v", uploadMB, downloadMB)
+		err = t.rds.Set(ctx, key, data, 24*time.Hour).Err()
+		if err != nil {
+			return fmt.Errorf("failed to set user data in redis: %v", err)
+		}
+	}
+
+	if err := t.HandleClientStatus(ctx, torrentID, userID, status); err != nil {
+		return fmt.Errorf("failed to update torrent status: %v", err)
+	}
+	return nil
+}
+
+// HandleStop Handle stop.
+func (t *trackerV1) HandleStop(ctx context.Context, torrentID, userID string, status int, uploadMB, downloadMB int64) error {
+	key := TorrentSumKey(torrentID, userID)
+	exists, err := t.rds.Exists(ctx, key).Result()
+	if err != nil {
+		return fmt.Errorf("failed to check hash existence in redis: %v", err)
+	}
+
+	// if exist and the value is greater than old, update
+	// if not exist, set the value to db and reset the value
+	if exists != 0 {
+		oldData, err := t.rds.Get(ctx, key).Result()
+		if err != nil {
+			return fmt.Errorf("failed to get old user data in redis: %v", err)
+		}
+
+		parts := strings.Split(oldData, ":")
+		if len(parts) != 2 {
+			return fmt.Errorf("invalid old data format for key %s/%s", torrentID, userID)
+		}
+
+		oldUploadMB, _ := strconv.ParseInt(parts[0], 10, 64)
+		oldDownloadMB, _ := strconv.ParseInt(parts[1], 10, 64)
+
+		// is smaller it is reset
+		uploadSmaller := uploadMB < oldUploadMB
+		downloadSmaller := downloadMB < oldDownloadMB
+		if uploadSmaller || downloadSmaller {
+			//if uploadSmaller {
+			//	err = SingleSum.IncreaseSingleSum(ctx, torrentID, userID, uploadMB, 0)
+			//	if err != nil {
+			//		return fmt.Errorf("failed to increase single sum: %v", err)
+			//	}
+			//}
+			//
+			//if downloadSmaller {
+			//	err = SingleSum.IncreaseSingleSum(ctx, torrentID, userID, 0, downloadMB)
+			//	if err != nil {
+			//		return fmt.Errorf("failed to increase single sum: %v", err)
+			//	}
+			//}
+
+			err = t.rds.Del(ctx, key).Err()
+			if err != nil {
+				return fmt.Errorf("failed to delete key: %v", err)
+			}
+		} else {
+			// THERE MIGHT BE SOME BUG HERE
+			uploadToIncrease := uploadMB - oldUploadMB
+			downloadToIncrease := downloadMB - oldDownloadMB
+			if uploadToIncrease < 0 {
+				uploadToIncrease = 0
+			}
+			if downloadToIncrease < 0 {
+				downloadToIncrease = 0
+			}
+			err = SingleSum.IncreaseSingleSum(ctx, torrentID, userID, uploadToIncrease, downloadToIncrease)
+			if err != nil {
+				return fmt.Errorf("failed to increase single sum: %v", err)
+			}
+			err = t.rds.Del(ctx, key).Err()
+			if err != nil {
+				return fmt.Errorf("failed to delete key: %v", err)
+			}
+		}
+	} else {
+		// not exist
+		err = SingleSum.IncreaseSingleSum(ctx, torrentID, userID, uploadMB, downloadMB)
+		if err != nil {
+			return fmt.Errorf("failed to increase single sum: %v", err)
+		}
+
+		err = t.rds.Del(ctx, key).Err()
+		if err != nil {
+			return fmt.Errorf("failed to delete key: %v", err)
+		}
+	}
+
+	return nil
+}
+
+func TorrentDownloadingKey(torrentID string, uid string) string {
+	return "TorrentDownloading" + "/" + torrentID + "/" + uid
+}
+
+func TorrentSumKey(torrentID, uid string) string {
+	return "TorrentSum" + "/" + torrentID + "/" + uid
+}
+
+func TorrentSeedingKey(torrentID, uid string) string {
+	return "TorrentSeeding" + "/" + torrentID + "/" + uid
+}
+
+func TorrentStopKey(torrentID, uid string) string {
+	return "TorrentStop" + "/" + torrentID + "/" + uid
 }

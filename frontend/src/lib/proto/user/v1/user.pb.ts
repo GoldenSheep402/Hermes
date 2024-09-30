@@ -138,6 +138,6 @@ export class UserService {
     return fm.fetchReq<GroupUserUpdateRequest, GroupUserUpdateResponse>(`/gapi/group/v1/user/update`, {...initReq, method: "POST", body: JSON.stringify(req, fm.replacer)})
   }
   static GetUserPassKey(req: GetUserRequest, initReq?: fm.InitReq): Promise<GetUserResponse> {
-    return fm.fetchReq<GetUserRequest, GetUserResponse>(`/gapi/user/v1/passkey?${fm.renderURLSearchParams(req, [])}`, {...initReq, method: "GET"})
+    return fm.fetchReq<GetUserRequest, GetUserResponse>(`/gapi/user/v1/passkey`, {...initReq, method: "POST", body: JSON.stringify(req, fm.replacer)})
   }
 }

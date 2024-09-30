@@ -270,7 +270,7 @@
       }
     },
     "/gapi/user/v1/passkey": {
-      "get": {
+      "post": {
         "operationId": "UserService_GetUserPassKey",
         "responses": {
           "200": {
@@ -288,10 +288,12 @@
         },
         "parameters": [
           {
-            "name": "id",
-            "in": "query",
-            "required": false,
-            "type": "string"
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1GetUserRequest"
+            }
           }
         ],
         "tags": [
@@ -385,6 +387,14 @@
       "properties": {
         "group": {
           "$ref": "#/definitions/v1Group"
+        }
+      }
+    },
+    "v1GetUserRequest": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
         }
       }
     },

@@ -49,6 +49,7 @@ export type TorrentBasic = {
 export type CreateTorrentV1Request = {
   categoryId?: string
   name?: string
+  comment?: string
   metadata?: TorrentMetaData[]
   torrent?: Torrent
 }

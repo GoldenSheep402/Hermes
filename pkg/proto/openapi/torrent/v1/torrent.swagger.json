@@ -185,6 +185,9 @@
         "name": {
           "type": "string"
         },
+        "comment": {
+          "type": "string"
+        },
         "metadata": {
           "type": "array",
           "items": {

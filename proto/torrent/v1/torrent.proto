@@ -29,15 +29,15 @@ service TorrentService{
     };
   }
 
-    /*
-     CreateTorrentV1
-     @Description
-      Create torrent, return torrent id
-      The file follows the torrent file format V1.
-     @Param CreateTorrentV1Request
-     @Return CreateTorrentV1Response
-     @Http POST /gapi/torrent/v1/info
-  */
+  /*
+   CreateTorrentV1
+   @Description
+    Create torrent, return torrent id
+    The file follows the torrent file format V1.
+   @Param CreateTorrentV1Request
+   @Return CreateTorrentV1Response
+   @Http POST /gapi/torrent/v1/info
+*/
   rpc CreateTorrentV1(CreateTorrentV1Request) returns (CreateTorrentV1Response) {
     option (google.api.http) = {
       post: "/gapi/torrent/v1/create/v1"
@@ -97,8 +97,9 @@ message TorrentBasic {
 message CreateTorrentV1Request {
   string categoryId = 1;
   string name = 2;
-  repeated TorrentMetaData metadata = 3;
-  Torrent torrent = 4;
+  string comment = 3;
+  repeated TorrentMetaData metadata = 4;
+  Torrent torrent = 5;
 }
 message CreateTorrentV1Response {
   string id = 1;

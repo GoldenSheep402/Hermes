@@ -123,6 +123,7 @@ func AnnounceWithKey(c *jin.Context) {
 	downloadedStr := c.Request.URL.Query().Get("downloaded")
 	leftStr := c.Request.URL.Query().Get("left")
 	req.Event = c.Request.URL.Query().Get("event")
+	// TODO: take IP from header
 	req.IP = c.Request.URL.Query().Get("ip")
 	numWantStr := c.Request.URL.Query().Get("numwant")
 	req.Key = c.Request.URL.Query().Get("key")
@@ -284,7 +285,7 @@ func AnnounceWithKey(c *jin.Context) {
 			return
 		}
 	case "completed":
-		peerStatus = trackerV1Values.Seeding
+		peerStatus = trackerV1Values.Completed
 		peer := &model.Peer{
 			PeerID:   req.PeerID,
 			IP:       req.IP,

@@ -1,31 +1,50 @@
 <script lang="ts" setup>
 import {onMounted, ref} from "vue";
-import {TorrentService} from "@/services/grpc.ts";
+import {TorrentService,TrackerService} from "@/services/grpc.ts";
 import {Notification} from "@arco-design/web-vue";
 
 interface TorrentMessage {
-  id: string,
+  id: string;
   name: string;
   description: string;
   categoryId: string;
   categoryName: string;
+  downloading: number;
+  seeding: number;
+  finished: number;
 }
 
 const torrentList = ref<TorrentMessage[]>([]);
 
-function loadList() {
-  TorrentService.GetTorrentV1List({}).then((res) => {
-    for (let i = 0; i < res.torrents!!.length; i++) {
+async function fetchTorrentData() {
+  TorrentService.GetTorrentV1List({}).then(async (res) => {
+    for (let i = 0; i < res.torrents.length; i++) {
+      const downloadingCount = ref<number>(0);
+      const seedingCount = ref<number>(0);
+      const finishedCount = ref<number>(0);
+      await TrackerService.GetTorrentDownloadingStatus({ torrentId: res.torrents[i].id })
+          .then((statusRes) => {
+            downloadingCount.value = statusRes.downloading;
+            seedingCount.value = statusRes.seeding;
+            finishedCount.value = statusRes.finished;
+          })
+          .catch((err) => {
+            console.error('Failed to get torrent status', err);
+          });
+
       torrentList.value.push({
-        id: res.torrents!![i].id!!,
-        name: res.torrents!![i].name!!,
-        description: res.torrents!![i].description!!,
-        categoryId: res.torrents!![i].categoryId!!,
-        categoryName: res.torrents!![i].categoryName!!,
+        id: res.torrents[i].id,
+        name: res.torrents[i].name,
+        description: res.torrents[i].description,
+        categoryId: res.torrents[i].categoryId,
+        categoryName: res.torrents[i].categoryName,
+        downloading: downloadingCount.value,
+        seeding: seedingCount.value,
+        finished: finishedCount.value,
       });
     }
   }).catch((err) => {
-    console.error(err);
+    console.error('Failed to fetch torrent list', err);
   });
 }
 
@@ -91,7 +110,8 @@ const handleNotification = (type: string, title: string, content: string) => {
 }
 
 onMounted(() => {
-  loadList();
+  fetchTorrentData();
+  console.log(torrentList.value);
 });
 </script>
 
@@ -105,8 +125,26 @@ onMounted(() => {
       <a-table :data="torrentList">
         <template #columns>
           <a-table-column key="name" dataIndex="name" title="名称"></a-table-column>
-          <!--          <a-table-column title="描述" dataIndex="description" key="description"></a-table-column>-->
           <a-table-column key="categoryName" dataIndex="categoryName" title="类别名称"></a-table-column>
+<!--          <a-table-column key="finished" dataIndex="finished" title="下载"></a-table-column>-->
+          <a-table-column key="status" title="状态">
+            <template #cell="{record}">
+              <div class="flex flex-row gap-2">
+                <a-statistic :value="record.seeding">
+                  <template #suffix>
+                    <icon-arrow-up />
+                  </template>
+                </a-statistic>
+
+                <a-statistic :value="record.finished">
+                  <template #suffix>
+                    <icon-check />
+                  </template>
+                </a-statistic>
+              </div>
+
+            </template>
+          </a-table-column>
           <a-table-column key="action" title="操作">
             <template #cell="{record}">
               <a-button type="primary" @click="downloadTorrent(record.id,record.name)">下载</a-button>

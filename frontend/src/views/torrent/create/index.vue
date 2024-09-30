@@ -144,7 +144,7 @@ onMounted(() => {
               <div v-if="metas.id === checkedID">
                 <div v-for="meta in metas.metaData!!" :key="meta.id" class="flex items-center mb-4">
                   <div class="flex items-center mr-4">
-                    <div class="flex items-center justify-center text-gray-700 font-semibold">
+                    <div class="flex items-center justify-center text-[--color-text-1] font-semibold">
                       {{ meta.key }}:
                     </div>
                   </div>

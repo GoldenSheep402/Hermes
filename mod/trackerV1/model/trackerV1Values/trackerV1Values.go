@@ -17,4 +17,12 @@ const (
 	Finished
 	Stopped
 	ReadySeeding
+	Completed
+)
+
+const (
+	UserDownload_Download = iota
+	UserDownload_Upload
+	UserDownload_Finished
+	UserDownload_Seeding
 )

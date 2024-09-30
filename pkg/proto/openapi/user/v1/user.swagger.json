@@ -269,6 +269,36 @@
         ]
       }
     },
+    "/gapi/user/v1/passkey": {
+      "get": {
+        "operationId": "UserService_GetUserPassKey",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GetUserResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "UserService"
+        ]
+      }
+    },
     "/gapi/user/v1/password": {
       "put": {
         "operationId": "UserService_UpdatePassword",

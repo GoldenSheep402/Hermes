@@ -28,6 +28,7 @@ const (
 	UserService_GroupAddUser_FullMethodName    = "/user.v1.UserService/GroupAddUser"
 	UserService_GroupRemoveUser_FullMethodName = "/user.v1.UserService/GroupRemoveUser"
 	UserService_GroupUserUpdate_FullMethodName = "/user.v1.UserService/GroupUserUpdate"
+	UserService_GetUserPassKey_FullMethodName  = "/user.v1.UserService/GetUserPassKey"
 )
 
 // UserServiceClient is the client API for UserService service.
@@ -44,6 +45,7 @@ type UserServiceClient interface {
 	GroupAddUser(ctx context.Context, in *GroupAddUserRequest, opts ...grpc.CallOption) (*GroupAddUserResponse, error)
 	GroupRemoveUser(ctx context.Context, in *GroupRemoveUserRequest, opts ...grpc.CallOption) (*GroupRemoveUserResponse, error)
 	GroupUserUpdate(ctx context.Context, in *GroupUserUpdateRequest, opts ...grpc.CallOption) (*GroupUserUpdateResponse, error)
+	GetUserPassKey(ctx context.Context, in *GetUserRequest, opts ...grpc.CallOption) (*GetUserResponse, error)
 }
 
 type userServiceClient struct {
@@ -144,6 +146,16 @@ func (c *userServiceClient) GroupUserUpdate(ctx context.Context, in *GroupUserUp
 	return out, nil
 }
 
+func (c *userServiceClient) GetUserPassKey(ctx context.Context, in *GetUserRequest, opts ...grpc.CallOption) (*GetUserResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetUserResponse)
+	err := c.cc.Invoke(ctx, UserService_GetUserPassKey_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // UserServiceServer is the server API for UserService service.
 // All implementations must embed UnimplementedUserServiceServer
 // for forward compatibility.
@@ -158,6 +170,7 @@ type UserServiceServer interface {
 	GroupAddUser(context.Context, *GroupAddUserRequest) (*GroupAddUserResponse, error)
 	GroupRemoveUser(context.Context, *GroupRemoveUserRequest) (*GroupRemoveUserResponse, error)
 	GroupUserUpdate(context.Context, *GroupUserUpdateRequest) (*GroupUserUpdateResponse, error)
+	GetUserPassKey(context.Context, *GetUserRequest) (*GetUserResponse, error)
 	mustEmbedUnimplementedUserServiceServer()
 }
 
@@ -194,6 +207,9 @@ func (UnimplementedUserServiceServer) GroupRemoveUser(context.Context, *GroupRem
 }
 func (UnimplementedUserServiceServer) GroupUserUpdate(context.Context, *GroupUserUpdateRequest) (*GroupUserUpdateResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GroupUserUpdate not implemented")
+}
+func (UnimplementedUserServiceServer) GetUserPassKey(context.Context, *GetUserRequest) (*GetUserResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetUserPassKey not implemented")
 }
 func (UnimplementedUserServiceServer) mustEmbedUnimplementedUserServiceServer() {}
 func (UnimplementedUserServiceServer) testEmbeddedByValue()                     {}
@@ -378,6 +394,24 @@ func _UserService_GroupUserUpdate_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _UserService_GetUserPassKey_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetUserRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).GetUserPassKey(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_GetUserPassKey_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).GetUserPassKey(ctx, req.(*GetUserRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // UserService_ServiceDesc is the grpc.ServiceDesc for UserService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -420,6 +454,10 @@ var UserService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GroupUserUpdate",
 			Handler:    _UserService_GroupUserUpdate_Handler,
+		},
+		{
+			MethodName: "GetUserPassKey",
+			Handler:    _UserService_GetUserPassKey_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

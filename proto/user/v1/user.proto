@@ -74,6 +74,12 @@ service UserService {
       body: "*",
     };
   }
+
+  rpc GetUserPassKey(GetUserRequest) returns (GetUserResponse) {
+    option (google.api.http) = {
+      get: "/gapi/user/v1/passkey"
+    };
+  }
 }
 
 message GetUserRequest {
@@ -156,3 +162,10 @@ message GroupUserUpdateRequest {
   repeated GroupMetaData metaData = 3;
 }
 message GroupUserUpdateResponse {}
+
+message GetUserPassKeyRequest {
+  string id = 1;
+}
+message GetUserPassKeyResponse {
+  string passKey = 1;
+}

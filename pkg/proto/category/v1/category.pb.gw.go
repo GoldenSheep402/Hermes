@@ -339,7 +339,7 @@ func RegisterCategoryServiceHandler(ctx context.Context, mux *runtime.ServeMux, 
 
 // RegisterCategoryServiceHandlerClient registers the http handlers for service CategoryService
 // to "mux". The handlers forward requests to the grpc endpoint over the given implementation of "CategoryServiceClient".
-// Note: the gRPC framework executes interceptors within the gRPC handler. If the passed in "CategoryServiceClient"
+// Note: the gRPC framework executes interceptors within the gRPC handlers. If the passed in "CategoryServiceClient"
 // doesn't go through the normal gRPC flow (creating a gRPC client etc.) then it will be up to the passed in
 // "CategoryServiceClient" to call the correct interceptors. This client ignores the HTTP middlewares.
 func RegisterCategoryServiceHandlerClient(ctx context.Context, mux *runtime.ServeMux, client CategoryServiceClient) error {

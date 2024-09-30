@@ -5,8 +5,10 @@ import (
 	"github.com/GoldenSheep402/Hermes/core/kernel"
 	"github.com/GoldenSheep402/Hermes/mod/grpcGateway/gateway"
 	"github.com/GoldenSheep402/Hermes/mod/torrent/dao"
+	"github.com/GoldenSheep402/Hermes/mod/torrent/handlers"
 	"github.com/GoldenSheep402/Hermes/mod/torrent/service"
 	torrentV1 "github.com/GoldenSheep402/Hermes/pkg/proto/torrent/v1"
+	"github.com/juanjiTech/jin"
 	"github.com/redis/go-redis/v9"
 	"google.golang.org/grpc"
 	"gorm.io/gorm"
@@ -46,7 +48,15 @@ func (m *Mod) Load(h *kernel.Hub) error {
 	torrentV1.RegisterTorrentServiceServer(&GRPC, &service.S{
 		Log: h.Log.Named("torrent.service"),
 	})
-	err := gw.Register(torrentV1.RegisterTorrentServiceHandler)
+
+	var jinE jin.Engine
+	err := h.Load(&jinE)
+	if err != nil {
+		return errors.New("can't load jin.Engine from kernel")
+	}
+	handlers.Registry(&jinE)
+
+	err = gw.Register(torrentV1.RegisterTorrentServiceHandler)
 	if err != nil {
 		h.Log.Fatalw("failed to register", "error", err)
 	}

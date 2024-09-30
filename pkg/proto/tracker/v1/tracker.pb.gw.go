@@ -125,7 +125,7 @@ func RegisterTrackerServiceHandler(ctx context.Context, mux *runtime.ServeMux, c
 
 // RegisterTrackerServiceHandlerClient registers the http handlers for service TrackerService
 // to "mux". The handlers forward requests to the grpc endpoint over the given implementation of "TrackerServiceClient".
-// Note: the gRPC framework executes interceptors within the gRPC handler. If the passed in "TrackerServiceClient"
+// Note: the gRPC framework executes interceptors within the gRPC handlers. If the passed in "TrackerServiceClient"
 // doesn't go through the normal gRPC flow (creating a gRPC client etc.) then it will be up to the passed in
 // "TrackerServiceClient" to call the correct interceptors. This client ignores the HTTP middlewares.
 func RegisterTrackerServiceHandlerClient(ctx context.Context, mux *runtime.ServeMux, client TrackerServiceClient) error {

@@ -304,12 +304,9 @@ func (s *S) DownloadTorrentV1(ctx context.Context, req *torrentV1.DownloadTorren
 		_torrentFull.Info.NameUTF8 = &torrent.NameUTF8
 	}
 
-	marshaledInfo, err := bencode.Marshal(_torrentFull.Info)
 	if err != nil {
 		return nil, err
 	}
-	hash := fmt.Sprintf("%x", sha1.Sum(marshaledInfo))
-	fmt.Println(hash)
 
 	var buf bytes.Buffer
 	encoder := bencode.NewEncoder(&buf)

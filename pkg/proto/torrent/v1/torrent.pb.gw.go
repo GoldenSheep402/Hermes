@@ -278,7 +278,7 @@ func RegisterTorrentServiceHandler(ctx context.Context, mux *runtime.ServeMux, c
 
 // RegisterTorrentServiceHandlerClient registers the http handlers for service TorrentService
 // to "mux". The handlers forward requests to the grpc endpoint over the given implementation of "TorrentServiceClient".
-// Note: the gRPC framework executes interceptors within the gRPC handler. If the passed in "TorrentServiceClient"
+// Note: the gRPC framework executes interceptors within the gRPC handlers. If the passed in "TorrentServiceClient"
 // doesn't go through the normal gRPC flow (creating a gRPC client etc.) then it will be up to the passed in
 // "TorrentServiceClient" to call the correct interceptors. This client ignores the HTTP middlewares.
 func RegisterTorrentServiceHandlerClient(ctx context.Context, mux *runtime.ServeMux, client TorrentServiceClient) error {

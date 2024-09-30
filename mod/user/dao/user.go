@@ -131,3 +131,11 @@ func (u *user) CheckKey(ctx context.Context, key string) (*model.User, error) {
 
 	return &_user, nil
 }
+
+func (u *user) GetPassKey(ctx context.Context, id string) (key string, err error) {
+	var _user model.User
+	if err := u.DB().WithContext(ctx).Model(&model.User{}).Where("id = ?", id).First(&_user).Error; err != nil {
+		return "", err
+	}
+	return _user.Key, nil
+}

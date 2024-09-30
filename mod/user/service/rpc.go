@@ -442,3 +442,30 @@ func (s *S) GroupUserUpdate(ctx context.Context, req *userV1.GroupUserUpdateRequ
 
 	return &userV1.GroupUserUpdateResponse{}, nil
 }
+
+func (s *S) GetUserPassKey(ctx context.Context, req *userV1.GetUserPassKeyRequest) (*userV1.GetUserPassKeyResponse, error) {
+	UID, ok := ctx.Value(ctxKey.UID).(string)
+	if !ok || UID == "" {
+		return nil, status.Error(codes.Unauthenticated, "Unauthenticated")
+	}
+
+	if req.Id == "" {
+		isAdmin, err := userDao.User.IsAdmin(ctx, UID)
+		if err != nil {
+			return nil, status.Error(codes.Internal, "Internal error")
+		}
+
+		if !isAdmin {
+			return nil, status.Error(codes.PermissionDenied, "Permission denied")
+		}
+	}
+
+	passKey, err := userDao.User.GetPassKey(ctx, req.Id)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "Internal error")
+	}
+
+	return &userV1.GetUserPassKeyResponse{
+		PassKey: passKey,
+	}, nil
+}

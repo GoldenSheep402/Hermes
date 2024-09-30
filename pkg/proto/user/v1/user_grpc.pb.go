@@ -45,7 +45,7 @@ type UserServiceClient interface {
 	GroupAddUser(ctx context.Context, in *GroupAddUserRequest, opts ...grpc.CallOption) (*GroupAddUserResponse, error)
 	GroupRemoveUser(ctx context.Context, in *GroupRemoveUserRequest, opts ...grpc.CallOption) (*GroupRemoveUserResponse, error)
 	GroupUserUpdate(ctx context.Context, in *GroupUserUpdateRequest, opts ...grpc.CallOption) (*GroupUserUpdateResponse, error)
-	GetUserPassKey(ctx context.Context, in *GetUserRequest, opts ...grpc.CallOption) (*GetUserResponse, error)
+	GetUserPassKey(ctx context.Context, in *GetUserPassKeyRequest, opts ...grpc.CallOption) (*GetUserPassKeyResponse, error)
 }
 
 type userServiceClient struct {
@@ -146,9 +146,9 @@ func (c *userServiceClient) GroupUserUpdate(ctx context.Context, in *GroupUserUp
 	return out, nil
 }
 
-func (c *userServiceClient) GetUserPassKey(ctx context.Context, in *GetUserRequest, opts ...grpc.CallOption) (*GetUserResponse, error) {
+func (c *userServiceClient) GetUserPassKey(ctx context.Context, in *GetUserPassKeyRequest, opts ...grpc.CallOption) (*GetUserPassKeyResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(GetUserResponse)
+	out := new(GetUserPassKeyResponse)
 	err := c.cc.Invoke(ctx, UserService_GetUserPassKey_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -170,7 +170,7 @@ type UserServiceServer interface {
 	GroupAddUser(context.Context, *GroupAddUserRequest) (*GroupAddUserResponse, error)
 	GroupRemoveUser(context.Context, *GroupRemoveUserRequest) (*GroupRemoveUserResponse, error)
 	GroupUserUpdate(context.Context, *GroupUserUpdateRequest) (*GroupUserUpdateResponse, error)
-	GetUserPassKey(context.Context, *GetUserRequest) (*GetUserResponse, error)
+	GetUserPassKey(context.Context, *GetUserPassKeyRequest) (*GetUserPassKeyResponse, error)
 	mustEmbedUnimplementedUserServiceServer()
 }
 
@@ -208,7 +208,7 @@ func (UnimplementedUserServiceServer) GroupRemoveUser(context.Context, *GroupRem
 func (UnimplementedUserServiceServer) GroupUserUpdate(context.Context, *GroupUserUpdateRequest) (*GroupUserUpdateResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GroupUserUpdate not implemented")
 }
-func (UnimplementedUserServiceServer) GetUserPassKey(context.Context, *GetUserRequest) (*GetUserResponse, error) {
+func (UnimplementedUserServiceServer) GetUserPassKey(context.Context, *GetUserPassKeyRequest) (*GetUserPassKeyResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetUserPassKey not implemented")
 }
 func (UnimplementedUserServiceServer) mustEmbedUnimplementedUserServiceServer() {}
@@ -395,7 +395,7 @@ func _UserService_GroupUserUpdate_Handler(srv interface{}, ctx context.Context, 
 }
 
 func _UserService_GetUserPassKey_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetUserRequest)
+	in := new(GetUserPassKeyRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -407,7 +407,7 @@ func _UserService_GetUserPassKey_Handler(srv interface{}, ctx context.Context, d
 		FullMethod: UserService_GetUserPassKey_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UserServiceServer).GetUserPassKey(ctx, req.(*GetUserRequest))
+		return srv.(UserServiceServer).GetUserPassKey(ctx, req.(*GetUserPassKeyRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }

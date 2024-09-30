@@ -276,7 +276,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1GetUserResponse"
+              "$ref": "#/definitions/v1GetUserPassKeyResponse"
             }
           },
           "default": {
@@ -292,7 +292,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/v1GetUserRequest"
+              "$ref": "#/definitions/v1GetUserPassKeyRequest"
             }
           }
         ],
@@ -390,10 +390,18 @@
         }
       }
     },
-    "v1GetUserRequest": {
+    "v1GetUserPassKeyRequest": {
       "type": "object",
       "properties": {
         "id": {
+          "type": "string"
+        }
+      }
+    },
+    "v1GetUserPassKeyResponse": {
+      "type": "object",
+      "properties": {
+        "passKey": {
           "type": "string"
         }
       }

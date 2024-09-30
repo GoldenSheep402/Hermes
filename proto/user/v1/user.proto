@@ -17,6 +17,13 @@ service UserService {
     };
   }
 
+  rpc GetUserInfo(GetUserInfoRequest) returns (GetUserInfoResponse) {
+    option (google.api.http) = {
+      post: "/gapi/user/v1/info/full"
+      body: "*"
+    };
+  }
+
   rpc UpdateUser(UpdateUserRequest) returns (UpdateUserResponse) {
     option (google.api.http) = {
       put: "/gapi/user/v1/info"
@@ -89,6 +96,20 @@ message GetUserRequest {
 
 message GetUserResponse {
   User user = 1;
+}
+
+message GetUserInfoRequest {
+  string id = 1;
+}
+message GetUserInfoResponse {
+  string name = 1;
+  string email = 2;
+  int32  download = 3;
+  int32  upload = 4;
+  int32  torrentPublished = 5;
+  int32  torrentDownloaded = 6;
+  int32  torrentSeeding = 7;
+  string key = 8;
 }
 
 message UpdateUserRequest {

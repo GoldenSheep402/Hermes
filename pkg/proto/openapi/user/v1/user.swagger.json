@@ -269,6 +269,38 @@
         ]
       }
     },
+    "/gapi/user/v1/info/full": {
+      "post": {
+        "operationId": "UserService_GetUserInfo",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GetUserInfoResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1GetUserInfoRequest"
+            }
+          }
+        ],
+        "tags": [
+          "UserService"
+        ]
+      }
+    },
     "/gapi/user/v1/passkey": {
       "post": {
         "operationId": "UserService_GetUserPassKey",
@@ -387,6 +419,48 @@
       "properties": {
         "group": {
           "$ref": "#/definitions/v1Group"
+        }
+      }
+    },
+    "v1GetUserInfoRequest": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        }
+      }
+    },
+    "v1GetUserInfoResponse": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "download": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "upload": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "torrentPublished": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "torrentDownloaded": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "torrentSeeding": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "key": {
+          "type": "string"
         }
       }
     },

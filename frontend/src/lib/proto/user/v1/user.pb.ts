@@ -19,6 +19,21 @@ export type GetUserResponse = {
   user?: User
 }
 
+export type GetUserInfoRequest = {
+  id?: string
+}
+
+export type GetUserInfoResponse = {
+  name?: string
+  email?: string
+  download?: number
+  upload?: number
+  torrentPublished?: number
+  torrentDownloaded?: number
+  torrentSeeding?: number
+  key?: string
+}
+
 export type UpdateUserRequest = {
   user?: User
 }
@@ -112,6 +127,9 @@ export type GetUserPassKeyResponse = {
 export class UserService {
   static GetUser(req: GetUserRequest, initReq?: fm.InitReq): Promise<GetUserResponse> {
     return fm.fetchReq<GetUserRequest, GetUserResponse>(`/gapi/user/v1/info?${fm.renderURLSearchParams(req, [])}`, {...initReq, method: "GET"})
+  }
+  static GetUserInfo(req: GetUserInfoRequest, initReq?: fm.InitReq): Promise<GetUserInfoResponse> {
+    return fm.fetchReq<GetUserInfoRequest, GetUserInfoResponse>(`/gapi/user/v1/info/full`, {...initReq, method: "POST", body: JSON.stringify(req, fm.replacer)})
   }
   static UpdateUser(req: UpdateUserRequest, initReq?: fm.InitReq): Promise<UpdateUserResponse> {
     return fm.fetchReq<UpdateUserRequest, UpdateUserResponse>(`/gapi/user/v1/info`, {...initReq, method: "PUT", body: JSON.stringify(req, fm.replacer)})

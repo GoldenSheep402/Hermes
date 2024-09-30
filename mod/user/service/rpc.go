@@ -449,7 +449,7 @@ func (s *S) GetUserPassKey(ctx context.Context, req *userV1.GetUserPassKeyReques
 		return nil, status.Error(codes.Unauthenticated, "Unauthenticated")
 	}
 
-	if req.Id == "" {
+	if req.Id != "" {
 		isAdmin, err := userDao.User.IsAdmin(ctx, UID)
 		if err != nil {
 			return nil, status.Error(codes.Internal, "Internal error")
@@ -458,6 +458,8 @@ func (s *S) GetUserPassKey(ctx context.Context, req *userV1.GetUserPassKeyReques
 		if !isAdmin {
 			return nil, status.Error(codes.PermissionDenied, "Permission denied")
 		}
+	} else {
+		req.Id = UID
 	}
 
 	passKey, err := userDao.User.GetPassKey(ctx, req.Id)

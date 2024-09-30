@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import {onMounted, ref} from "vue";
-import {TorrentService,TrackerService} from "@/services/grpc.ts";
+import {TorrentService, TrackerService, UserService} from "@/services/grpc.ts";
 import {Notification} from "@arco-design/web-vue";
 
 interface TorrentMessage {
@@ -22,7 +22,7 @@ async function fetchTorrentData() {
       const downloadingCount = ref<number>(0);
       const seedingCount = ref<number>(0);
       const finishedCount = ref<number>(0);
-      await TrackerService.GetTorrentDownloadingStatus({ torrentId: res.torrents[i].id })
+      await TrackerService.GetTorrentDownloadingStatus({torrentId: res.torrents[i].id})
           .then((statusRes) => {
             downloadingCount.value = statusRes.downloading;
             seedingCount.value = statusRes.seeding;
@@ -109,7 +109,23 @@ const handleNotification = (type: string, title: string, content: string) => {
   }
 }
 
+
+const passkey = ref<string>("");
+
+function getPasskey() {
+  UserService.GetUserPassKey({}).then((res) => {
+    passkey.value = res.passKey!!;
+  }).catch(() => {
+    console.log("Get Passkey Fail");
+  });
+}
+
+function genUrl(id: string) {
+  return "http://172.16.7.183:27811/torrent/download/" + passkey.value + "?id=" + id;
+}
+
 onMounted(() => {
+  getPasskey();
   fetchTorrentData();
   console.log(torrentList.value);
 });
@@ -126,19 +142,19 @@ onMounted(() => {
         <template #columns>
           <a-table-column key="name" dataIndex="name" title="名称"></a-table-column>
           <a-table-column key="categoryName" dataIndex="categoryName" title="类别名称"></a-table-column>
-<!--          <a-table-column key="finished" dataIndex="finished" title="下载"></a-table-column>-->
+          <!--          <a-table-column key="finished" dataIndex="finished" title="下载"></a-table-column>-->
           <a-table-column key="status" title="状态">
             <template #cell="{record}">
               <div class="flex flex-row gap-2">
                 <a-statistic :value="record.seeding">
                   <template #suffix>
-                    <icon-arrow-up />
+                    <icon-arrow-up/>
                   </template>
                 </a-statistic>
 
                 <a-statistic :value="record.finished">
                   <template #suffix>
-                    <icon-check />
+                    <icon-check/>
                   </template>
                 </a-statistic>
               </div>
@@ -147,7 +163,11 @@ onMounted(() => {
           </a-table-column>
           <a-table-column key="action" title="操作">
             <template #cell="{record}">
-              <a-button type="primary" @click="downloadTorrent(record.id,record.name)">下载</a-button>
+              <a-button type="primary"
+                        :href="genUrl(record.id)"
+                        @click.prevent="downloadTorrent(record.id,record.name)">
+                下载
+              </a-button>
             </template>
           </a-table-column>
         </template>

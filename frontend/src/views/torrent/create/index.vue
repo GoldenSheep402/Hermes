@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import {onMounted, ref} from "vue";
-import {CategoryService, TorrentService} from "@/services/grpc.ts";
+import {CategoryService, TorrentService,UserService} from "@/services/grpc.ts";
 import {Category as CategoryBase} from "@/lib/proto/category/v1/category.pb.ts"
 import {FileItem} from "@arco-design/web-vue";
 import {CreateTorrentV1Request} from "@/lib/proto/torrent/v1/torrent.pb.ts";
@@ -113,7 +113,6 @@ function handleFileChange(fileList: FileItem[], file: FileItem) {
 }
 
 onMounted(() => {
-  console.log('onMounted');
   fetchCategoryList()
 });
 </script>

@@ -20,6 +20,7 @@ export type Settings = {
 }
 
 export type InnetTracker = {
+  id?: string
   addr?: string
   enable?: boolean
 }

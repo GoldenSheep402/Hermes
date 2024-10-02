@@ -2,7 +2,7 @@
 import {onMounted, ref} from "vue";
 import {SystemService} from "@/services/grpc.ts";
 import Subnets from "@/components/subnets/index.vue";
-import {Settings} from "@/lib/proto/system/v1/system.pb.ts";
+import {Settings,InnetTracker} from "@/lib/proto/system/v1/system.pb.ts";
 
 const setting = ref<Settings>({
   peerExpireTime: 0,
@@ -17,11 +17,13 @@ const setting = ref<Settings>({
   publishEnable: false,
 });
 
+const trackers = ref<InnetTracker[]>([]);
+
 function fetchSystemSettings() {
   SystemService.GetSettings({}).then((res) => {
     if (res.settings) {
       setting.value = res.settings;
-      console.log(setting.value);
+      trackers.value = res.settings.innetTracker!!;
     }
   }).catch((err) => {
     console.error(err);
@@ -92,7 +94,7 @@ onMounted(() => {
         <a-form-item field="publishEnable" label="发布启用">
           <a-switch v-model="setting.publishEnable"/>
         </a-form-item>
-
+        {{trackers}}
         <a-form-item>
           <a-button html-type="submit">修改</a-button>
         </a-form-item>

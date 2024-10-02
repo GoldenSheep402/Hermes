@@ -37,8 +37,9 @@ message Settings{
 }
 
 message InnetTracker{
-  string addr = 1;
-  bool enable = 2;
+  string id = 1;
+  string addr = 2;
+  bool enable = 3;
 }
 
 message GetSettingsRequest {}

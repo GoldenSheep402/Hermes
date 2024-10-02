@@ -124,6 +124,9 @@
     "v1InnetTracker": {
       "type": "object",
       "properties": {
+        "id": {
+          "type": "string"
+        },
         "addr": {
           "type": "string"
         },

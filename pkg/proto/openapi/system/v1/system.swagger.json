@@ -169,6 +169,12 @@
         },
         "publishEnable": {
           "type": "boolean"
+        },
+        "innetTrackerAddrs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       }
     }

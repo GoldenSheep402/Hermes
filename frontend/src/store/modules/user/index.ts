@@ -108,18 +108,16 @@ const useUserStore = defineStore('hermes', {
           this.isLogin = true;
           this.token = res.accessToken;
           this._refreshToken = res.refreshToken;
-          // set role
-          // UserService.GetUserInfo({}).then((res) => {
-          //   this.projectLimit = res.info?.limit;
-          //   this.name = res.info?.name;
-          //   if (res.info?.isAdmin) {
-          //     this.role = 'admin';
-          //   } else {
-          //     this.role = 'user';
-          //   }
-          // }).catch(()=>{
-          //   this.role = 'user';
-          // });
+          UserService.GetUser({}).then((res) => {
+            if (res.user?.role) {
+              this.role = 'admin';
+            }else {
+              this.role = 'user';
+            }
+          }).catch((err) => {
+            console.error(err);
+            throw err;
+          });
         }).catch((err) => {
           console.error(err);
           throw err;

@@ -1,6 +1,7 @@
 import {AuthService as originAuthService} from "@/lib/proto/auth/v1/auth.pb.ts";
 import {UserService as originUserService} from "@/lib/proto/user/v1/user.pb.ts";
 import {CategoryService as originCategoryService} from "@/lib/proto/category/v1/category.pb.ts";
+import {SystemService as originSystemService} from "@/lib/proto/system/v1/system.pb.ts";
 import {TorrentService as originTorrentService} from "@/lib/proto/torrent/v1/torrent.pb.ts";
 import {TrackerService as originTrackerService} from "@/lib/proto/tracker/v1/tracker.pb.ts"
 import {useUserStore} from "@/store";
@@ -8,6 +9,7 @@ import {useUserStore} from "@/store";
 export const AuthService = createProxy(originAuthService);
 export const UserService = createProxy(originUserService);
 export const CategoryService = createProxy(originCategoryService);
+export const SystemService = createProxy(originSystemService);
 export const TorrentService = createProxy(originTorrentService);
 export const TrackerService = createProxy(originTrackerService)
 

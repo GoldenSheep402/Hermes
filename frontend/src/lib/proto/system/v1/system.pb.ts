@@ -16,6 +16,7 @@ export type Settings = {
   registerEnable?: boolean
   loginEnable?: boolean
   publishEnable?: boolean
+  innetTrackerAddrs?: string[]
 }
 
 export type GetSettingsRequest = {

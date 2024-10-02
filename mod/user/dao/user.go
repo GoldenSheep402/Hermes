@@ -3,10 +3,14 @@ package dao
 import (
 	"context"
 	"errors"
+	torrentModel "github.com/GoldenSheep402/Hermes/mod/torrent/model"
+	trackerV1Model "github.com/GoldenSheep402/Hermes/mod/trackerV1/model"
 	"github.com/GoldenSheep402/Hermes/mod/user/model"
 	"github.com/GoldenSheep402/Hermes/pkg/stdao"
 	"github.com/oklog/ulid/v2"
+	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
+	"time"
 )
 
 var (
@@ -15,9 +19,11 @@ var (
 
 type user struct {
 	stdao.Std[*model.User]
+	rds *redis.Client
 }
 
-func (u *user) Init(db *gorm.DB) error {
+func (u *user) Init(db *gorm.DB, rds *redis.Client) error {
+	u.rds = rds
 	return u.Std.Init(db)
 }
 
@@ -95,6 +101,73 @@ func (u *user) GetInfo(ctx context.Context, uid string) (*model.User, error) {
 		return nil, err
 	}
 	return &user, nil
+}
+
+func (u *user) GetFullInfo(ctx context.Context, uid string) (user *model.User, download, upload, pubished, downloadCount, seedingCount int64, err error) {
+	if err := u.DB().WithContext(ctx).Model(&model.User{}).Where("id = ?", uid).First(user).Error; err != nil {
+		return nil, 0, 0, 0, 0, 0, err
+	}
+
+	sum := trackerV1Model.Sum{}
+	if err := u.DB().WithContext(ctx).Model(&trackerV1Model.Sum{}).Where("uid = ?", uid).First(&sum).Error; err != nil {
+		return nil, 0, 0, 0, 0, 0, err
+	}
+
+	timeNow := time.Now()
+	download = 0
+	upload = 0
+
+	// TODO: time setting
+	if timeNow.Sub(sum.UpdatedAt) > 10*time.Minute {
+		var singleSums []trackerV1Model.SingleSum
+		if err := u.DB().WithContext(ctx).Model(&trackerV1Model.SingleSum{}).Where("uid = ?", uid).Find(&singleSums).Error; err != nil {
+			return nil, 0, 0, 0, 0, 0, err
+		}
+
+		for _, singleSum := range singleSums {
+			download += singleSum.Download
+			upload += singleSum.Upload
+		}
+
+		// Update
+		if err := u.DB().WithContext(ctx).Model(&trackerV1Model.Sum{}).Where("id = ?", sum.ID).Updates(&trackerV1Model.Sum{
+			RealDownload: download,
+			RealUpload:   upload,
+		}).Error; err != nil {
+			return nil, 0, 0, 0, 0, 0, err
+		}
+	} else {
+		download = sum.RealDownload
+		upload = sum.RealUpload
+	}
+
+	var torrents []torrentModel.Torrent
+	if err := u.DB().WithContext(ctx).Model(&torrentModel.Torrent{}).Where("creator_id = ?", uid).Find(&torrents).Error; err != nil {
+		return nil, 0, 0, 0, 0, 0, err
+	}
+
+	var singleSums []trackerV1Model.SingleSum
+	if err := u.DB().WithContext(ctx).Model(&trackerV1Model.SingleSum{}).Where("uid = ?", uid).Find(&singleSums).Error; err != nil {
+		return nil, 0, 0, 0, 0, 0, err
+	}
+
+	for _, singleSum := range singleSums {
+		if singleSum.IsFinish {
+			downloadCount++
+		}
+	}
+
+	keys, err := u.rds.Keys(ctx, "TorrentSeeding/*/"+uid).Result()
+	if err != nil {
+		return nil, 0, 0, 0, 0, 0, err
+	}
+
+	seedingCount = int64(len(keys))
+	if err != nil {
+		return nil, 0, 0, 0, 0, 0, err
+	}
+
+	return user, download, upload, int64(len(torrents)), downloadCount, seedingCount, nil
 }
 
 func (u *user) IsAdmin(ctx context.Context, uid string) (bool, error) {

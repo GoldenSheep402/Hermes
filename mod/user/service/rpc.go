@@ -67,6 +67,28 @@ func (s *S) GetUser(ctx context.Context, req *userV1.GetUserRequest) (*userV1.Ge
 	return resp, nil
 }
 
+func (s *S) GetUserInfo(ctx context.Context, req *userV1.GetUserInfoRequest) (*userV1.GetUserInfoResponse, error) {
+	UID, ok := ctx.Value(ctxKey.UID).(string)
+	if !ok || UID == "" {
+		return nil, status.Error(codes.Unauthenticated, "Unauthenticated")
+	}
+
+	user, download, upload, published, downloadCount, seedingCount, err := userDao.User.GetFullInfo(ctx, UID)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "Internal error")
+	}
+
+	return &userV1.GetUserInfoResponse{
+		Name:              user.Name,
+		Download:          int32(download),
+		Upload:            int32(upload),
+		TorrentPublished:  int32(published),
+		TorrentDownloaded: int32(downloadCount),
+		TorrentSeeding:    int32(seedingCount),
+		Key:               user.Key,
+	}, nil
+}
+
 // UpdateUser updates a user's information based on the provided request, ensuring authentication, input validation, and authorization.
 func (s *S) UpdateUser(ctx context.Context, req *userV1.UpdateUserRequest) (*userV1.UpdateUserResponse, error) {
 	UID, ok := ctx.Value(ctxKey.UID).(string)

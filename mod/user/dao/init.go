@@ -20,7 +20,7 @@ func Init(DB *gorm.DB, rds *redis.Client) error {
 		return err
 	}
 
-	err = User.Init(DB)
+	err = User.Init(DB, rds)
 	if err != nil {
 		return err
 	}

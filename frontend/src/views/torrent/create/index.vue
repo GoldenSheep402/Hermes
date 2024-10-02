@@ -3,6 +3,7 @@ import {onMounted, ref} from "vue";
 import {CategoryService, TorrentService,UserService} from "@/services/grpc.ts";
 import {Category as CategoryBase} from "@/lib/proto/category/v1/category.pb.ts"
 import {FileItem} from "@arco-design/web-vue";
+import {Notification} from "@arco-design/web-vue";
 import {CreateTorrentV1Request} from "@/lib/proto/torrent/v1/torrent.pb.ts";
 
 
@@ -91,6 +92,8 @@ const sendFile = () => {
     console.log('CreateTorrentV1:', res);
   }).catch((err) => {
     console.error(err);
+  }).finally(() => {
+    handleNotification('success', '发布成功', '种子发布成功');
   });
 };
 
@@ -111,6 +114,35 @@ function handleFileChange(fileList: FileItem[], file: FileItem) {
     reader.readAsArrayBuffer(fileObj);
   }
 }
+
+const handleNotification = (type: string, title: string, content: string) => {
+  switch (type) {
+    case "success":
+      Notification.success({
+        title: title,
+        content: content,
+      });
+      break;
+    case "error":
+      Notification.error({
+        title: title,
+        content: content,
+      });
+      break;
+    case "warning":
+      Notification.warning({
+        title: title,
+        content: content,
+      });
+      break;
+    default:
+      Notification.info({
+        title: title,
+        content: content,
+      });
+  }
+}
+
 
 onMounted(() => {
   fetchCategoryList()

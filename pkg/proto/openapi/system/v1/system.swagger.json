@@ -132,6 +132,9 @@
         },
         "enable": {
           "type": "boolean"
+        },
+        "toBeDeleted": {
+          "type": "boolean"
         }
       }
     },

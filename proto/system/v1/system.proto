@@ -40,6 +40,7 @@ message InnetTracker{
   string id = 1;
   string addr = 2;
   bool enable = 3;
+  bool toBeDeleted = 4;
 }
 
 message GetSettingsRequest {}

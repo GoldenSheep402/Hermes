@@ -38,6 +38,11 @@ function handleSubmit() {
   });
 }
 
+function deleteTracker(tracker: InnetTracker) {
+  const index = trackers.value.indexOf(tracker);
+  trackers.value.splice(index, 1);
+}
+
 onMounted(() => {
   fetchSystemSettings();
 });
@@ -53,7 +58,7 @@ onMounted(() => {
         </a-form-item>
 
         <!-- allowedNets -->
-        <subnets v-model:subnets="setting.allowedNets!!"/>
+<!--        <subnets v-model:subnets="setting.allowedNets!!"/>-->
 
         <!-- smtpEnable -->
         <a-form-item field="smtpEnable" label="SMTP启用">
@@ -94,7 +99,22 @@ onMounted(() => {
         <a-form-item field="publishEnable" label="发布启用">
           <a-switch v-model="setting.publishEnable"/>
         </a-form-item>
-        {{trackers}}
+
+        <!-- trackers -->
+
+        <a-form-item field="trackers" label="内网跟踪器">
+          <div class="flex flex-col">
+            <a-button type="primary" @click="trackers.push({addr: '', enable: false})">添加</a-button>
+            <div v-for="(tracker, index) in trackers" :key="index">
+              <div class="flex flex-row items-center gap-2 m-t2">
+                <a-input v-model="trackers[index].addr"/>
+                <a-button @click="deleteTracker(trackers[index])">删除</a-button>
+                <a-switch v-model="trackers[index].enable" class="justify-center flex"/>
+              </div>
+            </div>
+          </div>
+        </a-form-item>
+
         <a-form-item>
           <a-button html-type="submit">修改</a-button>
         </a-form-item>

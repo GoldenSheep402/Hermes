@@ -23,6 +23,7 @@ export type InnetTracker = {
   id?: string
   addr?: string
   enable?: boolean
+  toBeDeleted?: boolean
 }
 
 export type GetSettingsRequest = {

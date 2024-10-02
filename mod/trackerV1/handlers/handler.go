@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/binary"
 	"fmt"
+	"github.com/GoldenSheep402/Hermes/conf"
 	"github.com/GoldenSheep402/Hermes/mod/trackerV1/dao"
 	trackerV1Dao "github.com/GoldenSheep402/Hermes/mod/trackerV1/dao"
 	"github.com/GoldenSheep402/Hermes/mod/trackerV1/model"
@@ -14,6 +15,7 @@ import (
 	"net"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -245,12 +247,38 @@ func AnnounceWithKey(c *jin.Context) {
 		req.Redundant, _ = strconv.Atoi(redundantStr)
 	}
 
-	if req.IP == "" {
-		host, _, err := net.SplitHostPort(c.Request.RemoteAddr)
+	// take ip from x-forwarded-for
+	xForwardedFor := c.Request.Header.Get("X-Forwarded-For")
+	var host string
+
+	if xForwardedFor != "" {
+		ips := strings.Split(xForwardedFor, ",")
+		host = strings.TrimSpace(ips[0])
+	} else {
+		host, _, err = net.SplitHostPort(c.Request.RemoteAddr)
 		if err != nil {
 			host = c.Request.RemoteAddr
 		}
+	}
 
+	allowedSubnets := conf.Get().TrackerV1.AllowedSubnets
+	var allowed bool
+
+	for _, subnet := range allowedSubnets {
+		_, ipNet, err := net.ParseCIDR(subnet)
+		if err != nil {
+			continue
+		}
+
+		if ipNet.Contains(net.ParseIP(host)) {
+			allowed = true
+			break
+		}
+	}
+
+	if !allowed {
+		req.IP = c.Request.RemoteAddr
+	} else {
 		req.IP = host
 	}
 
@@ -271,7 +299,7 @@ func AnnounceWithKey(c *jin.Context) {
 			Port:   req.Port,
 		}
 
-		err := dao.Peer.AddPeer(ctx, torrentID, peer)
+		err := dao.Peer.AddPeer(ctx, torrentID, peer, UID)
 
 		if err != nil {
 			c.Writer.WriteString("Failed to add peer")
@@ -279,7 +307,7 @@ func AnnounceWithKey(c *jin.Context) {
 		}
 	case "stopped":
 		peerStatus = trackerV1Values.Stopped
-		err := dao.Peer.RemovePeer(ctx, torrentID, req.PeerID)
+		err := dao.Peer.RemovePeer(ctx, torrentID, req.PeerID, UID)
 		if err != nil {
 			c.Writer.WriteString("Failed to remove peer")
 			return
@@ -294,7 +322,7 @@ func AnnounceWithKey(c *jin.Context) {
 			Status:   0,
 		}
 
-		err := dao.Peer.AddPeer(ctx, torrentID, peer)
+		err := dao.Peer.AddPeer(ctx, torrentID, peer, UID)
 		if err != nil {
 			c.Writer.WriteString("Failed to add peer")
 			return

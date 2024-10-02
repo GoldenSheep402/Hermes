@@ -104,13 +104,35 @@ func (u *user) GetInfo(ctx context.Context, uid string) (*model.User, error) {
 }
 
 func (u *user) GetFullInfo(ctx context.Context, uid string) (user *model.User, download, upload, pubished, downloadCount, seedingCount int64, err error) {
-	if err := u.DB().WithContext(ctx).Model(&model.User{}).Where("id = ?", uid).First(user).Error; err != nil {
+	if err := u.DB().WithContext(ctx).Model(&model.User{}).Where("id = ?", uid).First(&user).Error; err != nil {
 		return nil, 0, 0, 0, 0, 0, err
 	}
 
 	sum := trackerV1Model.Sum{}
 	if err := u.DB().WithContext(ctx).Model(&trackerV1Model.Sum{}).Where("uid = ?", uid).First(&sum).Error; err != nil {
-		return nil, 0, 0, 0, 0, 0, err
+		switch {
+		case errors.Is(err, gorm.ErrRecordNotFound):
+			var singleSums []trackerV1Model.SingleSum
+			if err := u.DB().WithContext(ctx).Model(&trackerV1Model.SingleSum{}).Where("uid = ?", uid).Find(&singleSums).Error; err != nil {
+				return nil, 0, 0, 0, 0, 0, err
+			}
+
+			for _, singleSum := range singleSums {
+				download += singleSum.Download
+				upload += singleSum.Upload
+			}
+
+			// create
+			if err := u.DB().WithContext(ctx).Model(&trackerV1Model.Sum{}).Create(&trackerV1Model.Sum{
+				UID:          uid,
+				RealDownload: download,
+				RealUpload:   upload,
+			}).Error; err != nil {
+				return nil, 0, 0, 0, 0, 0, err
+			}
+		default:
+			return nil, 0, 0, 0, 0, 0, err
+		}
 	}
 
 	timeNow := time.Now()

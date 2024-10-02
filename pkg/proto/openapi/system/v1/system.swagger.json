@@ -121,6 +121,17 @@
         }
       }
     },
+    "v1InnetTracker": {
+      "type": "object",
+      "properties": {
+        "addr": {
+          "type": "string"
+        },
+        "enable": {
+          "type": "boolean"
+        }
+      }
+    },
     "v1SetSettingsRequest": {
       "type": "object",
       "properties": {
@@ -170,10 +181,11 @@
         "publishEnable": {
           "type": "boolean"
         },
-        "innetTrackerAddrs": {
+        "innetTracker": {
           "type": "array",
           "items": {
-            "type": "string"
+            "type": "object",
+            "$ref": "#/definitions/v1InnetTracker"
           }
         }
       }

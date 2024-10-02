@@ -33,7 +33,12 @@ message Settings{
   bool registerEnable = 8;
   bool loginEnable = 9;
   bool publishEnable = 10;
-  repeated string innetTrackerAddrs = 11;
+  repeated InnetTracker innetTracker = 11;
+}
+
+message InnetTracker{
+  string addr = 1;
+  bool enable = 2;
 }
 
 message GetSettingsRequest {}

@@ -34,12 +34,13 @@ func (s *S) GetUser(ctx context.Context, req *userV1.GetUserRequest) (*userV1.Ge
 		return nil, status.Error(codes.InvalidArgument, "Id is empty")
 	}
 
+	isAdmin, err := userDao.User.IsAdmin(ctx, UID)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "Internal error")
+	}
+
 	// Check the permission
 	if req.Id != UID {
-		isAdmin, err := userDao.User.IsAdmin(ctx, UID)
-		if err != nil {
-			return nil, status.Error(codes.Internal, "Internal error")
-		}
 
 		if !isAdmin {
 			isOk, err := rbac.CasbinManager.CheckUserToUserReadPermission(UID, req.Id)
@@ -62,6 +63,12 @@ func (s *S) GetUser(ctx context.Context, req *userV1.GetUserRequest) (*userV1.Ge
 			Id:   _user.ID,
 			Name: _user.Name,
 		},
+	}
+
+	if isAdmin {
+		resp.User.Role = "admin"
+	} else {
+		resp.User.Role = "user"
 	}
 
 	return resp, nil

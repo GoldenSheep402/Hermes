@@ -11,6 +11,8 @@ import (
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"gorm.io/gorm"
+	"time"
 )
 
 var _ systemV1.SystemServiceServer = (*S)(nil)
@@ -103,7 +105,7 @@ func (s *S) SetSettings(ctx context.Context, req *systemV1.SetSettingsRequest) (
 	}
 
 	var trackers []systemModel.InnetTracker
-	for _, tracker := range req.Settings.InnetTracker {
+	for v, tracker := range req.Settings.InnetTracker {
 		trackers = append(trackers, systemModel.InnetTracker{
 			Model: stdao.Model{
 				ID: tracker.Id,
@@ -111,6 +113,12 @@ func (s *S) SetSettings(ctx context.Context, req *systemV1.SetSettingsRequest) (
 			Address: tracker.Addr,
 			Enable:  tracker.Enable,
 		})
+		if tracker.ToBeDeleted {
+			trackers[v].DeletedAt = gorm.DeletedAt{
+				Time:  time.Now(),
+				Valid: true,
+			}
+		}
 	}
 
 	if err := systemDao.Setting.SetSettings(ctx, &setting, subnets, trackers); err != nil {

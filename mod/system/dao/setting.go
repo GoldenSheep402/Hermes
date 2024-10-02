@@ -137,9 +137,16 @@ func (s *setting) SetSettings(ctx context.Context, setting *model.Setting, subne
 				}
 			}
 		} else {
-			err := tx.Model(&model.InnetTracker{}).Where("id = ?", tracker.ID).Select("*").Updates(&tracker).Error
-			if err != nil {
-				return err
+			if tracker.DeletedAt.Valid {
+				err := tx.Model(&model.InnetTracker{}).Where("id = ?", tracker.ID).Delete(&tracker).Error
+				if err != nil {
+					return err
+				}
+			} else {
+				err := tx.Model(&model.InnetTracker{}).Where("id = ?", tracker.ID).Select("*").Updates(&tracker).Error
+				if err != nil {
+					return err
+				}
 			}
 		}
 	}

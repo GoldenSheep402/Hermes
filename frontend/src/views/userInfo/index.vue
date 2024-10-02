@@ -1,58 +1,92 @@
 <script setup lang="ts">
-import {ref} from "vue";
+import { onMounted, ref } from "vue";
+import { UserService } from "@/services/grpc";
+import USERINFO from "@/router/routes/modules/userInfo";
 
 interface userInfo {
   name: string;
   email: string;
   download: number;
   upload: number;
-  torrentPubic: number;
+  torrentPublished: number;
   torrentDownload: number;
   torrentSeeding: number;
   key: string;
 }
 
 const mockData = ref<userInfo>({
+  name: "admin",
+  email: "admin@admin.com",
+  download: 0,
+  upload: 0,
+  torrentPublished: 0,
+  torrentDownload: 0,
+  torrentSeeding: 0,
+  key: "111"
 })
 
 function toDescriptionData(_data: userInfo) {
   return [
     {
       label: "用户名",
-      content: _data.name
+      value: _data.name,
     },
     {
       label: "邮箱",
-      content: _data.email
+      value: _data.email,
     },
     {
       label: "下载量",
-      content: _data.download
+      value: _data.download,
     },
     {
       label: "上传量",
-      content: _data.upload
+      value: _data.upload,
     },
     {
       label: "发布种子",
-      content: _data.torrentPubic
+      value: _data.torrentPublished,
     },
     {
       label: "下载种子",
-      content: _data.torrentDownload
+      value: _data.torrentDownload,
     },
     {
       label: "做种种子",
-      content: _data.torrentSeeding
+      value: _data.torrentSeeding,
     },
     {
       label: "密钥",
-      content: _data.key
+      value: _data.key,
     }
   ]
 }
 
-function fetchUserInfo()
+const userInfo = ref<userInfo>({} as userInfo);
+async function fetchUserInfo() { 
+  UserService.GetUserInfo({}).then(async (res) => {
+    userInfo.value.email = res.email!!;
+    userInfo.value.name = res.name!!;
+    userInfo.value.download = res.download!!;
+    userInfo.value.upload = res.upload!!;
+    userInfo.value.torrentPublished = res.torrentPublished!!;
+    userInfo.value.torrentDownload = res.torrentDownloaded!!;
+    userInfo.value.torrentSeeding = res.torrentSeeding!!;
+  }).catch((err)=>{
+    console.error('Error fetching user info:', err);
+    userInfo.value = mockData.value;
+  }).finally(async() => {
+    UserService.GetUserPassKey({}).then((res) => {
+      userInfo.value.key = res.passKey!!;
+    }).catch((err) => {
+      console.error('Error fetching user passkey:', err);
+    });
+  });
+}
+
+onMounted(() => {
+  fetchUserInfo();
+});
 </script>
 
 <template>
@@ -63,8 +97,7 @@ function fetchUserInfo()
       </div>
 
       <div>
-        <a-descriptions title="User Info" :data="toDescriptionData(mockData)" :column="{xs:1, md:3, lg:4}" bordered>
-
+        <a-descriptions title="用户详细信息" :data="toDescriptionData(userInfo)" :column="1" bordered>
         </a-descriptions>
       </div>
     </div>

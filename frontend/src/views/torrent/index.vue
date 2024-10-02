@@ -18,26 +18,26 @@ const torrentList = ref<TorrentMessage[]>([]);
 
 async function fetchTorrentData() {
   TorrentService.GetTorrentV1List({}).then(async (res) => {
-    for (let i = 0; i < res.torrents.length; i++) {
+    for (let i = 0; i < res.torrents!!.length; i++) {
       const downloadingCount = ref<number>(0);
       const seedingCount = ref<number>(0);
       const finishedCount = ref<number>(0);
-      await TrackerService.GetTorrentDownloadingStatus({torrentId: res.torrents[i].id})
+      await TrackerService.GetTorrentDownloadingStatus({torrentId: res.torrents!![i].id})
           .then((statusRes) => {
-            downloadingCount.value = statusRes.downloading;
-            seedingCount.value = statusRes.seeding;
-            finishedCount.value = statusRes.finished;
+            downloadingCount.value = statusRes.downloading!!;
+            seedingCount.value = statusRes.seeding!!;
+            finishedCount.value = statusRes.finished!!;
           })
           .catch((err) => {
             console.error('Failed to get torrent status', err);
           });
 
       torrentList.value.push({
-        id: res.torrents[i].id,
-        name: res.torrents[i].name,
-        description: res.torrents[i].description,
-        categoryId: res.torrents[i].categoryId,
-        categoryName: res.torrents[i].categoryName,
+        id: res.torrents!![i].id!!,
+        name: res.torrents!![i].name!!,
+        description: res.torrents!![i].description!!,
+        categoryId: res.torrents!![i].categoryId!!,
+        categoryName: res.torrents!![i].categoryName!!,
         downloading: downloadingCount.value,
         seeding: seedingCount.value,
         finished: finishedCount.value,
@@ -121,7 +121,8 @@ function getPasskey() {
 }
 
 function genUrl(id: string) {
-  return "http://172.16.7.183:27811/torrent/download/" + passkey.value + "?id=" + id;
+  const baseUrl = import.meta.env.VITE_GAPI_URL;
+  return `${baseUrl}/torrent/download/${passkey.value}?id=${id}`;
 }
 
 onMounted(() => {

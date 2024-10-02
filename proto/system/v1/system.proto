@@ -1,0 +1,46 @@
+syntax = "proto3";
+package system.v1;
+option go_package = "github.com/GoldenSheep402/Hermes/pkg/proto/system/v1;systemV1";
+
+import "google/api/annotations.proto";
+
+
+
+service SystemService {
+  rpc GetSettings(GetSettingsRequest) returns (GetSettingsResponse) {
+    option (google.api.http) = {
+      post: "/gapi/system/v1/settings/get"
+      body: "*"
+    };
+  }
+
+  rpc SetSettings(SetSettingsRequest) returns (SetSettingsResponse) {
+    option (google.api.http) = {
+      post: "/gapi/system/v1/settings/set"
+      body: "*"
+    };
+  }
+}
+
+message Settings{
+  int32 peerExpireTime = 1;
+  repeated string allowedNets = 2;
+  bool smtpEnable = 3;
+  string smtpHost = 4;
+  int32 smtpPort = 5;
+  string smtpUser = 6;
+  string smtpPassword = 7;
+  bool registerEnable = 8;
+  bool loginEnable = 9;
+  bool publishEnable = 10;
+}
+
+message GetSettingsRequest {}
+message GetSettingsResponse {
+  Settings settings = 1;
+}
+
+message SetSettingsRequest {
+  Settings settings = 1;
+}
+message SetSettingsResponse {}

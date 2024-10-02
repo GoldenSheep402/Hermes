@@ -1,0 +1,176 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "system/v1/system.proto",
+    "version": "version not set"
+  },
+  "tags": [
+    {
+      "name": "SystemService"
+    }
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/gapi/system/v1/settings/get": {
+      "post": {
+        "operationId": "SystemService_GetSettings",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GetSettingsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1GetSettingsRequest"
+            }
+          }
+        ],
+        "tags": [
+          "SystemService"
+        ]
+      }
+    },
+    "/gapi/system/v1/settings/set": {
+      "post": {
+        "operationId": "SystemService_SetSettings",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1SetSettingsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1SetSettingsRequest"
+            }
+          }
+        ],
+        "tags": [
+          "SystemService"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": {}
+    },
+    "rpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    },
+    "v1GetSettingsRequest": {
+      "type": "object"
+    },
+    "v1GetSettingsResponse": {
+      "type": "object",
+      "properties": {
+        "settings": {
+          "$ref": "#/definitions/v1Settings"
+        }
+      }
+    },
+    "v1SetSettingsRequest": {
+      "type": "object",
+      "properties": {
+        "settings": {
+          "$ref": "#/definitions/v1Settings"
+        }
+      }
+    },
+    "v1SetSettingsResponse": {
+      "type": "object"
+    },
+    "v1Settings": {
+      "type": "object",
+      "properties": {
+        "peerExpireTime": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "allowedNets": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "smtpEnable": {
+          "type": "boolean"
+        },
+        "smtpHost": {
+          "type": "string"
+        },
+        "smtpPort": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "smtpUser": {
+          "type": "string"
+        },
+        "smtpPassword": {
+          "type": "string"
+        },
+        "registerEnable": {
+          "type": "boolean"
+        },
+        "loginEnable": {
+          "type": "boolean"
+        },
+        "publishEnable": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

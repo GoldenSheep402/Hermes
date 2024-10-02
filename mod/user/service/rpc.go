@@ -31,7 +31,7 @@ func (s *S) GetUser(ctx context.Context, req *userV1.GetUserRequest) (*userV1.Ge
 	}
 
 	if req.Id == "" {
-		return nil, status.Error(codes.InvalidArgument, "Id is empty")
+		req.Id = UID
 	}
 
 	isAdmin, err := userDao.User.IsAdmin(ctx, UID)

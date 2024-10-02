@@ -11,7 +11,7 @@ var (
 )
 
 func Init(db *gorm.DB, rds *redis.Client) error {
-	if err := Setting.Init(db); err != nil {
+	if err := Setting.Init(db, rds); err != nil {
 		return err
 	}
 	if err := Subnet.Init(db); err != nil {

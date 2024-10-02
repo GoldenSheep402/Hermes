@@ -1,6 +1,9 @@
 package model
 
+import "github.com/GoldenSheep402/Hermes/pkg/stdao"
+
 type Setting struct {
+	stdao.Model
 	PeerExpireTime int    `gorm:"column:peer_expire_time;default:60"`
 	SmtpEnable     bool   `gorm:"column:smtp_enable;default:false"`
 	SmtpHost       string `gorm:"column:smtp_host"`

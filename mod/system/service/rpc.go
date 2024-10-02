@@ -19,7 +19,7 @@ type S struct {
 	systemV1.UnimplementedSystemServiceServer
 }
 
-func (s *S) GetSetting(ctx context.Context, req *systemV1.GetSettingsRequest) (*systemV1.GetSettingsResponse, error) {
+func (s *S) GetSettings(ctx context.Context, req *systemV1.GetSettingsRequest) (*systemV1.GetSettingsResponse, error) {
 	UID, ok := ctx.Value(ctxKey.UID).(string)
 	if !ok || UID == "" {
 		return nil, status.Error(codes.Unauthenticated, "Unauthenticated")

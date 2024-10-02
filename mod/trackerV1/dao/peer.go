@@ -2,6 +2,7 @@ package dao
 
 import (
 	"context"
+	systemDao "github.com/GoldenSheep402/Hermes/mod/system/dao"
 	"strconv"
 	"strings"
 	"time"
@@ -56,7 +57,15 @@ func (p *peer) AddPeer(ctx context.Context, torrentID string, peerData *model.Pe
 	if err != nil {
 		return err
 	}
-	return p.rds.Expire(ctx, key, 24*time.Hour).Err()
+
+	expireTime, err := systemDao.Setting.GetPeerExpiration(ctx)
+	if err != nil {
+		return err
+	}
+
+	expirationDuration := time.Duration(expireTime) * time.Minute
+
+	return p.rds.Expire(ctx, key, expirationDuration).Err()
 }
 
 // GetPeers returns a list of peers for the torrent.
@@ -69,6 +78,13 @@ func (p *peer) GetPeers(ctx context.Context, torrentID string, numWant int) ([]*
 	peers := make([]*model.Peer, 0, numWant)
 	now := time.Now().Unix()
 
+	expireTime, err := systemDao.Setting.GetPeerExpiration(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	expirationDuration := time.Duration(expireTime) * time.Minute
+
 	for field, lastSeenStr := range peersData {
 		parts := strings.Split(field, ":")
 		if len(parts) != 4 {
@@ -79,7 +95,7 @@ func (p *peer) GetPeers(ctx context.Context, torrentID string, numWant int) ([]*
 		port, _ := strconv.Atoi(parts[3])
 		lastSeen, _ := strconv.ParseInt(lastSeenStr, 10, 64)
 
-		if now-lastSeen > 3600 {
+		if now-lastSeen > int64(expireTime) {
 			p.rds.HDel(ctx, key, field)
 			continue
 		}
@@ -96,7 +112,7 @@ func (p *peer) GetPeers(ctx context.Context, torrentID string, numWant int) ([]*
 		}
 	}
 
-	err = p.rds.Expire(ctx, key, 24*time.Hour).Err()
+	err = p.rds.Expire(ctx, key, expirationDuration).Err()
 	if err != nil {
 		return nil, err
 	}
@@ -129,5 +145,12 @@ func (p *peer) RemovePeer(ctx context.Context, torrentID string, peerID string, 
 		}
 	}
 
-	return p.rds.Expire(ctx, key, 24*time.Hour).Err()
+	expireTime, err := systemDao.Setting.GetPeerExpiration(ctx)
+	if err != nil {
+		return err
+	}
+
+	expirationDuration := time.Duration(expireTime) * time.Minute
+
+	return p.rds.Expire(ctx, key, expirationDuration).Err()
 }

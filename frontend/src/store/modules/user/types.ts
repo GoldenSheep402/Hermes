@@ -8,7 +8,5 @@ export interface UserState {
   avatar?: string;
   location?: string;
   email?: string;
-  phone?: string;
-  projectLimit?: number;
   role: RoleType;
 }

@@ -10,6 +10,7 @@ import (
 	"github.com/GoldenSheep402/Hermes/mod/jinx"
 	"github.com/GoldenSheep402/Hermes/mod/pgsql"
 	"github.com/GoldenSheep402/Hermes/mod/rds"
+	"github.com/GoldenSheep402/Hermes/mod/system"
 	"github.com/GoldenSheep402/Hermes/mod/torrent"
 	"github.com/GoldenSheep402/Hermes/mod/trackerV1"
 	"github.com/GoldenSheep402/Hermes/mod/user"
@@ -27,6 +28,7 @@ var ModList = []kernel.Module{
 	&pgsql.Mod{},
 	&rds.Mod{},
 	&user.Mod{},
+	&system.Mod{},
 	&torrent.Mod{},
 	&trackerV1.Mod{},
 }

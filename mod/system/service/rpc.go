@@ -7,6 +7,7 @@ import (
 	userDao "github.com/GoldenSheep402/Hermes/mod/user/dao"
 	"github.com/GoldenSheep402/Hermes/pkg/ctxKey"
 	systemV1 "github.com/GoldenSheep402/Hermes/pkg/proto/system/v1"
+	"github.com/GoldenSheep402/Hermes/pkg/stdao"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -34,7 +35,7 @@ func (s *S) GetSettings(ctx context.Context, req *systemV1.GetSettingsRequest) (
 		return nil, status.Error(codes.PermissionDenied, "Permission Denied")
 	}
 
-	setting, subnets, err := systemDao.Setting.GetSettings(ctx)
+	setting, subnets, trackers, err := systemDao.Setting.GetSettings(ctx)
 	if err != nil {
 		return nil, status.Error(codes.Internal, "Internal Error")
 	}
@@ -54,6 +55,14 @@ func (s *S) GetSettings(ctx context.Context, req *systemV1.GetSettingsRequest) (
 
 	for _, subnet := range subnets {
 		resp.Settings.AllowedNets = append(resp.Settings.AllowedNets, subnet.CIDR)
+	}
+
+	for _, tracker := range trackers {
+		resp.Settings.InnetTracker = append(resp.Settings.InnetTracker, &systemV1.InnetTracker{
+			Id:     tracker.ID,
+			Addr:   tracker.Address,
+			Enable: tracker.Enable,
+		})
 	}
 
 	return &resp, nil
@@ -93,7 +102,18 @@ func (s *S) SetSettings(ctx context.Context, req *systemV1.SetSettingsRequest) (
 		})
 	}
 
-	if err := systemDao.Setting.SetSettings(ctx, &setting, subnets); err != nil {
+	var trackers []systemModel.InnetTracker
+	for _, tracker := range req.Settings.InnetTracker {
+		trackers = append(trackers, systemModel.InnetTracker{
+			Model: stdao.Model{
+				ID: tracker.Id,
+			},
+			Address: tracker.Addr,
+			Enable:  tracker.Enable,
+		})
+	}
+
+	if err := systemDao.Setting.SetSettings(ctx, &setting, subnets, trackers); err != nil {
 		return nil, status.Error(codes.Internal, "Internal Error")
 	}
 	return &systemV1.SetSettingsResponse{}, nil

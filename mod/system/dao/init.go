@@ -6,8 +6,9 @@ import (
 )
 
 var (
-	Setting = &setting{}
-	Subnet  = &subnet{}
+	Setting      = &setting{}
+	Subnet       = &subnet{}
+	InnetTracker = &innetTracker{}
 )
 
 func Init(db *gorm.DB, rds *redis.Client) error {
@@ -15,6 +16,9 @@ func Init(db *gorm.DB, rds *redis.Client) error {
 		return err
 	}
 	if err := Subnet.Init(db); err != nil {
+		return err
+	}
+	if err := InnetTracker.Init(db, rds); err != nil {
 		return err
 	}
 	return nil

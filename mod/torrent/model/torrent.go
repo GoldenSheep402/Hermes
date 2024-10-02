@@ -46,9 +46,10 @@ type BencodeInfo struct {
 }
 
 type BencodeTorrent struct {
-	Announce  string      `bencode:"announce"`
-	CreatedBy *string     `bencode:"created by,omitempty"`
-	CreatedAt *int        `bencode:"creation date,omitempty"`
-	Comment   *string     `bencode:"comment,omitempty"`
-	Info      BencodeInfo `bencode:"info"`
+	Announce     string      `bencode:"announce"`
+	AnnounceList *[][]string `bencode:"announce-list,omitempty"`
+	CreatedBy    *string     `bencode:"created by,omitempty"`
+	CreatedAt    *int        `bencode:"creation date,omitempty"`
+	Comment      *string     `bencode:"comment,omitempty"`
+	Info         BencodeInfo `bencode:"info"`
 }

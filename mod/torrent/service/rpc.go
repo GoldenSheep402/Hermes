@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"github.com/GoldenSheep402/Hermes/conf"
 	categoryDao "github.com/GoldenSheep402/Hermes/mod/category/dao"
+	systemDao "github.com/GoldenSheep402/Hermes/mod/system/dao"
 	torrentDao "github.com/GoldenSheep402/Hermes/mod/torrent/dao"
 	torrentModel "github.com/GoldenSheep402/Hermes/mod/torrent/model"
 	userDao "github.com/GoldenSheep402/Hermes/mod/user/dao"
@@ -252,7 +253,7 @@ func (s *S) DownloadTorrentV1(ctx context.Context, req *torrentV1.DownloadTorren
 	}
 
 	_torrentFull := &torrentModel.BencodeTorrent{
-		Announce:  conf.Get().TrackerV1.Endpoint + user.Key,
+		//Announce:  conf.Get().TrackerV1.Endpoint + user.Key,
 		CreatedBy: torrent.CreatedBy,
 		Comment:   torrent.Comment,
 		CreatedAt: func(i int64) *int { v := int(i); return &v }(torrent.CreatedAt.Unix()),
@@ -298,6 +299,23 @@ func (s *S) DownloadTorrentV1(ctx context.Context, req *torrentV1.DownloadTorren
 			}(torrent.Private),
 			Source: torrent.Source,
 		},
+	}
+
+	var announceList []string
+
+	trackers, err := systemDao.InnetTracker.GetTrackers(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, tracker := range trackers {
+		if tracker.Enable {
+			announceList = append(announceList, tracker.Address+"/tracker/announce/key/"+user.Key)
+		}
+	}
+
+	if len(announceList) > 0 {
+		_torrentFull.AnnounceList = &[][]string{announceList}
 	}
 
 	if torrent.NameUTF8 != "" {

@@ -1,13 +1,14 @@
-version: '3'
+version: '3.8'
 
 services:
   template-main:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: template-main
-    #    restart: always
+    container_name: hermes
     volumes:
-      - ./config:/Serve/config
+      - /root/Hermes/config.yaml:/Serve/config/config.yaml
+      - /root/Hermes/Caddyfile:/etc/caddy/Caddyfile
+    network_mode: host
     ports:
-      - "19080:8080"
+      - "80:80"

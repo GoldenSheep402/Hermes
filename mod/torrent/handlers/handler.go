@@ -14,7 +14,7 @@ import (
 )
 
 func Registry(jinE *jin.Engine) {
-	trackerGroup := jinE.Group("/torrent")
+	trackerGroup := jinE.Group("/api/torrent")
 
 	trackerGroup.Group("/download").
 		GET("/:key", DownloadHandler)
@@ -101,7 +101,7 @@ func DownloadHandler(c *jin.Context) {
 
 	for _, tracker := range trackers {
 		if tracker.Enable {
-			announceList = append(announceList, tracker.Address+"/tracker/announce/key/"+user.Key)
+			announceList = append(announceList, tracker.Address+"/api/tracker/announce/key/"+user.Key)
 		}
 	}
 

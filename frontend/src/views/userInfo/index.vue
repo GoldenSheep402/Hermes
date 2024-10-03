@@ -97,7 +97,7 @@ onMounted(() => {
       </div>
 
       <div>
-        <a-descriptions title="用户详细信息" :data="toDescriptionData(userInfo)" :column="1" bordered>
+        <a-descriptions title="用户详细信息" :data="toDescriptionData(userInfo) as any" :column="1" bordered>
         </a-descriptions>
       </div>
     </div>

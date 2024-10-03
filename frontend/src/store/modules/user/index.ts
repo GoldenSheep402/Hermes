@@ -21,7 +21,6 @@ const useUserStore = defineStore('hermes', {
     avatar: undefined,
     location: undefined,
     email: undefined,
-    phone: undefined,
     role: '',
   }),
 
@@ -51,17 +50,17 @@ const useUserStore = defineStore('hermes', {
     // Get user's information
     info() {
       // rbacValues res = await getUserInfo();
-      UserService.GetUser({}).then((res) => {
-        this.userId = res.info?.id;
-        this.name = res.info?.name;
-        this.email = res.info?.email;
-        this.projectLimit = res.info?.limit;
-        if (res.info?.isAdmin) {
-          this.role = 'admin';
-        }else {
-          this.role = 'user';
-        }
-      })
+      // UserService.GetUser({}).then((res) => {
+      //   this.userId = res.info?.id;
+      //   this.name = res.info?.name;
+      //   this.email = res.info?.email;
+      //   this.projectLimit = res.info?.limit;
+      //   if (res.info?.isAdmin) {
+      //     this.role = 'admin';
+      //   }else {
+      //     this.role = 'user';
+      //   }
+      // })
 
       this.setInfo({
         // name: 'Admin',

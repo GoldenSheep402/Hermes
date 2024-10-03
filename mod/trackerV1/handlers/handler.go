@@ -20,7 +20,7 @@ import (
 )
 
 func Registry(jinE *jin.Engine) {
-	trackerGroup := jinE.Group("/tracker")
+	trackerGroup := jinE.Group("/api/tracker")
 
 	trackerGroup.Group("/announce").
 		GET("/key/:key", AnnounceWithKey)

@@ -27,17 +27,7 @@ import {useUserStore} from "@/store";
 
 const UserStore = useUserStore();
 
-interface data {
-  productNum: number,
-  projectNum: number,
-  projectLimit: number,
-}
 
-const data = ref<data>({
-  productNum: 0,
-  projectNum: 0,
-  projectLimit: <number>UserStore.projectLimit,
-});
 
 const isAdmin = ref<boolean>(false);
 isAdmin.value = UserStore.role === 'admin';

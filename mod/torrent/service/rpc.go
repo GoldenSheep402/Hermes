@@ -321,7 +321,7 @@ func (s *S) DownloadTorrentV1(ctx context.Context, req *torrentV1.DownloadTorren
 
 	for _, tracker := range trackers {
 		if tracker.Enable {
-			announceList = append(announceList, tracker.Address+"/tracker/announce/key/"+user.Key)
+			announceList = append(announceList, tracker.Address+"/api/tracker/announce/key/"+user.Key)
 		}
 	}
 

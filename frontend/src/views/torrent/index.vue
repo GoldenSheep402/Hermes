@@ -122,7 +122,7 @@ function getPasskey() {
 
 function genUrl(id: string) {
   const baseUrl = import.meta.env.VITE_GAPI_URL;
-  return `${baseUrl}/torrent/download/${passkey.value}?id=${id}`;
+  return `${baseUrl}/api/torrent/download/${passkey.value}?id=${id}`;
 }
 
 onMounted(() => {

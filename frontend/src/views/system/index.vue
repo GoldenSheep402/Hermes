@@ -12,6 +12,8 @@ const setting = ref<Settings>({
   smtpPort: 0,
   smtpUser: '',
   smtpPassword: '',
+  smtpSendName: '',
+  smtpSendAddr: '',
   registerEnable: false,
   loginEnable: false,
   publishEnable: false,

@@ -96,8 +96,17 @@ func (s *S) CreateTorrentV1(ctx context.Context, req *torrentV1.CreateTorrentV1R
 	}
 	// TODO: rbac
 
+	settings, _, _, err := systemDao.Setting.GetSettings(ctx)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "Internal error")
+	}
+
+	if !settings.PublishEnable {
+		return nil, status.Error(codes.PermissionDenied, "Publish is not allowed")
+	}
+
 	// Check Category
-	ok, err := categoryDao.Category.CheckByID(ctx, req.CategoryId)
+	ok, err = categoryDao.Category.CheckByID(ctx, req.CategoryId)
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, "Invalid Category ID")
 	}
@@ -125,10 +134,12 @@ func (s *S) CreateTorrentV1(ctx context.Context, req *torrentV1.CreateTorrentV1R
 	}
 
 	var comment string
-	if req.Name != "" {
+	if req.Comment != "" {
 		comment = req.Comment
 	} else {
-		comment = *bencodeTorrent.Comment
+		if bencodeTorrent.Comment != nil {
+			comment = *bencodeTorrent.Comment
+		}
 	}
 
 	trackerAddress := conf.Get().TrackerV1.Endpoint

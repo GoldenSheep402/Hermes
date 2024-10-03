@@ -101,17 +101,17 @@ const useUserStore = defineStore('hermes', {
           pathPrefix: import.meta.env.VITE_GAPI_URL,
         };
 
-        await AuthService.Login(request, initReq).then((res) => {
+        await AuthService.Login(request, initReq).then(async (res) => {
           if (!res.accessToken || !res.refreshToken) {
             throw new Error('Invalid response from login');
           }
           this.isLogin = true;
           this.token = res.accessToken;
           this._refreshToken = res.refreshToken;
-          UserService.GetUser({}).then((res) => {
-            if (res.user?.role) {
+          await UserService.GetUser({}).then((res) => {
+            if (res.user?.role === 'admin') {
               this.role = 'admin';
-            }else {
+            }else{
               this.role = 'user';
             }
           }).catch((err) => {

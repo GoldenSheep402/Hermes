@@ -192,12 +192,14 @@ func (t *trackerV1) HandleClientStatus(ctx context.Context, torrentID, userID st
 	switch status {
 	case trackerV1Values.Downloading:
 		t.rds.Set(ctx, seedingKey, trackerV1Values.Downloading, 24*time.Hour)
+	case trackerV1Values.ReadySeeding:
+		t.rds.Set(ctx, seedingKey, trackerV1Values.ReadySeeding, 24*time.Hour)
 	case trackerV1Values.Seeding:
 		t.rds.Set(ctx, seedingKey, trackerV1Values.Seeding, 24*time.Hour)
 	case trackerV1Values.Finished:
 		t.rds.Set(ctx, seedingKey, trackerV1Values.Finished, 24*time.Hour)
 	case trackerV1Values.Stopped:
-		t.rds.Set(ctx, seedingKey, trackerV1Values.Stopped, 1*time.Hour)
+		t.rds.Set(ctx, seedingKey, trackerV1Values.Stopped, 24*time.Hour)
 
 	}
 	return nil
@@ -488,6 +490,10 @@ func (t *trackerV1) HandleStop(ctx context.Context, torrentID, userID string, st
 		if err != nil {
 			return fmt.Errorf("failed to delete key: %v", err)
 		}
+	}
+
+	if err := t.HandleClientStatus(ctx, torrentID, userID, status); err != nil {
+		return fmt.Errorf("failed to update client status: %v", err)
 	}
 
 	return nil

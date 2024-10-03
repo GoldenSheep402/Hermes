@@ -11,23 +11,23 @@
         @submit="reg"
     >
       <a-form-item
-          field="email"
           :rules="[{ required: true, message: $t('login.form.userName.errMsg') }]"
           :validate-trigger="['change', 'blur']"
+          field="email"
           hide-label
       >
         <a-input
             v-model="userInfo.email"
         >
           <template #prefix>
-            <icon-user />
+            <icon-user/>
           </template>
         </a-input>
       </a-form-item>
       <a-form-item
-          field="password"
           :rules="[{ required: true, message: '注册出错，轻刷新重试' }]"
           :validate-trigger="['change', 'blur']"
+          field="password"
           hide-label
       >
         <a-input-password
@@ -35,14 +35,21 @@
             allow-clear
         >
           <template #prefix>
-            <icon-lock />
+            <icon-lock/>
           </template>
         </a-input-password>
+      </a-form-item>
+
+      <a-form-item>
+        <div class="flex flex-row justify-between w-full gap-2">
+          <a-input v-model="code"></a-input>
+          <a-button type="primary" @click="sendEmail">获取验证码</a-button>
+        </div>
       </a-form-item>
       <a-space :size="16" direction="vertical">
         <div class="login-form-password-actions">
         </div>
-        <a-button type="primary" html-type="submit" long class="login-form-register-btn">
+        <a-button class="login-form-register-btn" html-type="submit" long type="primary">
           {{ $t('login.form.register') }}
         </a-button>
       </a-space>
@@ -51,16 +58,17 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, reactive } from 'vue';
-import useLoading from '@/hooks/loading';
+import {reactive, ref} from 'vue';
 import {AuthService} from "@/services/grpc.ts";
 import {Message} from "@arco-design/web-vue";
-import { useRouter } from 'vue-router';
+import {useRouter} from 'vue-router';
 import {RegisterWithEmailRequest} from "@/lib/proto/auth/v1/auth.pb.ts";
+
 const errorMessage = ref('');
 
 const router = useRouter();
 
+const code = ref<string>("");
 
 const userInfo = reactive({
   email: '',
@@ -68,12 +76,21 @@ const userInfo = reactive({
   password: '',
 });
 
+function sendEmail() {
+  AuthService.RegisterSendEmail({email: userInfo.email}).then((res) => {
+    Message.success('验证码已发送');
+  }).catch((err) => {
+    Message.error(err.message);
+  });
+}
+
 
 const reg = () => {
   const req = ref<RegisterWithEmailRequest>({
     email: userInfo.email,
     username: userInfo.email,
     password: userInfo.password,
+    emailToken: code.value,
   });
   AuthService.RegisterWithEmail(req.value).then((res) => {
     Message.success('注册成功');

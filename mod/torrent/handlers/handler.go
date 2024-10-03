@@ -3,7 +3,7 @@ package handlers
 import (
 	"bytes"
 	"context"
-	"github.com/GoldenSheep402/Hermes/conf"
+	systemDao "github.com/GoldenSheep402/Hermes/mod/system/dao"
 	torrentDao "github.com/GoldenSheep402/Hermes/mod/torrent/dao"
 	torrentModel "github.com/GoldenSheep402/Hermes/mod/torrent/model"
 	userDao "github.com/GoldenSheep402/Hermes/mod/user/dao"
@@ -28,7 +28,7 @@ func DownloadHandler(c *jin.Context) {
 		return
 	}
 
-	_, err := userDao.User.CheckKey(ctx, key)
+	user, err := userDao.User.CheckKey(ctx, key)
 	if err != nil {
 		c.Writer.WriteHeader(http.StatusBadRequest)
 		return
@@ -43,7 +43,7 @@ func DownloadHandler(c *jin.Context) {
 	}
 
 	_torrentFull := &torrentModel.BencodeTorrent{
-		Announce:  conf.Get().TrackerV1.Endpoint + key,
+		//Announce:  conf.Get().TrackerV1.Endpoint + key,
 		CreatedBy: torrent.CreatedBy,
 		Comment:   torrent.Comment,
 		CreatedAt: func(i int64) *int { v := int(i); return &v }(torrent.CreatedAt.Unix()),
@@ -89,6 +89,24 @@ func DownloadHandler(c *jin.Context) {
 			}(torrent.Private),
 			Source: torrent.Source,
 		},
+	}
+
+	var announceList []string
+
+	trackers, err := systemDao.InnetTracker.GetTrackers(ctx)
+	if err != nil {
+		c.Writer.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	for _, tracker := range trackers {
+		if tracker.Enable {
+			announceList = append(announceList, tracker.Address+"/tracker/announce/key/"+user.Key)
+		}
+	}
+
+	if len(announceList) > 0 {
+		_torrentFull.AnnounceList = &[][]string{announceList}
 	}
 
 	if torrent.NameUTF8 != "" {

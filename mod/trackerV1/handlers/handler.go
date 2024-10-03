@@ -277,7 +277,11 @@ func AnnounceWithKey(c *jin.Context) {
 	}
 
 	if !allowed {
-		req.IP = c.Request.RemoteAddr
+		_host, _, err := net.SplitHostPort(c.Request.RemoteAddr)
+		if err != nil {
+			host = c.Request.RemoteAddr
+		}
+		req.IP = _host
 	} else {
 		req.IP = host
 	}

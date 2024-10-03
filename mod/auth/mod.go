@@ -3,9 +3,9 @@ package auth
 import (
 	"errors"
 	"github.com/GoldenSheep402/Hermes/core/kernel"
+	"github.com/GoldenSheep402/Hermes/mod/auth/dao"
 	"github.com/GoldenSheep402/Hermes/mod/auth/service"
 	"github.com/GoldenSheep402/Hermes/mod/grpcGateway/gateway"
-	"github.com/GoldenSheep402/Hermes/mod/user/dao"
 	authV1 "github.com/GoldenSheep402/Hermes/pkg/proto/auth/v1"
 	"github.com/redis/go-redis/v9"
 	"google.golang.org/grpc"

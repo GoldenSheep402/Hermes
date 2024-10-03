@@ -10,6 +10,8 @@ type Setting struct {
 	SmtpPort       int    `gorm:"column:smtp_port"`
 	SmtpUser       string `gorm:"column:smtp_user"`
 	SmtpPass       string `gorm:"column:smtp_pass"`
+	SmtpSendName   string `gorm:"column:smtp_send_name"`
+	SmtpSendAddr   string `gorm:"column:smtp_send_addr"`
 	RegisterEnable bool   `gorm:"column:register_enable;default:true"`
 	LoginEnable    bool   `gorm:"column:login_enable;default:true"`
 	PublishEnable  bool   `gorm:"column:publish_enable;default:true"`

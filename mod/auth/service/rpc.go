@@ -2,18 +2,26 @@ package service
 
 import (
 	"context"
+	"crypto/tls"
 	"errors"
+	"fmt"
+	authDao "github.com/GoldenSheep402/Hermes/mod/auth/dao"
+	"github.com/GoldenSheep402/Hermes/mod/auth/model/codeValues"
+	systemDao "github.com/GoldenSheep402/Hermes/mod/system/dao"
 	"github.com/GoldenSheep402/Hermes/mod/user/dao"
 	userDao "github.com/GoldenSheep402/Hermes/mod/user/dao"
 	"github.com/GoldenSheep402/Hermes/mod/user/model"
 	"github.com/GoldenSheep402/Hermes/mod/user/model/bindType"
 	"github.com/GoldenSheep402/Hermes/pkg/auth"
 	authV1 "github.com/GoldenSheep402/Hermes/pkg/proto/auth/v1"
+	"github.com/GoldenSheep402/Hermes/pkg/randx"
 	"github.com/GoldenSheep402/Hermes/pkg/utils/check"
 	"github.com/GoldenSheep402/Hermes/pkg/utils/crypto"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"net/smtp"
+	"strconv"
 )
 
 var _ authV1.AuthServiceServer = (*S)(nil)
@@ -25,11 +33,123 @@ type S struct {
 
 // RegisterSendEmail TODO: SMTP
 func (s *S) RegisterSendEmail(ctx context.Context, req *authV1.RegisterSendEmailRequest) (*authV1.RegisterSendEmailResponse, error) {
-	return nil, nil
+	settings, _, _, err := systemDao.Setting.GetSettings(ctx)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "Internal error")
+	}
+
+	if !settings.SmtpEnable {
+		return nil, status.Error(codes.PermissionDenied, "Smtp is not allowed")
+	}
+
+	senderEmail := settings.SmtpUser
+	smtpHost := settings.SmtpHost
+	smtpPort := strconv.Itoa(settings.SmtpPort)
+	smtpUser := settings.SmtpUser
+	smtpPassword := settings.SmtpPass
+	smtpTO := req.Email
+	subject := "Subject: 欢迎来到HERMES\r\n"
+	code := randx.String(6)
+	mime := "MIME-version: 1.0;\r\nContent-Type: text/html; charset=\"UTF-8\";\r\n\r\n"
+	// TODO: HTML template
+	body := fmt.Sprintf(`
+		<html>
+		<body>
+			<h1>你好!</h1>
+			<p>欢迎来到 HERMES！您的验证码是 <strong>%s</strong>，请在页面中输入此验证码。</p>
+		</body>
+		</html>
+	`, code)
+
+	msg := []byte(subject + mime + body)
+
+	auth := smtp.PlainAuth("", smtpUser, smtpPassword, smtpHost)
+
+	tlsconfig := &tls.Config{
+		InsecureSkipVerify: true,
+		ServerName:         smtpHost,
+	}
+
+	conn, err := tls.Dial("tcp", smtpHost+":"+smtpPort, tlsconfig)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "Failed to create TLS connection")
+	}
+
+	client, err := smtp.NewClient(conn, smtpHost)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "Failed to create SMTP client")
+	}
+
+	defer client.Close()
+
+	if err = client.Auth(auth); err != nil {
+		return nil, status.Error(codes.Internal, "SMTP authentication failed")
+	}
+
+	if err = client.Mail(senderEmail); err != nil {
+		return nil, status.Error(codes.Internal, "Failed to set sender email")
+	}
+
+	if err = client.Rcpt(smtpTO); err != nil {
+		return nil, status.Error(codes.Internal, "Failed to set recipient email")
+	}
+
+	wc, err := client.Data()
+	if err != nil {
+		return nil, status.Error(codes.Internal, "Failed to write email data")
+	}
+
+	_, err = wc.Write(msg)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "Failed to write message")
+	}
+
+	err = wc.Close()
+	if err != nil {
+		return nil, status.Error(codes.Internal, "Failed to close write connection")
+	}
+
+	err = client.Quit()
+	if err != nil {
+		return nil, status.Error(codes.Internal, "Failed to close SMTP connection")
+	}
+
+	err = authDao.Code.SetCodeWithEmail(ctx, req.Email, code)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "Internal error")
+	}
+
+	return &authV1.RegisterSendEmailResponse{}, nil
 }
 
 // RegisterWithEmail TODO: SMTP
 func (s *S) RegisterWithEmail(ctx context.Context, req *authV1.RegisterWithEmailRequest) (*authV1.RegisterWithEmailResponse, error) {
+	settings, _, _, err := systemDao.Setting.GetSettings(ctx)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "Internal error")
+	}
+
+	if !settings.RegisterEnable {
+		return nil, status.Error(codes.PermissionDenied, "Register is not allowed")
+	}
+
+	if settings.SmtpEnable {
+		//	check email
+		_status, err := authDao.Code.CheckCodeWithAttempts(ctx, req.Email, req.EmailToken)
+		if err != nil {
+			return nil, status.Error(codes.Internal, "Internal error")
+		}
+
+		switch _status {
+		case codeValues.Wrong:
+			return nil, status.Error(codes.InvalidArgument, "Email token error")
+		case codeValues.TooManyAttempts:
+			return nil, status.Error(codes.InvalidArgument, "Too many attempts")
+		case codeValues.Right:
+
+		}
+	}
+
 	email := req.Email
 	password := req.Password
 

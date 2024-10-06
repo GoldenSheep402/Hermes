@@ -1,0 +1,17 @@
+:80 {
+  root * /Serve/frontend
+  file_server
+  encode gzip
+
+  handle /api/* {
+    reverse_proxy 127.0.0.1:27811
+  }
+
+  handle /gapi/* {
+    reverse_proxy 127.0.0.1:27811
+  }
+
+  handle {
+    try_files {path} /index.html
+  }
+}

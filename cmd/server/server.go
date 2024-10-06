@@ -27,10 +27,9 @@ var (
 		Example: "jframe server -c ./config.yaml",
 		Run: func(cmd *cobra.Command, args []string) {
 			log.Info("loading config...")
+			fmt.Printf("config path at:%s\n", configPath)
 			conf.LoadConfig(configPath)
-			log.Info("loading config complete")
-
-			log.Info("init dep...")
+			log.Infof("config path at: init dep...")
 			if conf.Get().SentryDsn != "" {
 				sentry.Init()
 			}

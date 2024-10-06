@@ -1,14 +1,45 @@
 version: '3.8'
 
 services:
-  template-main:
+  hermes-test:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: hermes
     volumes:
-      - /root/Hermes/config.yaml:/Serve/config/config.yaml
-      - /root/Hermes/Caddyfile:/etc/caddy/Caddyfile
-    network_mode: host
+      - ./config.yaml:/Serve/config.yaml
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - ./supervisord.conf:/etc/supervisor/conf.d/supervisord.conf
+      - ./log-docker.log:/Serve/latest.log
+    container_name: hermes
+    restart: unless-stopped
     ports:
       - "80:80"
+    depends_on:
+      - hermes-rds
+      - hermes-postgres
+    networks:
+      - hermes-network
+
+  hermes-rds:
+    image: redis
+    container_name: hermes-rds-ctn-template
+    ports:
+      - "26379:6379"
+    networks:
+      - hermes-network
+
+  hermes-postgres:
+    image: bitnami/postgresql:latest
+    container_name: hermes-ctn-template
+    ports:
+      - "25432:5432"
+    environment:
+      - POSTGRESQL_USERNAME=hermes
+      - POSTGRESQL_PASSWORD=123456
+      - POSTGRESQL_DATABASE=hermes
+    networks:
+      - hermes-network
+
+networks:
+  hermes-network:
+    driver: bridge

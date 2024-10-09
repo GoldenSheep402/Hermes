@@ -8,17 +8,17 @@ services:
     volumes:
       - ./config.yaml:/Serve/config.yaml
       - ./Caddyfile:/etc/caddy/Caddyfile
-      - ./supervisord.conf:/etc/supervisor/conf.d/supervisord.conf
+      - /root/Hermes/supervisord.conf:/Serve/supervisord.conf
       - ./log-docker.log:/Serve/latest.log
     container_name: hermes
     restart: unless-stopped
     ports:
       - "80:80"
+      - "443:443"
     depends_on:
       - hermes-rds
       - hermes-postgres
-    networks:
-      - hermes-network
+    network_mode: host
 
   hermes-rds:
     image: redis
@@ -27,18 +27,22 @@ services:
       - "26379:6379"
     networks:
       - hermes-network
+    volumes:
+      - /root/dev/Hermes/rds-data:/data
 
   hermes-postgres:
-    image: bitnami/postgresql:latest
+    image: postgres:latest
     container_name: hermes-ctn-template
     ports:
       - "25432:5432"
     environment:
-      - POSTGRESQL_USERNAME=hermes
-      - POSTGRESQL_PASSWORD=123456
-      - POSTGRESQL_DATABASE=hermes
+      - POSTGRES_USER=hermes
+      - POSTGRES_PASSWORD=123456
+      - POSTGRES_DB=hermes
     networks:
       - hermes-network
+    volumes:
+      - /root/dev/Hermes/pg-data:/var/lib/postgresql/data
 
 networks:
   hermes-network:

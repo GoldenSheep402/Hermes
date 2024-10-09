@@ -28,10 +28,11 @@ RUN apk update && apk add tzdata caddy supervisor \
     && ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime \
     && echo "Asia/Shanghai" > /etc/timezone
 
+
 #COPY config.yaml /Serve/config.yaml
 #COPY Caddyfile /etc/caddy/Caddyfile
 #
-#COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 COPY --from=builder /build/App /Serve/App
 COPY --from=frontend-builder /frontend/dist /Serve/frontend
@@ -39,3 +40,4 @@ COPY --from=frontend-builder /frontend/dist /Serve/frontend
 EXPOSE 8080
 
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+

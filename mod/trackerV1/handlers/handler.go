@@ -251,9 +251,10 @@ func AnnounceWithKey(c *jin.Context) {
 	xForwardedFor := c.Request.Header.Get("X-Forwarded-For")
 	var host string
 
+	// TODO: xff has multiple ips
 	if xForwardedFor != "" {
 		ips := strings.Split(xForwardedFor, ",")
-		host = strings.TrimSpace(ips[0])
+		host = strings.TrimSpace(strings.Split(ips[0], ":")[0])
 	} else {
 		host, _, err = net.SplitHostPort(c.Request.RemoteAddr)
 		if err != nil {
@@ -262,6 +263,7 @@ func AnnounceWithKey(c *jin.Context) {
 	}
 
 	allowedSubnets := conf.Get().TrackerV1.AllowedSubnets
+	fmt.Printf("Allowed subnets: %v\n", allowedSubnets)
 	var allowed bool
 
 	for _, subnet := range allowedSubnets {
@@ -303,6 +305,7 @@ func AnnounceWithKey(c *jin.Context) {
 			Port:   req.Port,
 		}
 
+		fmt.Printf("Peer: %v\n", peer)
 		err := dao.Peer.AddPeer(ctx, torrentID, peer, UID)
 
 		if err != nil {

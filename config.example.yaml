@@ -1,4 +1,5 @@
-Port: "8080"
+Mode: debug
+Port: "27811"
 Log:
     LogPath: "./latest.log"
     CLS:
@@ -6,16 +7,41 @@ Log:
         AccessKey: ""
         AccessToken: ""
         TopicID: ""
-MySQL:
-    Addr: "localhost"
-    Port: "3306"
-    User: "root"
+B2:
+    BucketKeyID: ""
+    BucketKey: ""
+    BucketName: ""
+Pyroscope:
+    ApplicationName: ""
+    ServerAddress: ""
+    BasicAuthUser: ""
+    BasicAuthPass: ""
+    TenantID: ""
+Uptrace:
+    ServiceName: ""
+    ServiceVersion: ""
+    DSN: ""
+SentryDsn: ""
+Pgsql:
+    Addr: "hermes-postgres"
+    Port: "5432"
+    User: "hermes"
     Password: "123456"
-    Database: "jframe"
-    UseTLS: false
-    Debug: false
-Redis:
-    Addr: "localhost"
-    Port: "6379"
+    Database: "hermes"
+Rds:
+    Addr: "hermes-rds"
+    Port: "16379"
     Password: ""
-    Db: 0
+    DB: 0
+uptrace:
+    DSN: ""
+    ServiceName: ""
+    ServiceVersion: ""
+user:
+    AdminName: "admin"
+    AdminAccount: "admin@admin.com"
+    AdminPassword: "admin@admin.com"
+TrackerV1:
+    Endpoint: "http://172.16.7.183:27811/tracker/announce/key/"
+    AllowedSubnets: [
+    ]

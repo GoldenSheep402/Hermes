@@ -1,9 +1,9 @@
 <template>
   <div class="register-form-wrapper">
-    <div class="register-form-title">HERMES</div>
+    <div class="register-form-title">{{ $t('site.maintitle') }}</div>
     <div class="register-form-sub-title">{{ $t('register.subtitle') }}</div>
     <div class="register-form-error-msg">{{ errorMessage }}</div>
-    <a-form ref="regForm" :model="registerForm" class="reg-form" layout="vertical" @submit="handleSubmit">
+    <a-form :model="registerForm" class="reg-form" layout="vertical" @submit="handleSubmit">
       <a-form-item :rules="[
         { required: true, message: $t('register.form.email.required') },
         {
@@ -26,7 +26,7 @@
         minLength: PASSWORD_MIN, message: $t('register.form.password.min', { minLength: PASSWORD_MIN })
       }]" :validate-trigger="['change', 'blur']" field="password" hide-label>
         <a-input-password v-model="registerForm.password" allow-clear
-          :placeholder="$t('register.form.password.placeholder')">
+          :placeholder="$t('register.form.password.placeholder', { minLength: PASSWORD_MIN })">
           <template #prefix>
             <icon-lock />
           </template>
@@ -46,8 +46,11 @@
       <a-space :size="16" direction="vertical">
         <div class="register-form-password-actions">
         </div>
-        <a-button class="register-form-register-btn" html-type="submit" long type="primary">
+        <a-button class="register-form-register-btn" html-type="submit" long type="primary" :loading="loading">
           {{ $t('register.form.sumbit') }}
+        </a-button>
+        <a-button type="text" long class="register-form-login-btn" @click="handleLogin">
+          {{ $t('register.form.login') }}
         </a-button>
       </a-space>
     </a-form>
@@ -61,10 +64,13 @@ import { Message, ValidatedError } from "@arco-design/web-vue";
 import { useRouter } from 'vue-router';
 import { RegisterWithEmailRequest } from "@/lib/proto/auth/v1/auth.pb.ts";
 import { EMAIL_REGEX, PASSWORD_MIN } from '@/utils/constants';
+import useLoading from '@/hooks/loading';
+import { set } from 'nprogress';
 
 const errorMessage = ref('');
 
 const router = useRouter();
+const { loading, setLoading } = useLoading();
 
 const registerForm = reactive({
   email: '',
@@ -87,10 +93,13 @@ function sendEmail() {
 
 
 const handleSubmit = ({ values, errors }: { values: Record<string, any>; errors: Record<string, ValidatedError> | undefined }, ev: Event) => {
-  console.log('values:', values, '\nerrors:', errors)
+  if (loading.value) return;
+
   if (errors !== undefined) {
     return;
   }
+
+  setLoading(true);
 
   const req = ref<RegisterWithEmailRequest>({
     email: registerForm.email,
@@ -100,15 +109,24 @@ const handleSubmit = ({ values, errors }: { values: Record<string, any>; errors:
   });
 
   AuthService.RegisterWithEmail(req.value).then((res) => {
+    setLoading(false);
     Message.success('注册成功');
     router.push({
       name: 'login',
     });
   }).catch((err) => {
+    setLoading(false);
     Message.error(err.message);
     return
   });
 };
+
+const handleLogin = () => {
+  router.push({
+    name: 'login',
+  });
+};
+
 </script>
 
 <style lang="less" scoped>
@@ -141,8 +159,8 @@ const handleSubmit = ({ values, errors }: { values: Record<string, any>; errors:
     justify-content: space-between;
   }
 
-  &-register-btn {
-    //color: var(--color-text-3) !important;
+  &-login-btn {
+    color: var(--color-text-3) !important;
   }
 }
 </style>

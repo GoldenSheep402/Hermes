@@ -4,8 +4,10 @@ import localeRegister from '@/views/register/locale/en-US';
 import localeWorkplace from '@/views/dashboard/workplace/locale/en-US';
 
 import localeSettings from './en-US/settings';
+import { SITE_MAINTITLE } from '@/utils/constants';
 
 export default {
+  'site.maintitle': SITE_MAINTITLE,
   'menu.dashboard': 'Dashboard',
   'menu.server.dashboard': 'Dashboard-Server',
   'menu.server.workplace': 'Workplace-Server',

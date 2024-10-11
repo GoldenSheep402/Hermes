@@ -1,7 +1,7 @@
 <template>
   <div class="w-full flex h-dvh">
     <div class="logo">
-      <div class="logo-text">HERMES</div>
+      <div class="logo-text">{{$t('site.maintitle')}}</div>
     </div>
 <!--    <LoginBanner />-->
     <div class="relative flex flex-1 items-center justify-center">

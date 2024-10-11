@@ -4,8 +4,10 @@ import localeRegister from '@/views/register/locale/zh-CN';
 import localeWorkplace from '@/views/dashboard/workplace/locale/zh-CN';
 
 import localeSettings from './zh-CN/settings';
+import { SITE_MAINTITLE } from '@/utils/constants';
 
 export default {
+  'site.maintitle': SITE_MAINTITLE,
   'menu.dashboard': '仪表盘',
   'menu.server.dashboard': '仪表盘-服务端',
   'menu.server.workplace': '工作台-服务端',

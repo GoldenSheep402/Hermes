@@ -1,56 +1,53 @@
 <template>
-  <div class="login-form-wrapper">
-    <div class="login-form-title">HERMES</div>
-    <div class="login-form-sub-title">注册账户</div>
-    <div class="login-form-error-msg">{{ errorMessage }}</div>
-    <a-form
-        ref="regForm"
-        :model="userInfo"
-        class="reg-form"
-        layout="vertical"
-        @submit="reg"
-    >
-      <a-form-item
-          :rules="[{ required: true, message: $t('login.form.userName.errMsg') }]"
-          :validate-trigger="['change', 'blur']"
-          field="email"
-          hide-label
-      >
-        <a-input
-            v-model="userInfo.email"
-        >
+  <div class="register-form-wrapper">
+    <div class="register-form-title">HERMES</div>
+    <div class="register-form-sub-title">{{ $t('register.subtitle') }}</div>
+    <div class="register-form-error-msg">{{ errorMessage }}</div>
+    <a-form ref="regForm" :model="registerForm" class="reg-form" layout="vertical" @submit="handleSubmit">
+      <a-form-item :rules="[
+        { required: true, message: $t('register.form.email.required') },
+        {
+          validator: (value, cb) => {
+            if (EMAIL_REGEX.test(value)) {
+              cb();
+            } else {
+              cb($t('register.form.email.invalid'));
+            }
+          }
+        }
+      ]" :validate-trigger="['change', 'blur']" field="email" hide-label feedback>
+        <a-input v-model="registerForm.email" :placeholder="$t('register.form.email.placeholder')">
           <template #prefix>
-            <icon-user/>
+            <icon-email />
           </template>
         </a-input>
       </a-form-item>
-      <a-form-item
-          :rules="[{ required: true, message: '注册出错，轻刷新重试' }]"
-          :validate-trigger="['change', 'blur']"
-          field="password"
-          hide-label
-      >
-        <a-input-password
-            v-model="userInfo.password"
-            allow-clear
-        >
+      <a-form-item :rules="[{ required: true, message: $t('register.form.password.required') }, {
+        minLength: PASSWORD_MIN, message: $t('register.form.password.min', { minLength: PASSWORD_MIN })
+      }]" :validate-trigger="['change', 'blur']" field="password" hide-label>
+        <a-input-password v-model="registerForm.password" allow-clear
+          :placeholder="$t('register.form.password.placeholder')">
           <template #prefix>
-            <icon-lock/>
+            <icon-lock />
           </template>
         </a-input-password>
       </a-form-item>
 
       <a-form-item>
         <div class="flex flex-row justify-between w-full gap-2">
-          <a-input v-model="code"></a-input>
-          <a-button type="primary" @click="sendEmail">获取验证码</a-button>
+          <a-input v-model="registerForm.emailToken" :placeholder="$t('register.form.emailToken.placeholder')">
+            <template #prefix>
+              <icon-safe />
+            </template>
+          </a-input>
+          <a-button type="primary" @click="sendEmail">{{ $t('register.form.emailToken.send') }}</a-button>
         </div>
       </a-form-item>
       <a-space :size="16" direction="vertical">
-        <div class="login-form-password-actions">
+        <div class="register-form-password-actions">
         </div>
-        <a-button class="login-form-register-btn" html-type="submit" long type="primary">
-          {{ $t('login.form.register') }}
+        <a-button class="register-form-register-btn" html-type="submit" long type="primary">
+          {{ $t('register.form.sumbit') }}
         </a-button>
       </a-space>
     </a-form>
@@ -58,26 +55,30 @@
 </template>
 
 <script lang="ts" setup>
-import {reactive, ref} from 'vue';
-import {AuthService} from "@/services/grpc.ts";
-import {Message} from "@arco-design/web-vue";
-import {useRouter} from 'vue-router';
-import {RegisterWithEmailRequest} from "@/lib/proto/auth/v1/auth.pb.ts";
+import { reactive, ref } from 'vue';
+import { AuthService } from "@/services/grpc.ts";
+import { Message, ValidatedError } from "@arco-design/web-vue";
+import { useRouter } from 'vue-router';
+import { RegisterWithEmailRequest } from "@/lib/proto/auth/v1/auth.pb.ts";
+import { EMAIL_REGEX, PASSWORD_MIN } from '@/utils/constants';
 
 const errorMessage = ref('');
 
 const router = useRouter();
 
-const code = ref<string>("");
-
-const userInfo = reactive({
+const registerForm = reactive({
   email: '',
   username: '',
   password: '',
+  emailToken: '',
 });
 
 function sendEmail() {
-  AuthService.RegisterSendEmail({email: userInfo.email}).then((res) => {
+  if (!EMAIL_REGEX.test(registerForm.email)) {
+    Message.error('邮箱格式不正确');
+    return;
+  }
+  AuthService.RegisterSendEmail({ email: registerForm.email }).then((res) => {
     Message.success('验证码已发送');
   }).catch((err) => {
     Message.error(err.message);
@@ -85,27 +86,33 @@ function sendEmail() {
 }
 
 
-const reg = () => {
+const handleSubmit = ({ values, errors }: { values: Record<string, any>; errors: Record<string, ValidatedError> | undefined }, ev: Event) => {
+  console.log('values:', values, '\nerrors:', errors)
+  if (errors !== undefined) {
+    return;
+  }
+
   const req = ref<RegisterWithEmailRequest>({
-    email: userInfo.email,
-    username: userInfo.email,
-    password: userInfo.password,
-    emailToken: code.value,
+    email: registerForm.email,
+    username: registerForm.email,
+    password: registerForm.password,
+    emailToken: registerForm.emailToken,
   });
+
   AuthService.RegisterWithEmail(req.value).then((res) => {
     Message.success('注册成功');
+    router.push({
+      name: 'login',
+    });
   }).catch((err) => {
     Message.error(err.message);
     return
-  });
-  router.push({
-    name: 'login',
   });
 };
 </script>
 
 <style lang="less" scoped>
-.login-form {
+.register-form {
   &-wrapper {
     width: 320px;
   }

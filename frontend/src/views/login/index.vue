@@ -18,6 +18,14 @@
 <script lang="ts" setup>
   import Footer from '@/components/footer/index.vue';
   import LoginForm from './components/login-form.vue';
+  import { onMounted } from 'vue';
+  import { usePreferredDark } from '@vueuse/core'
+  const isDark = usePreferredDark()
+  onMounted(() => {
+    if (localStorage.getItem('arco-theme') != 'light') {
+      if (isDark.value) document.body.setAttribute('arco-theme', 'dark');
+    }
+  });
 </script>
 
 <style lang="less" scoped>

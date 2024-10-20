@@ -1,12 +1,12 @@
 version: '3'
 
 services:
-  cert-center-rds:
+  hermes-rds:
     image: redis
     container_name: hermes-rds-ctn
     ports:
       - "6379:6379"
-  cert-center-postgres:
+  hermes-postgres:
     image: bitnami/postgresql:latest
     container_name: hermes-ctn
     ports:

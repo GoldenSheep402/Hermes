@@ -2,7 +2,7 @@
 // versions:
 // 	protoc-gen-go v1.34.2
 // 	protoc        (unknown)
-// source: auth/v1/auth.proto
+// source: auth/v1/bonus.proto
 
 package authV1
 

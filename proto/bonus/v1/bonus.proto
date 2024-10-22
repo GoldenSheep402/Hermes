@@ -1,0 +1,8 @@
+syntax = "proto3";
+package bonus.v1;
+option go_package = "github.com/GoldenSheep402/Hermes/pkg/proto/bonus/v1;bonusV1";
+
+import "google/api/annotations.proto";
+
+service BonusService{
+}

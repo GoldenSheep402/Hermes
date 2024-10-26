@@ -32,6 +32,17 @@ const TORRENT: AppRouteRecordRaw = {
 				roles: ['*'],
 			},
 		},
+		{
+			path: 'detail',
+			name: 'TorrentDetail',
+			component: () => import('@/views/torrent/detail/index.vue'),
+			meta: {
+				label: '种子详情',
+				requiresAuth: true,
+				roles: ['*'],
+				hideInMenu: true,
+			},
+		}
 	],
 };
 

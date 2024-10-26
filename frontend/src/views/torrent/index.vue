@@ -2,7 +2,9 @@
 import {onMounted, ref} from "vue";
 import {TorrentService, TrackerService, UserService} from "@/services/grpc.ts";
 import {Notification} from "@arco-design/web-vue";
+import { useRouter } from "vue-router";
 
+const router = useRouter();
 interface TorrentMessage {
   id: string;
   name: string;
@@ -56,6 +58,10 @@ function base64ToUint8Array(base64: string): Uint8Array {
     bytes[i] = binaryString.charCodeAt(i);
   }
   return bytes;
+}
+
+function handleDetail(id: string) {
+  router.push(`/torrent/detail?id=${id}`);
 }
 
 function downloadTorrent(id: string, name: string) {
@@ -164,11 +170,15 @@ onMounted(() => {
           </a-table-column>
           <a-table-column key="action" title="操作">
             <template #cell="{record}">
+              <div class="flex gap-2">
+              <a-button type="primary" @click="handleDetail(record.id)">
+                查看
+              </a-button>
               <a-button type="primary"
                         :href="genUrl(record.id)"
                         @click.prevent="downloadTorrent(record.id,record.name)">
                 下载
-              </a-button>
+              </a-button></div>
             </template>
           </a-table-column>
         </template>

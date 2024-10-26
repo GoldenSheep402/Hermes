@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import {CategoryService} from "@/services/grpc.ts";
-import {onMounted, ref} from "vue";
-import {CreateCategoryRequest} from "@/lib/proto/category/v1/category.pb.ts";
-import {Notification} from "@arco-design/web-vue";
+import { CategoryService } from "@/services/grpc.ts";
+import { onMounted, ref } from "vue";
+import { CreateCategoryRequest } from "@/lib/proto/category/v1/category.pb.ts";
+import { Notification } from "@arco-design/web-vue";
 
 interface Category {
   id: string;
@@ -19,7 +19,7 @@ interface CategoryMetadata {
 }
 
 const categoryList = ref<Category[]>([]);
-
+const activeKey = ref<number>(1); 
 function fetchCategoryList() {
   categoryList.value = [];
   CategoryService.GetCategoryList({}).then((res) => {
@@ -44,14 +44,24 @@ function handleAdd() {
     type: "string",
     key: "默认key",
     description: "类别名称",
-    DefaultValue: "默认值",
+    DefaultValue: "",
   });
 }
 
-function handleDelete(order: string | number) {
-  const index = categoryMetadatas.value.findIndex((meta) => meta.order === order);
-  categoryMetadatas.value.splice(index, 1);
+function handleDelete(order: number | string) {
+  const index = categoryMetadatas.value.findIndex(item => item.order === order);
+  if (index !== -1) {
+    categoryMetadatas.value.splice(index, 1);
+    if (index > 0) {
+      activeKey.value = categoryMetadatas.value[index - 1].order;
+    } else if (categoryMetadatas.value.length > 0) {
+      activeKey.value = categoryMetadatas.value[0].order;
+    } else {
+      activeKey.value = 0;
+    }
+  }
 }
+
 
 function createCategory() {
   const req = ref<CreateCategoryRequest>({ category: { metaData: [] } } as CreateCategoryRequest);
@@ -157,20 +167,21 @@ onMounted(() => {
       </a-table>
 
       <a-modal v-model:visible="showAddCategory" @ok="createCategory()">
+        <template #title>
+          添加类别
+        </template>
         <div class="p-5">
-          <div class="text-20px leading-[1.4] font-500 text-[--color-text-1] mb-5">
-            添加类别
-          </div>
           <div class="flex flex-row gap-5">
             <a-input placeholder="类别名称" v-model="categoryNew.name"></a-input>
             <a-input placeholder="类别描述" v-model="categoryNew.description"></a-input>
           </div>
 
-          <div class="mt-2">
-            <a-tabs :editable="true" type="card-gutter" @add="handleAdd" @delete="" show-add-button auto-switch>
+          <div class="mt-4">
+            <a-tabs v-model:active-key="activeKey":editable="true" type="card-gutter" @add="handleAdd" @delete="handleDelete" show-add-button
+              auto-switch>
               <a-tab-pane v-for="meta in categoryMetadatas" :key="meta.order" :title="(meta.order).toString()">
-                <a-form :model="meta">
-                  <a-form-item field="order" label="顺序">
+                <a-form :model="meta" class="p-5">
+                  <a-form-item field="order" label="序号">
                     <a-input-number v-model="meta.order" />
                   </a-form-item>
                   <a-form-item field="type" label="类型">
@@ -184,10 +195,10 @@ onMounted(() => {
                     <a-input v-model="meta.key"></a-input>
                   </a-form-item>
                   <a-form-item field="description" label="描述">
-                    <a-input v-model="meta.description"/>
+                    <a-input v-model="meta.description" />
                   </a-form-item>
                   <a-form-item field="DefaultValue" label="默认值">
-                    <a-input v-model="meta.DefaultValue"/>
+                    <a-input v-model="meta.DefaultValue" />
                   </a-form-item>
                 </a-form>
               </a-tab-pane>
@@ -199,5 +210,4 @@ onMounted(() => {
   </div>
 </template>
 
-<style scoped lang="less">
-</style>
+<style scoped lang="less"></style>

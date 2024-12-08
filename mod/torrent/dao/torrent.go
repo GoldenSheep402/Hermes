@@ -141,7 +141,6 @@ func (t *torrent) GetTorrentMetadata(ctx context.Context, torrentID string) ([]c
 		case errors.Is(err, gorm.ErrRecordNotFound):
 			return nil, status.Error(codes.NotFound, "Torrent not found")
 		default:
-
 			return nil, status.Error(codes.Internal, "Internal error")
 		}
 	}

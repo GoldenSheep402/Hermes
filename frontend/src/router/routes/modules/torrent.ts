@@ -1,49 +1,49 @@
-import { DEFAULT_LAYOUT } from '../base';
-import { AppRouteRecordRaw } from '../types';
+import type { AppRouteRecordRaw } from '../types'
+import { DEFAULT_LAYOUT } from '../base'
 
 const TORRENT: AppRouteRecordRaw = {
-	path: '/torrent',
-	name: 'Torrent',
-	component: DEFAULT_LAYOUT,
-	meta: {
-		label: '种子',
-		requiresAuth: true,
-		icon: 'icon-relation',
-		order: 3,
-	},
-	children: [
-		{
-			path: 'list',
-			name: 'TorrentList',
-			component: () => import('@/views/torrent/index.vue'),
-			meta: {
-				label: '种子列表',
-				requiresAuth: true,
-				roles: ['*'],
-			},
-		},
-		{
-			path: 'create',
-			name: 'TorrentCreate',
-			component: () => import('@/views/torrent/create/index.vue'),
-			meta: {
-				label: '创建种子',
-				requiresAuth: true,
-				roles: ['*'],
-			},
-		},
-		{
-			path: 'detail',
-			name: 'TorrentDetail',
-			component: () => import('@/views/torrent/detail/index.vue'),
-			meta: {
-				label: '种子详情',
-				requiresAuth: true,
-				roles: ['*'],
-				hideInMenu: true,
-			},
-		}
-	],
-};
+  path: '/torrent',
+  name: 'Torrent',
+  component: DEFAULT_LAYOUT,
+  meta: {
+    label: '种子',
+    requiresAuth: true,
+    icon: 'icon-relation',
+    order: 3,
+  },
+  children: [
+    {
+      path: 'list',
+      name: 'TorrentList',
+      component: () => import('@/views/torrent/index.vue'),
+      meta: {
+        label: '种子列表',
+        requiresAuth: true,
+        roles: ['*'],
+      },
+    },
+    {
+      path: 'create',
+      name: 'TorrentCreate',
+      component: () => import('@/views/torrent/create/index.vue'),
+      meta: {
+        label: '创建种子',
+        requiresAuth: true,
+        roles: ['*'],
+      },
+    },
+    {
+      path: 'detail',
+      name: 'TorrentDetail',
+      component: () => import('@/views/torrent/detail/index.vue'),
+      meta: {
+        label: '种子详情',
+        requiresAuth: true,
+        roles: ['*'],
+        hideInMenu: true,
+      },
+    },
+  ],
+}
 
-export default TORRENT;
+export default TORRENT

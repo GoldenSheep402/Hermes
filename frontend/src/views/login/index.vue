@@ -1,9 +1,26 @@
+<script lang="ts" setup>
+import Footer from '@/components/footer/index.vue'
+import { usePreferredDark } from '@vueuse/core'
+import { onMounted } from 'vue'
+import LoginForm from './components/login-form.vue'
+
+const isDark = usePreferredDark()
+onMounted(() => {
+  if (localStorage.getItem('arco-theme') !== 'light') {
+    if (isDark.value)
+      document.body.setAttribute('arco-theme', 'dark')
+  }
+})
+</script>
+
 <template>
   <div class="w-full flex h-dvh">
     <div class="logo">
-      <div class="logo-text">{{$t('site.maintitle')}}</div>
+      <div class="logo-text">
+        {{ $t('site.maintitle') }}
+      </div>
     </div>
-<!--    <LoginBanner />-->
+    <!--    <LoginBanner /> -->
     <div class="relative flex flex-1 items-center justify-center">
       <div class="content-inner">
         <LoginForm />
@@ -14,19 +31,6 @@
     </div>
   </div>
 </template>
-
-<script lang="ts" setup>
-  import Footer from '@/components/footer/index.vue';
-  import LoginForm from './components/login-form.vue';
-  import { onMounted } from 'vue';
-  import { usePreferredDark } from '@vueuse/core'
-  const isDark = usePreferredDark()
-  onMounted(() => {
-    if (localStorage.getItem('arco-theme') != 'light') {
-      if (isDark.value) document.body.setAttribute('arco-theme', 'dark');
-    }
-  });
-</script>
 
 <style lang="less" scoped>
   .footer {

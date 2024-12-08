@@ -1,10 +1,10 @@
-import localeMessageBox from '@/components/message-box/locale/en-US';
-import localeLogin from '@/views/login/locale/en-US';
-import localeRegister from '@/views/register/locale/en-US';
-import localeWorkplace from '@/views/dashboard/workplace/locale/en-US';
+import localeMessageBox from '@/components/message-box/locale/en-US'
+import { SITE_MAINTITLE } from '@/utils/constants'
+import localeWorkplace from '@/views/dashboard/workplace/locale/en-US'
+import localeLogin from '@/views/login/locale/en-US'
 
-import localeSettings from './en-US/settings';
-import { SITE_MAINTITLE } from '@/utils/constants';
+import localeRegister from '@/views/register/locale/en-US'
+import localeSettings from './en-US/settings'
 
 export default {
   'site.maintitle': SITE_MAINTITLE,
@@ -28,4 +28,4 @@ export default {
   ...localeLogin,
   ...localeRegister,
   ...localeWorkplace,
-};
+}

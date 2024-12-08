@@ -1,3 +1,44 @@
+<script lang="ts" setup>
+import type { RouteLocationNormalized } from 'vue-router'
+import { useAppStore, useTabBarStore } from '@/store'
+import {
+  listenerRouteChange,
+  removeRouteListener,
+} from '@/utils/route-listener'
+import { computed, onUnmounted, ref, watch } from 'vue'
+import tabItem from './tab-item.vue'
+
+const appStore = useAppStore()
+const tabBarStore = useTabBarStore()
+
+const affixRef = ref()
+const tagList = computed(() => {
+  return tabBarStore.getTabList
+})
+const offsetTop = computed(() => {
+  return appStore.navbar ? 60 : 0
+})
+
+watch(
+  () => appStore.navbar,
+  () => {
+    affixRef.value.updatePosition()
+  },
+)
+listenerRouteChange((route: RouteLocationNormalized) => {
+  if (
+    !route.meta.noAffix
+    && !tagList.value.some(tag => tag.fullPath === route.fullPath)
+  ) {
+    tabBarStore.updateTabList(route)
+  }
+}, true)
+
+onUnmounted(() => {
+  removeRouteListener()
+})
+</script>
+
 <template>
   <div class="tab-bar-container">
     <a-affix ref="affixRef" :offset-top="offsetTop">
@@ -12,52 +53,11 @@
             />
           </div>
         </div>
-        <div class="tag-bar-operation"></div>
+        <div class="tag-bar-operation" />
       </div>
     </a-affix>
   </div>
 </template>
-
-<script lang="ts" setup>
-  import { ref, computed, watch, onUnmounted } from 'vue';
-  import type { RouteLocationNormalized } from 'vue-router';
-  import {
-    listenerRouteChange,
-    removeRouteListener,
-  } from '@/utils/route-listener';
-  import { useAppStore, useTabBarStore } from '@/store';
-  import tabItem from './tab-item.vue';
-
-  const appStore = useAppStore();
-  const tabBarStore = useTabBarStore();
-
-  const affixRef = ref();
-  const tagList = computed(() => {
-    return tabBarStore.getTabList;
-  });
-  const offsetTop = computed(() => {
-    return appStore.navbar ? 60 : 0;
-  });
-
-  watch(
-    () => appStore.navbar,
-    () => {
-      affixRef.value.updatePosition();
-    }
-  );
-  listenerRouteChange((route: RouteLocationNormalized) => {
-    if (
-      !route.meta.noAffix &&
-      !tagList.value.some((tag) => tag.fullPath === route.fullPath)
-    ) {
-      tabBarStore.updateTabList(route);
-    }
-  }, true);
-
-  onUnmounted(() => {
-    removeRouteListener();
-  });
-</script>
 
 <style scoped lang="less">
   .tab-bar-container {

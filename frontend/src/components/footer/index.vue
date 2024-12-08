@@ -1,8 +1,10 @@
-<template>
-  <a-layout-footer class="footer">HERMES</a-layout-footer>
-</template>
-
 <script lang="ts" setup></script>
+
+<template>
+  <a-layout-footer class="footer">
+    HERMES
+  </a-layout-footer>
+</template>
 
 <style lang="less" scoped>
   .footer {

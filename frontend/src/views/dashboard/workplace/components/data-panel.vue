@@ -1,3 +1,5 @@
+<script lang="ts" setup></script>
+
 <template>
   <a-grid :cols="24" :row-gap="16" class="panel">
     <a-grid-item
@@ -9,7 +11,7 @@
           <img
             alt="avatar"
             src="//p3-armor.byteimg.com/tos-cn-i-49unhts6dw/288b89194e657603ff40db39e8072640.svg~tplv-49unhts6dw-image.image"
-          />
+          >
         </a-avatar>
         <a-statistic
           :title="$t('workplace.onlineContent')"
@@ -34,7 +36,7 @@
           <img
             alt="avatar"
             src="//p3-armor.byteimg.com/tos-cn-i-49unhts6dw/fdc66b07224cdf18843c6076c2587eb5.svg~tplv-49unhts6dw-image.image"
-          />
+          >
         </a-avatar>
         <a-statistic
           :title="$t('workplace.putIn')"
@@ -58,7 +60,7 @@
           <img
             alt="avatar"
             src="//p3-armor.byteimg.com/tos-cn-i-49unhts6dw/77d74c9a245adeae1ec7fb5d4539738d.svg~tplv-49unhts6dw-image.image"
-          />
+          >
         </a-avatar>
         <a-statistic
           :title="$t('workplace.newDay')"
@@ -83,7 +85,7 @@
           <img
             alt="avatar"
             src="//p3-armor.byteimg.com/tos-cn-i-49unhts6dw/c8b36e26d2b9bb5dbf9b74dd6d7345af.svg~tplv-49unhts6dw-image.image"
-          />
+          >
         </a-avatar>
         <a-statistic
           :title="$t('workplace.newFromYesterday')"
@@ -92,7 +94,9 @@
           :value-from="0"
           animation
         >
-          <template #suffix> % <icon-caret-up class="up-icon" /> </template>
+          <template #suffix>
+            % <icon-caret-up class="up-icon" />
+          </template>
         </a-statistic>
       </a-space>
     </a-grid-item>
@@ -101,8 +105,6 @@
     </a-grid-item>
   </a-grid>
 </template>
-
-<script lang="ts" setup></script>
 
 <style lang="less" scoped>
   .arco-grid.panel {

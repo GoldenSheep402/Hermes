@@ -1,164 +1,203 @@
 <script setup lang="ts">
-import { CategoryService } from "@/services/grpc.ts";
-import { onMounted, ref } from "vue";
-import { CreateCategoryRequest } from "@/lib/proto/category/v1/category.pb.ts";
-import { Notification } from "@arco-design/web-vue";
+import type { CreateCategoryRequest } from '@/lib/proto/category/v1/category.pb.ts'
+import { CategoryService } from '@/services/grpc.ts'
+import { Notification } from '@arco-design/web-vue'
+import { onMounted, ref } from 'vue'
 
 interface Category {
-  id: string;
-  name: string;
-  description: string;
+  id: string
+  name: string
+  description: string
 }
 
 interface CategoryMetadata {
-  order: number;
-  type: string;
-  key: string;
-  description: string;
-  DefaultValue: string;
+  order: number
+  type: string
+  key: string
+  description: string
+  DefaultValue: string
 }
+const categoryNew = ref<Category>({
+  id: '',
+  name: '',
+  description: '',
+})
+const categoryMetadatas = ref<CategoryMetadata[]>([])
+const categoryList = ref<Category[]>([])
+const activeKey = ref<number>(1)
+const showAddCategory = ref<boolean>(false)
+const tagDefaultValue = ref<string[]>([])
 
-const categoryList = ref<Category[]>([]);
-const activeKey = ref<number>(1); 
 function fetchCategoryList() {
-  categoryList.value = [];
+  categoryList.value = []
   CategoryService.GetCategoryList({}).then((res) => {
-    for (let i = 0; i < res.category!!.length; i++) {
+    for (let i = 0; i < res.category!.length; i++) {
       categoryList.value.push({
-        id: res.category!![i].id!!,
-        name: res.category!![i].name!!,
-        description: res.category!![i].description!!,
-      });
+        id: res.category![i].id!,
+        name: res.category![i].name!,
+        description: res.category![i].description!,
+      })
     }
-  });
+  })
 }
 
-const showAddCategory = ref<boolean>(false);
 function addCategory() {
-  showAddCategory.value = true;
+  showAddCategory.value = true
 }
 
 function handleAdd() {
   categoryMetadatas.value.push({
     order: categoryMetadatas.value.length + 1,
-    type: "string",
-    key: "默认key",
-    description: "类别名称",
-    DefaultValue: "",
-  });
+    type: 'string',
+    key: '默认key',
+    description: '类别名称',
+    DefaultValue: '',
+  })
 }
 
 function handleDelete(order: number | string) {
-  const index = categoryMetadatas.value.findIndex(item => item.order === order);
+  const index = categoryMetadatas.value.findIndex(item => item.order === order)
   if (index !== -1) {
-    categoryMetadatas.value.splice(index, 1);
+    categoryMetadatas.value.splice(index, 1)
+    // 重新排列 order
+    categoryMetadatas.value.forEach((item, idx) => {
+      item.order = idx + 1
+    })
     if (index > 0) {
-      activeKey.value = categoryMetadatas.value[index - 1].order;
-    } else if (categoryMetadatas.value.length > 0) {
-      activeKey.value = categoryMetadatas.value[0].order;
-    } else {
-      activeKey.value = 0;
+      activeKey.value = categoryMetadatas.value[index - 1]?.order || 1
+    }
+    else if (categoryMetadatas.value.length > 0) {
+      activeKey.value = categoryMetadatas.value[0].order
+    }
+    else {
+      activeKey.value = 0
     }
   }
 }
 
-
-function createCategory() {
-  const req = ref<CreateCategoryRequest>({ category: { metaData: [] } } as CreateCategoryRequest);
-
-  req.value.category!!.name = categoryNew.value.name;
-  req.value.category!!.description = categoryNew.value.description;
-
-  for (let i = 0; i < categoryMetadatas.value.length; i++) {
-    req.value.category!!.metaData!!.push({
-      key: categoryMetadatas.value[i].key,
-      order: categoryMetadatas.value[i].order,
-      type: categoryMetadatas.value[i].type,
-      description: categoryMetadatas.value[i].description,
-      defaultValue: categoryMetadatas.value[i].DefaultValue,
-    });
-  }
-
-  CategoryService.CreateCategory(req.value).then((res) => {
-    handleNotification("success", "成功", "添加类别成功");
-  }).catch((err) => {
-    handleNotification("error", "失败", "添加类别失败");
-  }).finally(() => {
-    showAddCategory.value = false;
-    fetchCategoryList()
-  });
+function clear() {
+  categoryMetadatas.value = [{
+    order: 1,
+    type: 'string',
+    key: '默认key',
+    description: '类别名称',
+    DefaultValue: '',
+  }]
+  activeKey.value = 1
 }
 
+function checkEmptyInput() {
+  if (categoryNew.value.name === '') {
+    handleNotification('warning', '警告', '类别名称不能为空')
+    return false
+  }
+  return true
+}
 
-const categoryNew = ref<Category>({
-  id: "",
-  name: "",
-  description: "",
-});
-const categoryMetadatas = ref<CategoryMetadata[]>([]);
+function createCategory() {
+  const req = ref<CreateCategoryRequest>({ category: { metaData: [] } } as CreateCategoryRequest)
+
+  req.value.category!.name = categoryNew.value.name
+  req.value.category!.description = categoryNew.value.description
+
+  for (let i = 0; i < categoryMetadatas.value.length; i++) {
+    if (categoryMetadatas.value[i].type === 'select') {
+      req.value.category!.metaData!.push({
+        key: categoryMetadatas.value[i].key,
+        order: categoryMetadatas.value[i].order,
+        type: categoryMetadatas.value[i].type,
+        description: categoryMetadatas.value[i].description,
+        defaultValue: tagDefaultValue.value.join(','),
+      })
+    }
+    else {
+      req.value.category!.metaData!.push({
+        key: categoryMetadatas.value[i].key,
+        order: categoryMetadatas.value[i].order,
+        type: categoryMetadatas.value[i].type,
+        description: categoryMetadatas.value[i].description,
+        defaultValue: categoryMetadatas.value[i].DefaultValue,
+      })
+    }
+  }
+
+  CategoryService.CreateCategory(req.value).then(() => {
+    handleNotification('success', '成功', '添加类别成功')
+  }).catch(() => {
+    handleNotification('error', '失败', '添加类别失败')
+  }).finally(() => {
+    showAddCategory.value = false
+    fetchCategoryList()
+  })
+}
+
 categoryMetadatas.value.push({
   order: 1,
-  type: "string",
-  key: "默认key",
-  description: "类别名称",
-  DefaultValue: "",
-});
+  type: 'string',
+  key: '默认key',
+  description: '类别名称',
+  DefaultValue: '',
+})
 
-
-const handleNotification = (type: string, title: string, content: string) => {
+function handleNotification(type: string, title: string, content: string) {
   switch (type) {
-    case "success":
+    case 'success':
       Notification.success({
-        title: title,
-        content: content,
-      });
-      break;
-    case "error":
+        title,
+        content,
+      })
+      break
+    case 'error':
       Notification.error({
-        title: title,
-        content: content,
-      });
-      break;
-    case "warning":
+        title,
+        content,
+      })
+      break
+    case 'warning':
       Notification.warning({
-        title: title,
-        content: content,
-      });
-      break;
+        title,
+        content,
+      })
+      break
     default:
       Notification.info({
-        title: title,
-        content: content,
-      });
+        title,
+        content,
+      })
   }
 }
 
 onMounted(() => {
   fetchCategoryList()
-});
+})
 </script>
+
 <template>
   <div class="p-5">
-    <div class="p-5 bg-[--color-bg-2]">
+    <div class="bg-[--color-bg-2] p-5">
       <div class="flex justify-between">
-        <div class="p-0.5 text-20px leading-[1.4] font-500 text-[--color-text-1] mb-5">
+        <div class="mb-5 p-0.5 text-20px text-[--color-text-1] font-500 leading-[1.4]">
           类别列表
         </div>
 
         <div>
-          <a-button type="primary" @click="addCategory()">添加类别</a-button>
+          <a-button type="primary" @click="addCategory()">
+            添加类别
+          </a-button>
         </div>
       </div>
 
       <a-table :data="categoryList">
         <template #columns>
-          <a-table-column title="名称" data-index="name" :width="200"></a-table-column>
-          <a-table-column title="描述" data-index="description" :width="300"></a-table-column>
+          <a-table-column title="名称" data-index="name" :width="200" />
+          <a-table-column title="描述" data-index="description" :width="300" />
           <a-table-column title="操作" align="center" :width="100">
             <template #cell="{ record }">
               <div class="w-full flex justify-center">
-                <div class="w-fit flex flex-col md:flex-row items-center gap-2">
-                  <a-button @click="">详情</a-button>
+                <div class="w-fit flex flex-col items-center gap-2 md:flex-row">
+                  <a-button @click="console.log(record)">
+                    详情
+                  </a-button>
                 </div>
               </div>
             </template>
@@ -166,39 +205,56 @@ onMounted(() => {
         </template>
       </a-table>
 
-      <a-modal v-model:visible="showAddCategory" @ok="createCategory()">
+      <a-modal v-model:visible="showAddCategory" width="800px" :on-before-ok="checkEmptyInput" @ok="createCategory()" @close="clear()">
         <template #title>
           添加类别
         </template>
         <div class="p-5">
           <div class="flex flex-row gap-5">
-            <a-input placeholder="类别名称" v-model="categoryNew.name"></a-input>
-            <a-input placeholder="类别描述" v-model="categoryNew.description"></a-input>
+            <a-input v-model="categoryNew.name" placeholder="类别名称" />
+            <a-input v-model="categoryNew.description" placeholder="类别描述" />
           </div>
 
           <div class="mt-4">
-            <a-tabs v-model:active-key="activeKey":editable="true" type="card-gutter" @add="handleAdd" @delete="handleDelete" show-add-button
-              auto-switch>
+            <a-tabs
+              v-model:active-key="activeKey" :editable="true" type="card-gutter" show-add-button auto-switch @add="handleAdd"
+              @delete="handleDelete"
+            >
               <a-tab-pane v-for="meta in categoryMetadatas" :key="meta.order" :title="(meta.order).toString()">
                 <a-form :model="meta" class="p-5">
                   <a-form-item field="order" label="序号">
                     <a-input-number v-model="meta.order" />
                   </a-form-item>
                   <a-form-item field="type" label="类型">
-                    <a-radio-group type="button" v-model="meta.type">
-                      <a-radio value="string">字符串</a-radio>
-                      <a-radio value="number">数字</a-radio>
-                      <a-radio value="switch">开关</a-radio>
+                    <a-radio-group v-model="meta.type" type="button">
+                      <a-radio value="string">
+                        字符串
+                      </a-radio>
+                      <a-radio value="number">
+                        数字
+                      </a-radio>
+                      <a-radio value="switch">
+                        开关
+                      </a-radio>
+                      <a-radio value="textarea">
+                        多行文本
+                      </a-radio>
+                      <a-radio value="select">
+                        下拉框
+                      </a-radio>
                     </a-radio-group>
                   </a-form-item>
                   <a-form-item field="key" label="键">
-                    <a-input v-model="meta.key"></a-input>
+                    <a-input v-model="meta.key" />
                   </a-form-item>
                   <a-form-item field="description" label="描述">
                     <a-input v-model="meta.description" />
                   </a-form-item>
-                  <a-form-item field="DefaultValue" label="默认值">
+                  <a-form-item v-if="meta.type !== 'select'" field="DefaultValue" label="默认值">
                     <a-input v-model="meta.DefaultValue" />
+                  </a-form-item>
+                  <a-form-item v-if="meta.type === 'select'" field="values" label="多个值">
+                    <a-input-tag v-model:model-value="tagDefaultValue" allow-clear />
                   </a-form-item>
                 </a-form>
               </a-tab-pane>

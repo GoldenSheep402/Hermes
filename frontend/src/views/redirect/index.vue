@@ -1,17 +1,17 @@
-<template>
-  <div></div>
-</template>
-
 <script lang="ts" setup>
-  import { useRouter, useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router'
 
-  const router = useRouter();
-  const route = useRoute();
+const router = useRouter()
+const route = useRoute()
 
-  const gotoPath = route.params.path as string;
+const gotoPath = route.params.path as string
 
-  console.log({gotoPath})
-  router.replace({ path: gotoPath });
+console.log({ gotoPath })
+router.replace({ path: gotoPath })
 </script>
+
+<template>
+  <div />
+</template>
 
 <style scoped lang="less"></style>

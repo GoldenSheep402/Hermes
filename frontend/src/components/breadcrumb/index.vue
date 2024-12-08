@@ -1,3 +1,16 @@
+<script lang="ts" setup>
+import type { PropType } from 'vue'
+
+defineProps({
+  items: {
+    type: Array as PropType<string[]>,
+    default() {
+      return []
+    },
+  },
+})
+</script>
+
 <template>
   <a-breadcrumb class="container-breadcrumb">
     <a-breadcrumb-item>
@@ -8,19 +21,6 @@
     </a-breadcrumb-item>
   </a-breadcrumb>
 </template>
-
-<script lang="ts" setup>
-  import { PropType } from 'vue';
-
-  defineProps({
-    items: {
-      type: Array as PropType<string[]>,
-      default() {
-        return [];
-      },
-    },
-  });
-</script>
 
 <style scoped lang="less">
   .container-breadcrumb {

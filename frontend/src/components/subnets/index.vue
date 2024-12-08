@@ -1,29 +1,29 @@
 <script setup lang="ts">
-import { defineModel, ref, watch } from 'vue';
+import { defineModel, ref, watch } from 'vue'
 
 const subnets = defineModel<string[]>(
-    'subnets',
-    { required: true, default: () => [] }
-);
+  'subnets',
+  { required: true, default: () => [] },
+)
 
-const cidrString = ref(subnets.value.join(', '));
+const cidrString = ref(subnets.value.join(', '))
 
 watch(subnets, (newSubnets) => {
-  const newString = newSubnets.join(', ');
+  const newString = newSubnets.join(', ')
   if (newString !== cidrString.value) {
-    cidrString.value = newString;
+    cidrString.value = newString
   }
-});
+})
 
 watch(cidrString, (newString) => {
   const newArray = newString.split(',')
-      .map(item => item.trim())
-      .filter(item => item !== '');
+    .map(item => item.trim())
+    .filter(item => item !== '')
 
   if (newArray.join(', ') !== subnets.value.join(', ')) {
-    subnets.value = newArray;
+    subnets.value = newArray
   }
-});
+})
 </script>
 
 <template>

@@ -1,33 +1,22 @@
 {
   "name": "arco-design-pro-vue",
-  "description": "Arco Design Pro for Vue",
+  "type": "module",
   "version": "1.0.0",
   "private": true,
-  "type": "module",
+  "description": "Arco Design Pro for Vue",
   "author": "ArcoDesign Team",
   "license": "MIT",
+  "engines": {
+    "node": ">=14.0.0"
+  },
   "scripts": {
     "dev": "vite --config ./config/vite.config.dev.ts",
     "build": "vue-tsc --noEmit && vite build --config ./config/vite.config.prod.ts",
     "report": "cross-env REPORT=true npm run build",
     "preview": "npm run build && vite preview --host",
     "type:check": "vue-tsc --noEmit --skipLibCheck",
-    "lint-staged": "npx lint-staged"
-  },
-  "lint-staged": {
-    "*.{js,ts,jsx,tsx}": [
-      "prettier --write",
-      "eslint --fix"
-    ],
-    "*.vue": [
-      "stylelint --fix",
-      "eslint --fix",
-      "prettier --write"
-    ],
-    "*.{less,css}": [
-      "stylelint --fix",
-      "prettier --write"
-    ]
+    "lint-staged": "npx lint-staged",
+    "lint": "eslint . --fix"
   },
   "dependencies": {
     "@amap/amap-jsapi-loader": "^1.0.1",
@@ -56,6 +45,7 @@
     "vue-router": "^4.3.3"
   },
   "devDependencies": {
+    "@antfu/eslint-config": "^3.11.2",
     "@arco-plugins/vite-vue": "^1.4.5",
     "@commitlint/cli": "^19.3.0",
     "@commitlint/config-conventional": "^19.2.2",
@@ -65,6 +55,7 @@
     "@types/sortablejs": "^1.15.8",
     "@typescript-eslint/eslint-plugin": "^7.13.0",
     "@typescript-eslint/parser": "^7.13.0",
+    "@unocss/eslint-plugin": "^0.64.1",
     "@unocss/transformer-directives": "^0.61.0",
     "@vitejs/plugin-vue": "^3.2.0",
     "@vitejs/plugin-vue-jsx": "^2.1.1",
@@ -97,12 +88,24 @@
     "vite-svg-loader": "^5.1.0",
     "vue-tsc": "^2.0.21"
   },
-  "engines": {
-    "node": ">=14.0.0"
-  },
   "resolutions": {
     "bin-wrapper": "npm:bin-wrapper-china",
-    "rollup": "^2.56.3",
-    "gifsicle": "5.2.0"
+    "gifsicle": "5.2.0",
+    "rollup": "^2.56.3"
+  },
+  "lint-staged": {
+    "*.{js,ts,jsx,tsx}": [
+      "prettier --write",
+      "eslint --fix"
+    ],
+    "*.vue": [
+      "stylelint --fix",
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{less,css}": [
+      "stylelint --fix",
+      "prettier --write"
+    ]
   }
 }

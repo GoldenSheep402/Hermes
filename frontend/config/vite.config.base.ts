@@ -1,10 +1,10 @@
-import { resolve } from 'path';
-import { defineConfig } from 'vite';
+import { resolve } from 'node:path'
+import vue from '@vitejs/plugin-vue'
+import vueJsx from '@vitejs/plugin-vue-jsx'
 import UnoCSS from 'unocss/vite'
-import vue from '@vitejs/plugin-vue';
-import vueJsx from '@vitejs/plugin-vue-jsx';
-import svgLoader from 'vite-svg-loader';
-import configArcoStyleImportPlugin from './plugin/arcoStyleImport';
+import { defineConfig } from 'vite'
+import svgLoader from 'vite-svg-loader'
+import configArcoStyleImportPlugin from './plugin/arcoStyleImport'
 
 export default defineConfig({
   plugins: [
@@ -43,11 +43,11 @@ export default defineConfig({
       less: {
         modifyVars: {
           hack: `true; @import (reference) "${resolve(
-            'src/assets/style/breakpoint.less'
+            'src/assets/style/breakpoint.less',
           )}";`,
         },
         javascriptEnabled: true,
       },
     },
   },
-});
+})

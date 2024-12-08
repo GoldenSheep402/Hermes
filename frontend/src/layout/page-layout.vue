@@ -1,3 +1,12 @@
+<script lang="ts" setup>
+import { useTabBarStore } from '@/store'
+import { computed } from 'vue'
+
+const tabBarStore = useTabBarStore()
+
+const cacheList = computed(() => tabBarStore.getCacheList)
+</script>
+
 <template>
   <router-view v-slot="{ Component, route }">
     <transition name="fade" mode="out-in" appear>
@@ -12,14 +21,5 @@
     </transition>
   </router-view>
 </template>
-
-<script lang="ts" setup>
-  import { computed } from 'vue';
-  import { useTabBarStore } from '@/store';
-
-  const tabBarStore = useTabBarStore();
-
-  const cacheList = computed(() => tabBarStore.getCacheList);
-</script>
 
 <style scoped lang="less"></style>

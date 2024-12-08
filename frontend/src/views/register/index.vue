@@ -1,7 +1,14 @@
+<script lang="ts" setup>
+import Footer from '@/components/footer/index.vue'
+import RegForm from './components/reg-form.vue'
+</script>
+
 <template>
   <div class="w-full flex h-dvh">
     <div class="logo">
-      <div class="logo-text">{{$t('site.maintitle')}}</div>
+      <div class="logo-text">
+        {{ $t('site.maintitle') }}
+      </div>
     </div>
     <div class="relative flex flex-1 items-center justify-center">
       <div class="content-inner">
@@ -13,11 +20,6 @@
     </div>
   </div>
 </template>
-
-<script lang="ts" setup>
-import Footer from '@/components/footer/index.vue';
-import RegForm from './components/reg-form.vue';
-</script>
 
 <style lang="less" scoped>
 .footer {

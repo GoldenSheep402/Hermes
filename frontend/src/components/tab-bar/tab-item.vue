@@ -1,3 +1,120 @@
+<script lang="ts" setup>
+import type { TagProps } from '@/store/modules/tab-bar/types'
+import type { PropType } from 'vue'
+import { DEFAULT_ROUTE_NAME, REDIRECT_ROUTE_NAME } from '@/router/constants'
+import { useTabBarStore } from '@/store'
+import { computed } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+
+const props = defineProps({
+  itemData: {
+    type: Object as PropType<TagProps>,
+    default() {
+      // eslint-disable-next-line vue/require-valid-default-prop
+      return []
+    },
+  },
+  index: {
+    type: Number,
+    default: 0,
+  },
+})
+
+enum Eaction {
+  reload = 'reload',
+  current = 'current',
+  left = 'left',
+  right = 'right',
+  others = 'others',
+  all = 'all',
+}
+
+const router = useRouter()
+const route = useRoute()
+const tabBarStore = useTabBarStore()
+
+function goto(tag: TagProps) {
+  router.push({ ...tag })
+}
+const tagList = computed(() => {
+  return tabBarStore.getTabList
+})
+
+const disabledReload = computed(() => {
+  return props.itemData.fullPath !== route.fullPath
+})
+
+const disabledCurrent = computed(() => {
+  return props.index === 0
+})
+
+const disabledLeft = computed(() => {
+  return [0, 1].includes(props.index)
+})
+
+const disabledRight = computed(() => {
+  return props.index === tagList.value.length - 1
+})
+
+function tagClose(tag: TagProps, idx: number) {
+  tabBarStore.deleteTag(idx, tag)
+  if (props.itemData.fullPath === route.fullPath) {
+    const latest = tagList.value[idx - 1] // 获取队列的前一个tab
+    router.push({ name: latest.name })
+  }
+}
+
+function findCurrentRouteIndex() {
+  return tagList.value.findIndex(el => el.fullPath === route.fullPath)
+}
+async function actionSelect(value: any) {
+  const { itemData, index } = props
+  const copyTagList = [...tagList.value]
+  if (value === Eaction.current) {
+    tagClose(itemData, index)
+  }
+  else if (value === Eaction.left) {
+    const currentRouteIdx = findCurrentRouteIndex()
+    copyTagList.splice(1, props.index - 1)
+
+    tabBarStore.freshTabList(copyTagList)
+    if (currentRouteIdx < index) {
+      router.push({ name: itemData.name })
+    }
+  }
+  else if (value === Eaction.right) {
+    const currentRouteIdx = findCurrentRouteIndex()
+    copyTagList.splice(props.index + 1)
+
+    tabBarStore.freshTabList(copyTagList)
+    if (currentRouteIdx > index) {
+      router.push({ name: itemData.name })
+    }
+  }
+  else if (value === Eaction.others) {
+    const filterList = tagList.value.filter((el, idx) => {
+      return idx === 0 || idx === props.index
+    })
+    tabBarStore.freshTabList(filterList)
+    router.push({ name: itemData.name })
+  }
+  else if (value === Eaction.reload) {
+    tabBarStore.deleteCache(itemData)
+    await router.push({
+      name: REDIRECT_ROUTE_NAME,
+      params: {
+        path: route.fullPath,
+      },
+    })
+    tabBarStore.addCache(itemData.name)
+  }
+  else {
+    tabBarStore.resetTabList()
+    router.push({ name: DEFAULT_ROUTE_NAME })
+  }
+}
+</script>
+
 <template>
   <a-dropdown
     trigger="contextMenu"
@@ -55,117 +172,6 @@
     </template>
   </a-dropdown>
 </template>
-
-<script lang="ts" setup>
-  import { PropType, computed } from 'vue';
-  import { useRouter, useRoute } from 'vue-router';
-  import { useTabBarStore } from '@/store';
-  import type { TagProps } from '@/store/modules/tab-bar/types';
-  import { DEFAULT_ROUTE_NAME, REDIRECT_ROUTE_NAME } from '@/router/constants';
-
-  // eslint-disable-next-line no-shadow
-  enum Eaction {
-    reload = 'reload',
-    current = 'current',
-    left = 'left',
-    right = 'right',
-    others = 'others',
-    all = 'all',
-  }
-
-  const props = defineProps({
-    itemData: {
-      type: Object as PropType<TagProps>,
-      default() {
-        return [];
-      },
-    },
-    index: {
-      type: Number,
-      default: 0,
-    },
-  });
-
-  const router = useRouter();
-  const route = useRoute();
-  const tabBarStore = useTabBarStore();
-
-  const goto = (tag: TagProps) => {
-    router.push({ ...tag });
-  };
-  const tagList = computed(() => {
-    return tabBarStore.getTabList;
-  });
-
-  const disabledReload = computed(() => {
-    return props.itemData.fullPath !== route.fullPath;
-  });
-
-  const disabledCurrent = computed(() => {
-    return props.index === 0;
-  });
-
-  const disabledLeft = computed(() => {
-    return [0, 1].includes(props.index);
-  });
-
-  const disabledRight = computed(() => {
-    return props.index === tagList.value.length - 1;
-  });
-
-  const tagClose = (tag: TagProps, idx: number) => {
-    tabBarStore.deleteTag(idx, tag);
-    if (props.itemData.fullPath === route.fullPath) {
-      const latest = tagList.value[idx - 1]; // 获取队列的前一个tab
-      router.push({ name: latest.name });
-    }
-  };
-
-  const findCurrentRouteIndex = () => {
-    return tagList.value.findIndex((el) => el.fullPath === route.fullPath);
-  };
-  const actionSelect = async (value: any) => {
-    const { itemData, index } = props;
-    const copyTagList = [...tagList.value];
-    if (value === Eaction.current) {
-      tagClose(itemData, index);
-    } else if (value === Eaction.left) {
-      const currentRouteIdx = findCurrentRouteIndex();
-      copyTagList.splice(1, props.index - 1);
-
-      tabBarStore.freshTabList(copyTagList);
-      if (currentRouteIdx < index) {
-        router.push({ name: itemData.name });
-      }
-    } else if (value === Eaction.right) {
-      const currentRouteIdx = findCurrentRouteIndex();
-      copyTagList.splice(props.index + 1);
-
-      tabBarStore.freshTabList(copyTagList);
-      if (currentRouteIdx > index) {
-        router.push({ name: itemData.name });
-      }
-    } else if (value === Eaction.others) {
-      const filterList = tagList.value.filter((el, idx) => {
-        return idx === 0 || idx === props.index;
-      });
-      tabBarStore.freshTabList(filterList);
-      router.push({ name: itemData.name });
-    } else if (value === Eaction.reload) {
-      tabBarStore.deleteCache(itemData);
-      await router.push({
-        name: REDIRECT_ROUTE_NAME,
-        params: {
-          path: route.fullPath,
-        },
-      });
-      tabBarStore.addCache(itemData.name);
-    } else {
-      tabBarStore.resetTabList();
-      router.push({ name: DEFAULT_ROUTE_NAME });
-    }
-  };
-</script>
 
 <style scoped lang="less">
   .tag-link {

@@ -1,19 +1,16 @@
-import { defineStore } from 'pinia';
-import {
-  login as userLogin,
-  logout as userLogout,
-  getUserInfo,
+import type {
   LoginData,
-} from '@/api/user';
-import { setToken, clearToken } from '@/utils/auth';
-import { removeRouteListener } from '@/utils/route-listener';
-import { UserState } from './types';
-import useAppStore from '../app';
-import {AuthService, UserService} from "@/services/grpc.ts";
+} from '@/api/user'
+
+import type { UserState } from './types'
+import { AuthService, UserService } from '@/services/grpc.ts'
+import { removeRouteListener } from '@/utils/route-listener'
+import { defineStore } from 'pinia'
+import useAppStore from '../app'
 
 const useUserStore = defineStore('hermes', {
   state: (): UserState => ({
-    token:  undefined,
+    token: undefined,
     _refreshToken: undefined,
     isLogin: undefined,
     userId: undefined,
@@ -26,20 +23,20 @@ const useUserStore = defineStore('hermes', {
 
   getters: {
     userInfo(state: UserState): UserState {
-      return { ...state };
+      return { ...state }
     },
   },
 
   actions: {
     switchRoles() {
       return new Promise((resolve) => {
-        this.role = this.role === 'user' ? 'admin' : 'user';
-        resolve(this.role);
-      });
+        this.role = this.role === 'user' ? 'admin' : 'user'
+        resolve(this.role)
+      })
     },
     // Set user's information
     setInfo(partial: Partial<UserState>) {
-      this.$patch(partial);
+      this.$patch(partial)
     },
 
     // Reset user's information
@@ -64,90 +61,94 @@ const useUserStore = defineStore('hermes', {
 
       this.setInfo({
         // name: 'Admin',
-      });
+      })
     },
 
     async refreshToken() {
       try {
-        const request = { refreshToken: this._refreshToken };
+        const request = { refreshToken: this._refreshToken }
         const initReq = {
           pathPrefix: import.meta.env.VITE_API_BASE_URL,
-        };
+        }
 
         await AuthService.RefreshToken(request, initReq).then((res) => {
           if (!res.accessToken || !res.refreshToken) {
-            throw new Error('Invalid response from login');
+            throw new Error('Invalid response from login')
           }
-          this.token = res.accessToken;
-          this._refreshToken = res.refreshToken;
+          this.token = res.accessToken
+          this._refreshToken = res.refreshToken
         }).catch((err) => {
-          console.error(err);
-          throw err;
-        });
-      } catch (err) {
-        this.token = "";
-        this._refreshToken = "";
-        console.error(err);
-        throw err;
+          console.error(err)
+          throw err
+        })
+      }
+      catch (err) {
+        this.token = ''
+        this._refreshToken = ''
+        console.error(err)
+        throw err
       }
     },
 
     // Login
     async login(loginForm: LoginData) {
       try {
-        const request = { email: loginForm.email, password: loginForm.password };
+        const request = { email: loginForm.email, password: loginForm.password }
         const initReq = {
           pathPrefix: import.meta.env.VITE_GAPI_URL,
-        };
+        }
 
         await AuthService.Login(request, initReq).then(async (res) => {
           if (!res.accessToken || !res.refreshToken) {
-            throw new Error('Invalid response from login');
+            throw new Error('Invalid response from login')
           }
-          this.isLogin = true;
-          this.token = res.accessToken;
-          this._refreshToken = res.refreshToken;
+          this.isLogin = true
+          this.token = res.accessToken
+          this._refreshToken = res.refreshToken
           await UserService.GetUser({}).then((res) => {
             if (res.user?.role === 'admin') {
-              this.role = 'admin';
-            }else{
-              this.role = 'user';
+              this.role = 'admin'
+            }
+            else {
+              this.role = 'user'
             }
           }).catch((err) => {
-            console.error(err);
-            throw err;
-          });
+            console.error(err)
+            throw err
+          })
         }).catch((err) => {
-          console.error(err);
-          throw err;
+          console.error(err)
+          throw err
         }).finally(() => {
-        });
-      } catch (err) {
-        this.token = "";
-        this._refreshToken = "";
-        this.isLogin = false;
-        throw err;
+        })
+      }
+      catch (err) {
+        this.token = ''
+        this._refreshToken = ''
+        this.isLogin = false
+        throw err
       }
     },
     logoutCallBack() {
-      const appStore = useAppStore();
-      this.resetInfo();
-      this.token = "";
-      this._refreshToken = "";
-      this.isLogin = false;
-      removeRouteListener();
-      appStore.clearServerMenu();
+      const appStore = useAppStore()
+      this.resetInfo()
+      this.token = ''
+      this._refreshToken = ''
+      this.isLogin = false
+      removeRouteListener()
+      appStore.clearServerMenu()
     },
     // Logout
     async logout() {
       try {
         // await userLogout();
-      } finally {
-        this.logoutCallBack();
+      }
+      finally {
+        this.logoutCallBack()
       }
     },
   },
-  persist: true
-});
+  persist: true,
+})
 
-export default useUserStore;
+export default useUserStore

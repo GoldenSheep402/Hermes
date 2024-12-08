@@ -1,3 +1,22 @@
+<script lang="ts">
+export default {
+  props: {
+    title: {
+      type: String,
+      default: '',
+    },
+    value: {
+      type: Number,
+      default: 0,
+    },
+    isLast: {
+      type: Boolean,
+      default: false,
+    },
+  },
+}
+</script>
+
 <template>
   <a-grid-item
     :class="isLast ? 'panel-col-no-border' : 'panel-col'"
@@ -5,7 +24,9 @@
   >
     <a-space>
       <a-avatar :size="54" class="col-avatar">
-        <div style="margin: 120px"><slot /></div>
+        <div style="margin: 120px">
+          <slot />
+        </div>
       </a-avatar>
       <a-statistic
         :title="title"
@@ -14,30 +35,10 @@
         :value-from="0"
         animation
         show-group-separator
-      >
-      </a-statistic>
+      />
     </a-space>
   </a-grid-item>
 </template>
-
-<script lang="ts">
-  export default {
-    props: {
-      title: {
-        type: String,
-        default: '',
-      },
-      value: {
-        type: Number,
-        default: 0,
-      },
-      isLast: {
-        type: Boolean,
-        default: false,
-      },
-    },
-  };
-</script>
 
 <style lang="less" scoped>
   .panel-col {

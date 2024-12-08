@@ -1,3 +1,32 @@
+<script lang="ts" setup>
+import type { TableData } from '@arco-design/web-vue/es/table/interface'
+import { queryPopularList } from '@/api/dashboard'
+import useLoading from '@/hooks/loading'
+import { ref } from 'vue'
+
+const type = ref('text')
+const { loading, setLoading } = useLoading()
+const renderList = ref<TableData[]>()
+async function fetchData(contentType: string) {
+  try {
+    setLoading(true)
+    const { data } = await queryPopularList({ type: contentType })
+    renderList.value = data
+  }
+  catch (err) {
+    // you can report use errorHandler or other
+    console.error(err)
+  }
+  finally {
+    setLoading(false)
+  }
+}
+function typeChange(contentType: string) {
+  fetchData(contentType)
+}
+fetchData('text')
+</script>
+
 <template>
   <a-spin :loading="loading" style="width: 100%">
     <a-card
@@ -34,7 +63,7 @@
           :scroll="{ x: '100%', y: '264px' }"
         >
           <template #columns>
-            <a-table-column title="排名" data-index="key"></a-table-column>
+            <a-table-column title="排名" data-index="key" />
             <a-table-column title="内容标题" data-index="title">
               <template #cell="{ record }">
                 <a-typography-paragraph
@@ -46,8 +75,7 @@
                 </a-typography-paragraph>
               </template>
             </a-table-column>
-            <a-table-column title="点击量" data-index="clickNumber">
-            </a-table-column>
+            <a-table-column title="点击量" data-index="clickNumber" />
             <a-table-column
               title="日涨幅"
               data-index="increases"
@@ -71,32 +99,6 @@
     </a-card>
   </a-spin>
 </template>
-
-<script lang="ts" setup>
-  import { ref } from 'vue';
-  import useLoading from '@/hooks/loading';
-  import { queryPopularList } from '@/api/dashboard';
-  import type { TableData } from '@arco-design/web-vue/es/table/interface';
-
-  const type = ref('text');
-  const { loading, setLoading } = useLoading();
-  const renderList = ref<TableData[]>();
-  const fetchData = async (contentType: string) => {
-    try {
-      setLoading(true);
-      const { data } = await queryPopularList({ type: contentType });
-      renderList.value = data;
-    } catch (err) {
-      // you can report use errorHandler or other
-    } finally {
-      setLoading(false);
-    }
-  };
-  const typeChange = (contentType: string) => {
-    fetchData(contentType);
-  };
-  fetchData('text');
-</script>
 
 <style scoped lang="less">
   .general-card {

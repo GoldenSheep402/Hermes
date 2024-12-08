@@ -1,3 +1,16 @@
+<script lang="ts" setup>
+import { useUserStore } from '@/store'
+import { computed } from 'vue'
+
+const userStore = useUserStore()
+// userStore.info();
+const userInfo = computed(() => {
+  return {
+    name: userStore.name,
+  }
+})
+</script>
+
 <template>
   <a-col class="banner">
     <a-col :span="8">
@@ -8,19 +21,6 @@
     <a-divider class="panel-border" />
   </a-col>
 </template>
-
-<script lang="ts" setup>
-  import { computed } from 'vue';
-  import { useUserStore } from '@/store';
-
-  const userStore = useUserStore();
-  // userStore.info();
-  const userInfo = computed(() => {
-    return {
-      name: userStore.name,
-    };
-  });
-</script>
 
 <style scoped lang="less">
   .banner {

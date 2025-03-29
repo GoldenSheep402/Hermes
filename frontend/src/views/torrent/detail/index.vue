@@ -39,6 +39,8 @@ onMounted(() => {
               <a-input v-if="record.type === 'string'" v-model="record.value" />
               <a-input-number v-else-if="record.type === 'number'" v-model="record.value" />
               <a-switch v-else-if="record.type === 'switch'" v-model="record.value" />
+              <a-input v-if="record.type === 'textarea'" v-model="record.value" />
+              <div v-else>{{ record.value }}</div>
             </template>
           </a-table-column>
         </template>

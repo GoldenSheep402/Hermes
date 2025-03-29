@@ -93,6 +93,8 @@ func (s *S) GetCategory(ctx context.Context, req *categoryV1.GetCategoryRequest)
 	for i, meta := range categoryMeta {
 		metaData[i] = &categoryV1.CategoryMetaData{
 			Order:        int32(meta.Order),
+			Id:           meta.ID,
+			CategoryId:   meta.CategoryID,
 			Key:          meta.Key,
 			Type:         meta.Type,
 			Value:        meta.Value,

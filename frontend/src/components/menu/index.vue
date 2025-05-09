@@ -4,12 +4,20 @@ import type { RouteMeta, RouteRecordRaw } from 'vue-router'
 import { useAppStore } from '@/store'
 import { openWindow, regexUrl } from '@/utils'
 import { listenerRouteChange } from '@/utils/route-listener'
-// todo: remove ts-nocheck
-// @ts-nocheck
 import { compile, computed, defineComponent, h, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import useMenuTree from './use-menu-tree'
+
+declare global {
+  namespace JSX {
+    interface IntrinsicElements {
+      'a-menu': any
+      'a-sub-menu': any
+      'a-menu-item': any
+    }
+  }
+}
 
 export default defineComponent({
   emit: ['collapse'],
@@ -106,32 +114,31 @@ export default defineComponent({
       function travel(_route: RouteRecordRaw[], nodes = []) {
         if (_route) {
           _route.forEach((element) => {
-            // This is demo, modify nodes as needed
             const icon = element?.meta?.icon
               ? () => h(compile(`<${element?.meta?.icon}/>`))
               : null
             const node
-                = element?.children && element?.children.length !== 0
-                  ? (
-                      <a-sub-menu
-                        key={element?.name}
-                        v-slots={{
-                          icon,
-                          title: () => h(compile(element?.meta?.locale ? t(element?.meta?.locale || '') : element?.meta?.label || '')),
-                        }}
-                      >
-                        {travel(element?.children)}
-                      </a-sub-menu>
-                    )
-                  : (
-                      <a-menu-item
-                        key={element?.name}
-                        v-slots={{ icon }}
-                        onClick={() => goto(element)}
-                      >
-                        {element?.meta?.locale ? t(element?.meta?.locale || '') : element?.meta?.label || ''}
-                      </a-menu-item>
-                    )
+                  = element?.children && element?.children.length !== 0
+                    ? (
+                        <a-sub-menu
+                          key={element?.name}
+                          v-slots={{
+                            icon,
+                            title: () => h(compile(element?.meta?.locale ? t(element?.meta?.locale || '') : element?.meta?.label || '')),
+                          }}
+                        >
+                          {travel(element?.children)}
+                        </a-sub-menu>
+                      )
+                    : (
+                        <a-menu-item
+                          key={element?.name}
+                          v-slots={{ icon }}
+                          onClick={() => goto(element as AppRouteRecordRaw)}
+                        >
+                          {element?.meta?.locale ? t(element?.meta?.locale || '') : element?.meta?.label || ''}
+                        </a-menu-item>
+                      )
             nodes.push(node as never)
           })
         }
@@ -147,7 +154,7 @@ export default defineComponent({
         v-model:collapsed={collapsed.value}
         v-model:open-keys={openKeys.value}
         show-collapse-button={appStore.device !== 'mobile'}
-        auto-open={false}
+        auto-open={true}
         selected-keys={selectedKey.value}
         auto-open-selected={true}
         level-indent={34}

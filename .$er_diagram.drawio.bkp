@@ -1,0 +1,250 @@
+<mxfile host="Electron" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/26.2.2 Chrome/134.0.6998.178 Electron/35.1.2 Safari/537.36" version="26.2.2">
+  <diagram id="your-diagram-id" name="Hermes User Module E-R Diagram">
+    <mxGraphModel dx="1705" dy="1203" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="users" value="用户" style="shape=rectangle;whiteSpace=wrap;html=1;fontStyle=1;align=center;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="616" y="502" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="user_id" value="用户ID" style="shape=ellipse;whiteSpace=wrap;html=1;fontStyle=4;align=center;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="646" y="632" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="user_name" value="用户名" style="shape=ellipse;whiteSpace=wrap;html=1;align=center;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="726" y="592" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="user_password" value="密码" style="shape=ellipse;whiteSpace=wrap;html=1;align=center;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="566" y="592" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="user_is_admin" value="是否管理员" style="shape=ellipse;whiteSpace=wrap;html=1;align=center;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="766" y="512" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="user_salt" value="盐值" style="shape=ellipse;whiteSpace=wrap;html=1;align=center;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="556" y="452" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="user_limit" value="限制" style="shape=ellipse;whiteSpace=wrap;html=1;align=center;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="736" y="422" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="user_key" value="密钥" style="shape=ellipse;whiteSpace=wrap;html=1;align=center;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="646" y="402" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="groups" value="用户组" style="shape=rectangle;whiteSpace=wrap;html=1;fontStyle=1;align=center;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="906" y="782" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="group_id" value="用户组ID" style="shape=ellipse;whiteSpace=wrap;html=1;fontStyle=4;align=center;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="936" y="682" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="group_name" value="用户组名称" style="shape=ellipse;whiteSpace=wrap;html=1;align=center;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="916" y="902" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="group_description" value="描述" style="shape=ellipse;whiteSpace=wrap;html=1;align=center;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="1046" y="730" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="group_metadata" value="用户组元数据" style="shape=rectangle;whiteSpace=wrap;html=1;fontStyle=1;align=center;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="1206" y="972" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="group_metadata_id" value="元数据ID" style="shape=ellipse;whiteSpace=wrap;html=1;fontStyle=4;align=center;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="1126" y="1022" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="group_metadata_key" value="键" style="shape=ellipse;whiteSpace=wrap;html=1;align=center;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="1286" y="1082" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="group_metadata_value" value="值" style="shape=ellipse;whiteSpace=wrap;html=1;align=center;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="1336" y="1002" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="group_metadata_type" value="类型" style="shape=ellipse;whiteSpace=wrap;html=1;align=center;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="1196" y="1092" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="group_metadata_description" value="描述" style="shape=ellipse;whiteSpace=wrap;html=1;align=center;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="1226" y="872" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="group_metadata_order" value="排序" style="shape=ellipse;whiteSpace=wrap;html=1;align=center;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="1316" y="912" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="group_membership_metadata" value="用户组成员元数据" style="shape=rectangle;whiteSpace=wrap;html=1;fontStyle=1;align=center;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="586" y="1032" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="group_membership_metadata_id" value="元数据ID" style="shape=ellipse;whiteSpace=wrap;html=1;fontStyle=4;align=center;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="556" y="942" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="group_membership_metadata_key" value="键" style="shape=ellipse;whiteSpace=wrap;html=1;align=center;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="496" y="1022" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="group_membership_metadata_value" value="值" style="shape=ellipse;whiteSpace=wrap;html=1;align=center;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="716" y="1042" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="group_membership_metadata_type" value="类型" style="shape=ellipse;whiteSpace=wrap;html=1;align=center;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="586" y="1162" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="group_membership_metadata_description" value="描述" style="shape=ellipse;whiteSpace=wrap;html=1;align=center;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="516" y="1112" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="group_membership_metadata_order" value="排序" style="shape=ellipse;whiteSpace=wrap;html=1;align=center;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="676" y="1132" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="binds" value="用户绑定" style="shape=rectangle;whiteSpace=wrap;html=1;fontStyle=1;align=center;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="306" y="592" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="bind_id" value="绑定ID" style="shape=ellipse;whiteSpace=wrap;html=1;fontStyle=4;align=center;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="216" y="562" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="bind_platform" value="平台" style="shape=ellipse;whiteSpace=wrap;html=1;align=center;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="316" y="712" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="bind_open_id" value="OpenID" style="shape=ellipse;whiteSpace=wrap;html=1;align=center;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="236" y="662" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="bind_attr" value="属性" style="shape=ellipse;whiteSpace=wrap;html=1;align=center;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="286" y="492" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="user_bind_rel" value="用户绑定关系" style="shape=rhombus;perimeter=rhombusPerimeter;whiteSpace=wrap;html=1;fontStyle=1;align=center;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="446" y="532" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="users_to_bind" value="1" style="endArrow=none;endFill=0;endSize=12;html=1;rounded=0;strokeColor=#000000;noEdgeStyle=1;" edge="1" parent="1" source="users" target="user_bind_rel">
+          <mxGeometry width="50" height="50" relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="binds_to_bind" value="N" style="endArrow=none;endFill=0;endSize=12;html=1;rounded=0;strokeColor=#000000;noEdgeStyle=1;" edge="1" parent="1" source="binds" target="user_bind_rel">
+          <mxGeometry width="50" height="50" relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="group_membership_metadata_to_id" style="endArrow=none;endFill=0;endSize=12;html=1;rounded=0;strokeColor=#000000;noEdgeStyle=1;" edge="1" parent="1" source="group_membership_metadata" target="group_membership_metadata_id">
+          <mxGeometry width="50" height="50" relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="group_membership_metadata_to_key" style="endArrow=none;endFill=0;endSize=12;html=1;rounded=0;strokeColor=#000000;noEdgeStyle=1;" edge="1" parent="1" source="group_membership_metadata" target="group_membership_metadata_key">
+          <mxGeometry width="50" height="50" relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="group_membership_metadata_to_value" style="endArrow=none;endFill=0;endSize=12;html=1;rounded=0;strokeColor=#000000;noEdgeStyle=1;" edge="1" parent="1" source="group_membership_metadata" target="group_membership_metadata_value">
+          <mxGeometry width="50" height="50" relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="group_membership_metadata_to_type" style="endArrow=none;endFill=0;endSize=12;html=1;rounded=0;strokeColor=#000000;noEdgeStyle=1;" edge="1" parent="1" source="group_membership_metadata" target="group_membership_metadata_type">
+          <mxGeometry width="50" height="50" relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="group_membership_metadata_to_description" style="endArrow=none;endFill=0;endSize=12;html=1;rounded=0;strokeColor=#000000;noEdgeStyle=1;" edge="1" parent="1" source="group_membership_metadata" target="group_membership_metadata_description">
+          <mxGeometry width="50" height="50" relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="group_membership_metadata_to_order" style="endArrow=none;endFill=0;endSize=12;html=1;rounded=0;strokeColor=#000000;noEdgeStyle=1;" edge="1" parent="1" source="group_membership_metadata" target="group_membership_metadata_order">
+          <mxGeometry width="50" height="50" relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="binds_to_id" style="endArrow=none;endFill=0;endSize=12;html=1;rounded=0;strokeColor=#000000;noEdgeStyle=1;" edge="1" parent="1" source="binds" target="bind_id">
+          <mxGeometry width="50" height="50" relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="binds_to_platform" style="endArrow=none;endFill=0;endSize=12;html=1;rounded=0;strokeColor=#000000;noEdgeStyle=1;" edge="1" parent="1" source="binds" target="bind_platform">
+          <mxGeometry width="50" height="50" relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="binds_to_open_id" style="endArrow=none;endFill=0;endSize=12;html=1;rounded=0;strokeColor=#000000;noEdgeStyle=1;" edge="1" parent="1" source="binds" target="bind_open_id">
+          <mxGeometry width="50" height="50" relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="binds_to_attr" style="endArrow=none;endFill=0;endSize=12;html=1;rounded=0;strokeColor=#000000;noEdgeStyle=1;" edge="1" parent="1" source="binds" target="bind_attr">
+          <mxGeometry width="50" height="50" relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="casbin_rules" value="权限规则" style="shape=rectangle;whiteSpace=wrap;html=1;fontStyle=1;align=center;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="516" y="182" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="rule_id" value="规则ID" style="shape=ellipse;whiteSpace=wrap;html=1;fontStyle=4;align=center;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="586" y="92" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="rule_ptype" value="类型" style="shape=ellipse;whiteSpace=wrap;html=1;align=center;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="456" y="112" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="group_memberships" value="用户组成员关系" style="shape=rhombus;perimeter=rhombusPerimeter;whiteSpace=wrap;html=1;fontStyle=1;align=center;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="726" y="702" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="group_metadata_rel" value="用户组元数据关系" style="shape=rhombus;perimeter=rhombusPerimeter;whiteSpace=wrap;html=1;fontStyle=1;align=center;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="1056" y="872" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="membership_metadata_rel" value="用户组成员元数据关系" style="shape=rhombus;perimeter=rhombusPerimeter;whiteSpace=wrap;html=1;fontStyle=1;align=center;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="656" y="872" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="user_rule" value="用户权限关系" style="shape=rhombus;perimeter=rhombusPerimeter;whiteSpace=wrap;html=1;fontStyle=1;align=center;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="546" y="322" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="users_to_group_memberships" value="1" style="endArrow=none;endFill=0;endSize=12;html=1;rounded=0;strokeColor=#000000;noEdgeStyle=1;" parent="1" source="users" target="group_memberships" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="groups_to_group_memberships" value="N" style="endArrow=none;endFill=0;endSize=12;html=1;rounded=0;strokeColor=#000000;noEdgeStyle=1;" parent="1" source="groups" target="group_memberships" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="groups_to_metadata" value="1" style="endArrow=none;endFill=0;endSize=12;html=1;rounded=0;strokeColor=#000000;noEdgeStyle=1;" parent="1" source="groups" target="group_metadata_rel" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="metadata_to_group_metadata" value="N" style="endArrow=none;endFill=0;endSize=12;html=1;rounded=0;strokeColor=#000000;noEdgeStyle=1;" parent="1" source="group_metadata" target="group_metadata_rel" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="memberships_to_metadata" value="1" style="endArrow=none;endFill=0;endSize=12;html=1;rounded=0;strokeColor=#000000;noEdgeStyle=1;" parent="1" source="group_memberships" target="membership_metadata_rel" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="metadata_to_membership_metadata" value="N" style="endArrow=none;endFill=0;endSize=12;html=1;rounded=0;strokeColor=#000000;noEdgeStyle=1;" parent="1" source="group_membership_metadata" target="membership_metadata_rel" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="users_to_rule" value="1" style="endArrow=none;endFill=0;endSize=12;html=1;rounded=0;strokeColor=#000000;noEdgeStyle=1;" parent="1" source="users" target="user_rule" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rules_to_rule" value="N" style="endArrow=none;endFill=0;endSize=12;html=1;rounded=0;strokeColor=#000000;noEdgeStyle=1;" parent="1" source="casbin_rules" target="user_rule" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="user_to_id" style="endArrow=none;endFill=0;endSize=12;html=1;rounded=0;strokeColor=#000000;noEdgeStyle=1;" parent="1" source="users" target="user_id" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="user_to_name" style="endArrow=none;endFill=0;endSize=12;html=1;rounded=0;strokeColor=#000000;noEdgeStyle=1;" parent="1" source="users" target="user_name" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="user_to_password" style="endArrow=none;endFill=0;endSize=12;html=1;rounded=0;strokeColor=#000000;noEdgeStyle=1;" edge="1" parent="1" source="users" target="user_password">
+          <mxGeometry width="50" height="50" relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="user_to_is_admin" style="endArrow=none;endFill=0;endSize=12;html=1;rounded=0;strokeColor=#000000;noEdgeStyle=1;" edge="1" parent="1" source="users" target="user_is_admin">
+          <mxGeometry width="50" height="50" relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="user_to_salt" style="endArrow=none;endFill=0;endSize=12;html=1;rounded=0;strokeColor=#000000;noEdgeStyle=1;" parent="1" source="users" target="user_salt" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="user_to_limit" style="endArrow=none;endFill=0;endSize=12;html=1;rounded=0;strokeColor=#000000;noEdgeStyle=1;" parent="1" source="users" target="user_limit" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="user_to_key" style="endArrow=none;endFill=0;endSize=12;html=1;rounded=0;strokeColor=#000000;noEdgeStyle=1;" parent="1" source="users" target="user_key" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="group_to_id" style="endArrow=none;endFill=0;endSize=12;html=1;rounded=0;strokeColor=#000000;noEdgeStyle=1;" edge="1" parent="1" source="groups" target="group_id">
+          <mxGeometry width="50" height="50" relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="group_to_name" style="endArrow=none;endFill=0;endSize=12;html=1;rounded=0;strokeColor=#000000;noEdgeStyle=1;" edge="1" parent="1" source="groups" target="group_name">
+          <mxGeometry width="50" height="50" relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="group_to_description" style="endArrow=none;endFill=0;endSize=12;html=1;rounded=0;strokeColor=#000000;noEdgeStyle=1;" edge="1" parent="1" source="groups" target="group_description">
+          <mxGeometry width="50" height="50" relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="casbin_rules_to_id" style="endArrow=none;endFill=0;endSize=12;html=1;rounded=0;strokeColor=#000000;noEdgeStyle=1;" edge="1" parent="1" source="casbin_rules" target="rule_id">
+          <mxGeometry width="50" height="50" relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="casbin_rules_to_ptype" style="endArrow=none;endFill=0;endSize=12;html=1;rounded=0;strokeColor=#000000;noEdgeStyle=1;" edge="1" parent="1" source="casbin_rules" target="rule_ptype">
+          <mxGeometry width="50" height="50" relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="group_metadata_to_id" style="endArrow=none;endFill=0;endSize=12;html=1;rounded=0;strokeColor=#000000;noEdgeStyle=1;" edge="1" parent="1" source="group_metadata" target="group_metadata_id">
+          <mxGeometry width="50" height="50" relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="group_metadata_to_key" style="endArrow=none;endFill=0;endSize=12;html=1;rounded=0;strokeColor=#000000;noEdgeStyle=1;" edge="1" parent="1" source="group_metadata" target="group_metadata_key">
+          <mxGeometry width="50" height="50" relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="group_metadata_to_value" style="endArrow=none;endFill=0;endSize=12;html=1;rounded=0;strokeColor=#000000;noEdgeStyle=1;" edge="1" parent="1" source="group_metadata" target="group_metadata_value">
+          <mxGeometry width="50" height="50" relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="group_metadata_to_type" style="endArrow=none;endFill=0;endSize=12;html=1;rounded=0;strokeColor=#000000;noEdgeStyle=1;" edge="1" parent="1" source="group_metadata" target="group_metadata_type">
+          <mxGeometry width="50" height="50" relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="group_metadata_to_description" style="endArrow=none;endFill=0;endSize=12;html=1;rounded=0;strokeColor=#000000;noEdgeStyle=1;" edge="1" parent="1" source="group_metadata" target="group_metadata_description">
+          <mxGeometry width="50" height="50" relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="group_metadata_to_order" style="endArrow=none;endFill=0;endSize=12;html=1;rounded=0;strokeColor=#000000;noEdgeStyle=1;" edge="1" parent="1" source="group_metadata" target="group_metadata_order">
+          <mxGeometry width="50" height="50" relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="group_memberships_to_id" style="endArrow=none;endFill=0;endSize=12;html=1;rounded=0;strokeColor=#000000;" edge="1" parent="1" source="group_memberships">
+          <mxGeometry width="50" height="50" relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="group_memberships_to_uid" style="endArrow=none;endFill=0;endSize=12;html=1;rounded=0;strokeColor=#000000;" edge="1" parent="1" source="group_memberships">
+          <mxGeometry width="50" height="50" relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="group_memberships_to_gid" style="endArrow=none;endFill=0;endSize=12;html=1;rounded=0;strokeColor=#000000;" edge="1" parent="1" source="group_memberships">
+          <mxGeometry width="50" height="50" relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

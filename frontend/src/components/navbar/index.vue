@@ -84,7 +84,8 @@ function jumpToUserInfo() {
         </a-typography-title>
         <icon-menu-fold
           v-if="!topMenu && appStore.device === 'mobile'"
-          style="font-size: 22px; cursor: pointer"
+          style="font-size: 22px; cursor: pointer;"
+          :style="{ color: theme === 'dark' ? 'white' : 'black' }"
           @click="toggleDrawerMenu"
         />
       </a-space>

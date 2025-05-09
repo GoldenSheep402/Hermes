@@ -32,7 +32,7 @@ function sendEmail() {
   })
 }
 
-function handleSubmit({ _values, errors }: { _values: Record<string, any>, errors: Record<string, ValidatedError> | undefined }, _e: Event) {
+function handleSubmit({ _values, errors }: { _values: Record<string, any>, errors: Record<string, typeof ValidatedError> | undefined }, _e: Event) {
   if (loading.value)
     return
 

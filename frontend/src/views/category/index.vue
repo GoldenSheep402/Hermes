@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import type { CreateCategoryRequest } from '@/lib/proto/category/v1/category.pb.ts'
+import RichTextEditor from '@/components/Editor/index.vue'
 import { CategoryService } from '@/services/grpc.ts'
-import { Notification } from '@arco-design/web-vue'
+import { Modal, Notification } from '@arco-design/web-vue'
 import { onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
 
 interface Category {
   id: string
@@ -16,17 +18,22 @@ interface CategoryMetadata {
   key: string
   description: string
   DefaultValue: string
+  richTextValue?: string
 }
+
 const categoryNew = ref<Category>({
   id: '',
   name: '',
   description: '',
 })
+
 const categoryMetadatas = ref<CategoryMetadata[]>([])
 const categoryList = ref<Category[]>([])
 const activeKey = ref<number>(1)
 const showAddCategory = ref<boolean>(false)
 const tagDefaultValue = ref<string[]>([])
+
+const router = useRouter()
 
 function fetchCategoryList() {
   categoryList.value = []
@@ -55,24 +62,22 @@ function handleAdd() {
   })
 }
 
-function handleDelete(order: number | string) {
-  const index = categoryMetadatas.value.findIndex(item => item.order === order)
-  if (index !== -1) {
-    categoryMetadatas.value.splice(index, 1)
-    // 重新排列 order
-    categoryMetadatas.value.forEach((item, idx) => {
-      item.order = idx + 1
-    })
-    if (index > 0) {
-      activeKey.value = categoryMetadatas.value[index - 1]?.order || 1
-    }
-    else if (categoryMetadatas.value.length > 0) {
-      activeKey.value = categoryMetadatas.value[0].order
-    }
-    else {
-      activeKey.value = 0
-    }
-  }
+function handleDelete(id: string) {
+  Modal.warning({
+    title: '确认删除',
+    content: '确定要删除这个类别吗？删除后无法恢复。',
+    okText: '确认',
+    cancelText: '取消',
+    onOk: () => {
+      CategoryService.DeleteCategory({ id }).then(() => {
+        handleNotification('success', '成功', '删除类别成功')
+        fetchCategoryList()
+      }).catch((err) => {
+        console.error('删除类别失败:', err)
+        handleNotification('error', '失败', '删除类别失败')
+      })
+    },
+  })
 }
 
 function clear() {
@@ -110,6 +115,15 @@ function createCategory() {
         defaultValue: tagDefaultValue.value.join(','),
       })
     }
+    else if (categoryMetadatas.value[i].type === 'richText') {
+      req.value.category!.metaData!.push({
+        key: categoryMetadatas.value[i].key,
+        order: categoryMetadatas.value[i].order,
+        type: categoryMetadatas.value[i].type,
+        description: categoryMetadatas.value[i].description,
+        defaultValue: categoryMetadatas.value[i].richTextValue || '',
+      })
+    }
     else {
       req.value.category!.metaData!.push({
         key: categoryMetadatas.value[i].key,
@@ -128,6 +142,13 @@ function createCategory() {
   }).finally(() => {
     showAddCategory.value = false
     fetchCategoryList()
+  })
+}
+
+function viewDetail(record: Category) {
+  router.push({
+    name: 'CategoryDetail',
+    params: { id: record.id },
   })
 }
 
@@ -191,12 +212,15 @@ onMounted(() => {
         <template #columns>
           <a-table-column title="名称" data-index="name" :width="200" />
           <a-table-column title="描述" data-index="description" :width="300" />
-          <a-table-column title="操作" align="center" :width="100">
+          <a-table-column title="操作" align="center" :width="150">
             <template #cell="{ record }">
               <div class="w-full flex justify-center">
                 <div class="w-fit flex flex-col items-center gap-2 md:flex-row">
-                  <a-button @click="console.log(record)">
+                  <a-button @click="viewDetail(record)">
                     详情
+                  </a-button>
+                  <a-button type="primary" status="danger" @click="handleDelete(record.id)">
+                    删除
                   </a-button>
                 </div>
               </div>
@@ -242,6 +266,9 @@ onMounted(() => {
                       <a-radio value="select">
                         下拉框
                       </a-radio>
+                      <a-radio value="richText">
+                        富文本
+                      </a-radio>
                     </a-radio-group>
                   </a-form-item>
                   <a-form-item field="key" label="键">
@@ -255,6 +282,9 @@ onMounted(() => {
                   </a-form-item>
                   <a-form-item v-if="meta.type === 'select'" field="values" label="多个值">
                     <a-input-tag v-model:model-value="tagDefaultValue" allow-clear />
+                  </a-form-item>
+                  <a-form-item v-if="meta.type === 'richText'" field="richTextValue" label="富文本内容">
+                    <RichTextEditor v-model="meta.richTextValue" min-height="200px" />
                   </a-form-item>
                 </a-form>
               </a-tab-pane>

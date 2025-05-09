@@ -1,24 +1,18 @@
 <script lang="ts" setup>
 import { useUserStore } from '@/store'
-import { computed } from 'vue'
 
 const userStore = useUserStore()
-// userStore.info();
-const userInfo = computed(() => {
-  return {
-    name: userStore.name,
-  }
-})
+userStore.info()
 </script>
 
 <template>
   <a-col class="banner">
     <a-col :span="8">
       <a-typography-title :heading="5" style="margin-top: 0">
-        {{ $t('workplace.welcome') }} {{ userInfo.name }}
+        {{ $t('workplace.welcome') }} {{ userStore.name }} !
       </a-typography-title>
     </a-col>
-    <a-divider class="panel-border" />
+    <!-- <a-divider class="panel-border" /> -->
   </a-col>
 </template>
 

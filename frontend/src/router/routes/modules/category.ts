@@ -22,6 +22,17 @@ const CATEGORY: AppRouteRecordRaw = {
         roles: ['*'],
       },
     },
+    {
+      path: 'detail/:id',
+      name: 'CategoryDetail',
+      component: () => import('@/views/category/detail.vue'),
+      meta: {
+        label: '类别详情',
+        requiresAuth: true,
+        roles: ['*'],
+        hideInMenu: true,
+      },
+    },
   ],
 }
 

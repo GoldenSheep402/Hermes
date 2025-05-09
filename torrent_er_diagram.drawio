@@ -1,0 +1,445 @@
+<mxfile host="Electron" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/26.2.2 Chrome/134.0.6998.178 Electron/35.1.2 Safari/537.36" version="26.2.2">
+  <diagram id="your-diagram-id" name="Hermes Torrent Module E-R Diagram">
+    <mxGraphModel dx="2216" dy="1564" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="torrents" value="种子" style="shape=rectangle;whiteSpace=wrap;html=1;fontStyle=1;align=center;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="984" y="483" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="torrent_id" value="种子ID" style="shape=ellipse;whiteSpace=wrap;html=1;fontStyle=4;align=center;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="884" y="633" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="torrent_info_hash" value="信息哈希" style="shape=ellipse;whiteSpace=wrap;html=1;align=center;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="1194" y="473" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="torrent_name" value="名称" style="shape=ellipse;whiteSpace=wrap;html=1;align=center;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="894" y="473" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="torrent_name_utf8" value="UTF8名称" style="shape=ellipse;whiteSpace=wrap;html=1;align=center;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="1004" y="313" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="torrent_length" value="大小" style="shape=ellipse;whiteSpace=wrap;html=1;align=center;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="954" y="393" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="torrent_piece_length" value="分片大小" style="shape=ellipse;whiteSpace=wrap;html=1;align=center;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="1044" y="393" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="torrent_pieces" value="分片" style="shape=ellipse;whiteSpace=wrap;html=1;align=center;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="1094" y="313" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="torrent_private" value="私有" style="shape=ellipse;whiteSpace=wrap;html=1;align=center;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="1104" y="453" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="torrent_source" value="来源" style="shape=ellipse;whiteSpace=wrap;html=1;align=center;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="1154" y="383" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="torrent_announce" value="通告" style="shape=ellipse;whiteSpace=wrap;html=1;align=center;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="924" y="563" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="torrent_created_by" value="创建者" style="shape=ellipse;whiteSpace=wrap;html=1;align=center;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="844" y="543" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="torrent_creation_date" value="创建日期" style="shape=ellipse;whiteSpace=wrap;html=1;align=center;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="974" y="633" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="torrent_comment" value="注释" style="shape=ellipse;whiteSpace=wrap;html=1;align=center;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="1124" y="633" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="torrent_is_single_file" value="单文件" style="shape=ellipse;whiteSpace=wrap;html=1;align=center;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="864" y="393" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="torrent_md5sum" value="MD5" style="shape=ellipse;whiteSpace=wrap;html=1;align=center;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="1044" y="593" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="torrent_creator_id" value="创建者ID" style="shape=ellipse;whiteSpace=wrap;html=1;align=center;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="1114" y="543" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="torrent_statuses" value="种子状态" style="shape=rectangle;whiteSpace=wrap;html=1;fontStyle=1;align=center;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="1424" y="613" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="status_id" value="状态ID" style="shape=ellipse;whiteSpace=wrap;html=1;fontStyle=4;align=center;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="1544" y="533" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="status_upload_count" value="上传次数" style="shape=ellipse;whiteSpace=wrap;html=1;align=center;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="1384" y="723" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="status_upload_sum" value="上传总量" style="shape=ellipse;whiteSpace=wrap;html=1;align=center;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="1474" y="753" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="status_download_count" value="下载次数" style="shape=ellipse;whiteSpace=wrap;html=1;align=center;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="1584" y="613" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="status_download_sum" value="下载总量" style="shape=ellipse;whiteSpace=wrap;html=1;align=center;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="1444" y="513" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="status_seeding_count" value="做种数" style="shape=ellipse;whiteSpace=wrap;html=1;align=center;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="1564" y="703" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="files" value="文件" style="shape=rectangle;whiteSpace=wrap;html=1;fontStyle=1;align=center;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="994" y="893" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="file_id" value="文件ID" style="shape=ellipse;whiteSpace=wrap;html=1;fontStyle=4;align=center;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="1124" y="933" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="file_length" value="大小" style="shape=ellipse;whiteSpace=wrap;html=1;align=center;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="1064" y="1013" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="file_path" value="路径" style="shape=ellipse;whiteSpace=wrap;html=1;align=center;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="974" y="1023" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="file_path_utf8" value="UTF8路径" style="shape=ellipse;whiteSpace=wrap;html=1;align=center;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="894" y="943" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="categories" value="分类" style="shape=rectangle;whiteSpace=wrap;html=1;fontStyle=1;align=center;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="524" y="743" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="category_id" value="分类ID" style="shape=ellipse;whiteSpace=wrap;html=1;fontStyle=4;align=center;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="604" y="853" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="category_name" value="名称" style="shape=ellipse;whiteSpace=wrap;html=1;align=center;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="494" y="853" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="category_description" value="描述" style="shape=ellipse;whiteSpace=wrap;html=1;align=center;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="444" y="693" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="metadata" value="元数据" style="shape=rectangle;whiteSpace=wrap;html=1;fontStyle=1;align=center;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="134" y="963" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="metadata_id" value="元数据ID" style="shape=ellipse;whiteSpace=wrap;html=1;fontStyle=4;align=center;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="264" y="993" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="metadata_key" value="键" style="shape=ellipse;whiteSpace=wrap;html=1;align=center;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="34" y="1043" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="metadata_type" value="类型" style="shape=ellipse;whiteSpace=wrap;html=1;align=center;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="24" y="943" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="metadata_description" value="描述" style="shape=ellipse;whiteSpace=wrap;html=1;align=center;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="84" y="873" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="metadata_value" value="值" style="shape=ellipse;whiteSpace=wrap;html=1;align=center;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="184" y="863" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="metadata_default_value" value="默认值" style="shape=ellipse;whiteSpace=wrap;html=1;align=center;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="114" y="1093" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="metadata_order" value="排序" style="shape=ellipse;whiteSpace=wrap;html=1;align=center;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="204" y="1083" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="torrent_metadata" value="种子元数据" style="shape=rectangle;whiteSpace=wrap;html=1;fontStyle=1;align=center;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="604" y="453" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="torrent_metadata_id" value="元数据ID" style="shape=ellipse;whiteSpace=wrap;html=1;fontStyle=4;align=center;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="524" y="393" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="torrent_metadata_value" value="值" style="shape=ellipse;whiteSpace=wrap;html=1;align=center;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="514" y="513" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="single_sums" value="单种统计" style="shape=rectangle;whiteSpace=wrap;html=1;fontStyle=1;align=center;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="774" y="133" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="single_sum_id" value="统计ID" style="shape=ellipse;whiteSpace=wrap;html=1;fontStyle=4;align=center;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="874" y="63" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="single_sum_upload" value="上传量" style="shape=ellipse;whiteSpace=wrap;html=1;align=center;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="674" y="163" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="single_sum_download" value="下载量" style="shape=ellipse;whiteSpace=wrap;html=1;align=center;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="694" y="63" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="single_sum_is_finish" value="是否完成" style="shape=ellipse;whiteSpace=wrap;html=1;align=center;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="784" y="23" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="torrent_status_rel" value="种子状态关系" style="shape=rhombus;perimeter=rhombusPerimeter;whiteSpace=wrap;html=1;fontStyle=1;align=center;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="1224" y="563" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="torrent_file_rel" value="种子文件关系" style="shape=rhombus;perimeter=rhombusPerimeter;whiteSpace=wrap;html=1;fontStyle=1;align=center;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="1004" y="713" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="torrent_category_rel" value="种子分类关系" style="shape=rhombus;perimeter=rhombusPerimeter;whiteSpace=wrap;html=1;fontStyle=1;align=center;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="734" y="623" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="torrent_metadata_rel" value="种子元数据关系" style="shape=rhombus;perimeter=rhombusPerimeter;whiteSpace=wrap;html=1;fontStyle=1;align=center;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="754" y="443" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="category_metadata_rel" value="分类元数据关系" style="shape=rhombus;perimeter=rhombusPerimeter;whiteSpace=wrap;html=1;fontStyle=1;align=center;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="324" y="853" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="torrent_single_sum_rel" value="种子单种统计关系" style="shape=rhombus;perimeter=rhombusPerimeter;whiteSpace=wrap;html=1;fontStyle=1;align=center;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="874" y="273" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="torrent_to_id" style="endArrow=none;endFill=0;endSize=12;html=1;rounded=0;strokeColor=#000000;noEdgeStyle=1;edgeStyle=orthogonalEdgeStyle;" parent="1" source="torrents" target="torrent_id" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="torrent_to_info_hash" style="endArrow=none;endFill=0;endSize=12;html=1;rounded=0;strokeColor=#000000;noEdgeStyle=1;edgeStyle=orthogonalEdgeStyle;" parent="1" source="torrents" target="torrent_info_hash" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="torrent_to_name" style="endArrow=none;endFill=0;endSize=12;html=1;rounded=0;strokeColor=#000000;noEdgeStyle=1;edgeStyle=orthogonalEdgeStyle;" parent="1" source="torrents" target="torrent_name" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="torrent_to_name_utf8" style="endArrow=none;endFill=0;endSize=12;html=1;rounded=0;strokeColor=#000000;noEdgeStyle=1;edgeStyle=orthogonalEdgeStyle;" parent="1" source="torrents" target="torrent_name_utf8" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="torrent_to_length" style="endArrow=none;endFill=0;endSize=12;html=1;rounded=0;strokeColor=#000000;noEdgeStyle=1;edgeStyle=orthogonalEdgeStyle;" parent="1" source="torrents" target="torrent_length" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="torrent_to_piece_length" style="endArrow=none;endFill=0;endSize=12;html=1;rounded=0;strokeColor=#000000;noEdgeStyle=1;edgeStyle=orthogonalEdgeStyle;" parent="1" source="torrents" target="torrent_piece_length" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="torrent_to_pieces" style="endArrow=none;endFill=0;endSize=12;html=1;rounded=0;strokeColor=#000000;noEdgeStyle=1;edgeStyle=orthogonalEdgeStyle;" parent="1" source="torrents" target="torrent_pieces" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="torrent_to_private" style="endArrow=none;endFill=0;endSize=12;html=1;rounded=0;strokeColor=#000000;noEdgeStyle=1;edgeStyle=orthogonalEdgeStyle;" parent="1" source="torrents" target="torrent_private" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="torrent_to_source" style="endArrow=none;endFill=0;endSize=12;html=1;rounded=0;strokeColor=#000000;noEdgeStyle=1;edgeStyle=orthogonalEdgeStyle;" parent="1" source="torrents" target="torrent_source" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="torrent_to_announce" style="endArrow=none;endFill=0;endSize=12;html=1;rounded=0;strokeColor=#000000;noEdgeStyle=1;edgeStyle=orthogonalEdgeStyle;" parent="1" source="torrents" target="torrent_announce" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="torrent_to_created_by" style="endArrow=none;endFill=0;endSize=12;html=1;rounded=0;strokeColor=#000000;noEdgeStyle=1;edgeStyle=orthogonalEdgeStyle;" parent="1" source="torrents" target="torrent_created_by" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="torrent_to_creation_date" style="endArrow=none;endFill=0;endSize=12;html=1;rounded=0;strokeColor=#000000;noEdgeStyle=1;edgeStyle=orthogonalEdgeStyle;" parent="1" source="torrents" target="torrent_creation_date" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="torrent_to_comment" style="endArrow=none;endFill=0;endSize=12;html=1;rounded=0;strokeColor=#000000;noEdgeStyle=1;edgeStyle=orthogonalEdgeStyle;" parent="1" source="torrents" target="torrent_comment" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="torrent_to_is_single_file" style="endArrow=none;endFill=0;endSize=12;html=1;rounded=0;strokeColor=#000000;noEdgeStyle=1;edgeStyle=orthogonalEdgeStyle;" parent="1" source="torrents" target="torrent_is_single_file" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="torrent_to_md5sum" style="endArrow=none;endFill=0;endSize=12;html=1;rounded=0;strokeColor=#000000;noEdgeStyle=1;edgeStyle=orthogonalEdgeStyle;" parent="1" source="torrents" target="torrent_md5sum" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="torrent_to_creator_id" style="endArrow=none;endFill=0;endSize=12;html=1;rounded=0;strokeColor=#000000;noEdgeStyle=1;edgeStyle=orthogonalEdgeStyle;" parent="1" source="torrents" target="torrent_creator_id" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="status_to_id" style="endArrow=none;endFill=0;endSize=12;html=1;rounded=0;strokeColor=#000000;noEdgeStyle=1;edgeStyle=orthogonalEdgeStyle;" parent="1" source="torrent_statuses" target="status_id" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="status_to_upload_count" style="endArrow=none;endFill=0;endSize=12;html=1;rounded=0;strokeColor=#000000;noEdgeStyle=1;edgeStyle=orthogonalEdgeStyle;" parent="1" source="torrent_statuses" target="status_upload_count" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="status_to_upload_sum" style="endArrow=none;endFill=0;endSize=12;html=1;rounded=0;strokeColor=#000000;noEdgeStyle=1;edgeStyle=orthogonalEdgeStyle;" parent="1" source="torrent_statuses" target="status_upload_sum" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="status_to_download_count" style="endArrow=none;endFill=0;endSize=12;html=1;rounded=0;strokeColor=#000000;noEdgeStyle=1;edgeStyle=orthogonalEdgeStyle;" parent="1" source="torrent_statuses" target="status_download_count" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="status_to_download_sum" style="endArrow=none;endFill=0;endSize=12;html=1;rounded=0;strokeColor=#000000;noEdgeStyle=1;edgeStyle=orthogonalEdgeStyle;" parent="1" source="torrent_statuses" target="status_download_sum" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="status_to_seeding_count" style="endArrow=none;endFill=0;endSize=12;html=1;rounded=0;strokeColor=#000000;noEdgeStyle=1;edgeStyle=orthogonalEdgeStyle;" parent="1" source="torrent_statuses" target="status_seeding_count" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="file_to_id" style="endArrow=none;endFill=0;endSize=12;html=1;rounded=0;strokeColor=#000000;noEdgeStyle=1;edgeStyle=orthogonalEdgeStyle;" parent="1" source="files" target="file_id" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="file_to_length" style="endArrow=none;endFill=0;endSize=12;html=1;rounded=0;strokeColor=#000000;noEdgeStyle=1;edgeStyle=orthogonalEdgeStyle;" parent="1" source="files" target="file_length" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="file_to_path" style="endArrow=none;endFill=0;endSize=12;html=1;rounded=0;strokeColor=#000000;noEdgeStyle=1;edgeStyle=orthogonalEdgeStyle;" parent="1" source="files" target="file_path" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="file_to_path_utf8" style="endArrow=none;endFill=0;endSize=12;html=1;rounded=0;strokeColor=#000000;noEdgeStyle=1;edgeStyle=orthogonalEdgeStyle;" parent="1" source="files" target="file_path_utf8" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="category_to_id" style="endArrow=none;endFill=0;endSize=12;html=1;rounded=0;strokeColor=#000000;noEdgeStyle=1;edgeStyle=orthogonalEdgeStyle;" parent="1" source="categories" target="category_id" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="category_to_name" style="endArrow=none;endFill=0;endSize=12;html=1;rounded=0;strokeColor=#000000;noEdgeStyle=1;edgeStyle=orthogonalEdgeStyle;" parent="1" source="categories" target="category_name" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="category_to_description" style="endArrow=none;endFill=0;endSize=12;html=1;rounded=0;strokeColor=#000000;noEdgeStyle=1;edgeStyle=orthogonalEdgeStyle;" parent="1" source="categories" target="category_description" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="metadata_to_id" style="endArrow=none;endFill=0;endSize=12;html=1;rounded=0;strokeColor=#000000;noEdgeStyle=1;edgeStyle=orthogonalEdgeStyle;" parent="1" source="metadata" target="metadata_id" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="metadata_to_key" style="endArrow=none;endFill=0;endSize=12;html=1;rounded=0;strokeColor=#000000;noEdgeStyle=1;edgeStyle=orthogonalEdgeStyle;" parent="1" source="metadata" target="metadata_key" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="metadata_to_type" style="endArrow=none;endFill=0;endSize=12;html=1;rounded=0;strokeColor=#000000;noEdgeStyle=1;edgeStyle=orthogonalEdgeStyle;" parent="1" source="metadata" target="metadata_type" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="metadata_to_description" style="endArrow=none;endFill=0;endSize=12;html=1;rounded=0;strokeColor=#000000;noEdgeStyle=1;edgeStyle=orthogonalEdgeStyle;" parent="1" source="metadata" target="metadata_description" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="metadata_to_value" style="endArrow=none;endFill=0;endSize=12;html=1;rounded=0;strokeColor=#000000;noEdgeStyle=1;edgeStyle=orthogonalEdgeStyle;" parent="1" source="metadata" target="metadata_value" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="metadata_to_default_value" style="endArrow=none;endFill=0;endSize=12;html=1;rounded=0;strokeColor=#000000;noEdgeStyle=1;edgeStyle=orthogonalEdgeStyle;" parent="1" source="metadata" target="metadata_default_value" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="metadata_to_order" style="endArrow=none;endFill=0;endSize=12;html=1;rounded=0;strokeColor=#000000;noEdgeStyle=1;edgeStyle=orthogonalEdgeStyle;" parent="1" source="metadata" target="metadata_order" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="torrent_metadata_to_id" style="endArrow=none;endFill=0;endSize=12;html=1;rounded=0;strokeColor=#000000;noEdgeStyle=1;edgeStyle=orthogonalEdgeStyle;" parent="1" source="torrent_metadata" target="torrent_metadata_id" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="torrent_metadata_to_value" style="endArrow=none;endFill=0;endSize=12;html=1;rounded=0;strokeColor=#000000;noEdgeStyle=1;edgeStyle=orthogonalEdgeStyle;" parent="1" source="torrent_metadata" target="torrent_metadata_value" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="single_sum_to_id" style="endArrow=none;endFill=0;endSize=12;html=1;rounded=0;strokeColor=#000000;noEdgeStyle=1;edgeStyle=orthogonalEdgeStyle;" parent="1" source="single_sums" target="single_sum_id" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="single_sum_to_upload" style="endArrow=none;endFill=0;endSize=12;html=1;rounded=0;strokeColor=#000000;noEdgeStyle=1;edgeStyle=orthogonalEdgeStyle;" parent="1" source="single_sums" target="single_sum_upload" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="single_sum_to_download" style="endArrow=none;endFill=0;endSize=12;html=1;rounded=0;strokeColor=#000000;noEdgeStyle=1;edgeStyle=orthogonalEdgeStyle;" parent="1" source="single_sums" target="single_sum_download" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="single_sum_to_is_finish" style="endArrow=none;endFill=0;endSize=12;html=1;rounded=0;strokeColor=#000000;noEdgeStyle=1;edgeStyle=orthogonalEdgeStyle;" parent="1" source="single_sums" target="single_sum_is_finish" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="torrent_to_status" value="1" style="endArrow=none;endFill=0;endSize=12;html=1;rounded=0;strokeColor=#000000;noEdgeStyle=1;edgeStyle=orthogonalEdgeStyle;" parent="1" source="torrents" target="torrent_status_rel" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="status_to_torrent" value="1" style="endArrow=none;endFill=0;endSize=12;html=1;rounded=0;strokeColor=#000000;noEdgeStyle=1;edgeStyle=orthogonalEdgeStyle;" parent="1" source="torrent_statuses" target="torrent_status_rel" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="torrent_to_file" value="1" style="endArrow=none;endFill=0;endSize=12;html=1;rounded=0;strokeColor=#000000;noEdgeStyle=1;edgeStyle=orthogonalEdgeStyle;" parent="1" source="torrents" target="torrent_file_rel" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="file_to_torrent" value="N" style="endArrow=none;endFill=0;endSize=12;html=1;rounded=0;strokeColor=#000000;noEdgeStyle=1;edgeStyle=orthogonalEdgeStyle;" parent="1" source="files" target="torrent_file_rel" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="torrent_to_category" value="N" style="endArrow=none;endFill=0;endSize=12;html=1;rounded=0;strokeColor=#000000;noEdgeStyle=1;edgeStyle=orthogonalEdgeStyle;" parent="1" source="torrents" target="torrent_category_rel" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="category_to_torrent" value="1" style="endArrow=none;endFill=0;endSize=12;html=1;rounded=0;strokeColor=#000000;noEdgeStyle=1;edgeStyle=orthogonalEdgeStyle;" parent="1" source="categories" target="torrent_category_rel" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="torrent_to_metadata" value="1" style="endArrow=none;endFill=0;endSize=12;html=1;rounded=0;strokeColor=#000000;noEdgeStyle=1;edgeStyle=orthogonalEdgeStyle;" parent="1" source="torrents" target="torrent_metadata_rel" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="metadata_to_torrent" value="N" style="endArrow=none;endFill=0;endSize=12;html=1;rounded=0;strokeColor=#000000;noEdgeStyle=1;edgeStyle=orthogonalEdgeStyle;" parent="1" source="torrent_metadata" target="torrent_metadata_rel" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="category_to_metadata" value="1" style="endArrow=none;endFill=0;endSize=12;html=1;rounded=0;strokeColor=#000000;noEdgeStyle=1;edgeStyle=orthogonalEdgeStyle;" parent="1" source="categories" target="category_metadata_rel" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="metadata_to_category" value="N" style="endArrow=none;endFill=0;endSize=12;html=1;rounded=0;strokeColor=#000000;noEdgeStyle=1;edgeStyle=orthogonalEdgeStyle;" parent="1" source="metadata" target="category_metadata_rel" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="torrent_to_single_sum" value="1" style="endArrow=none;endFill=0;endSize=12;html=1;rounded=0;strokeColor=#000000;noEdgeStyle=1;edgeStyle=orthogonalEdgeStyle;" parent="1" source="torrents" target="torrent_single_sum_rel" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="single_sum_to_torrent" value="N" style="endArrow=none;endFill=0;endSize=12;html=1;rounded=0;strokeColor=#000000;noEdgeStyle=1;edgeStyle=orthogonalEdgeStyle;" parent="1" source="single_sums" target="torrent_single_sum_rel" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

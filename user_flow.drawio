@@ -1,0 +1,216 @@
+<mxfile host="Electron" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/26.2.2 Chrome/134.0.6998.178 Electron/35.1.2 Safari/537.36" version="26.2.2">
+  <diagram id="user-flow-diagram" name="用户使用流程图">
+    <mxGraphModel dx="1108" dy="782" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="start" value="开始" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=19;fontFamily=思源黑体 CN Bold;fontColor=#333333;" parent="1" vertex="1">
+          <mxGeometry x="360" y="20" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="system_settings" value="系统设置检查" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=19;fontFamily=思源黑体 CN Bold;fontColor=#333333;" parent="1" vertex="1">
+          <mxGeometry x="340" y="100" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="register" value="用户注册" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=19;fontFamily=思源黑体 CN Bold;fontColor=#333333;" parent="1" vertex="1">
+          <mxGeometry x="260" y="200" width="100" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="login" value="用户登录" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=19;fontFamily=思源黑体 CN Bold;fontColor=#333333;" parent="1" vertex="1">
+          <mxGeometry x="440" y="200" width="100" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="auth_methods" value="认证方式" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;fontSize=19;fontFamily=思源黑体 CN Bold;" parent="1" vertex="1">
+          <mxGeometry x="540" y="30" width="140" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="local_auth" value="本地账号密码" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;fontSize=19;fontFamily=思源黑体 CN Bold;fontColor=#333333;" parent="auth_methods" vertex="1">
+          <mxGeometry y="30" width="140" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="oauth" value="OAuth登录" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;fontSize=19;fontFamily=思源黑体 CN Bold;fontColor=#333333;" parent="auth_methods" vertex="1">
+          <mxGeometry y="60" width="140" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="key_auth" value="API密钥认证" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;fontSize=19;fontFamily=思源黑体 CN Bold;fontColor=#333333;" parent="auth_methods" vertex="1">
+          <mxGeometry y="90" width="140" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="main_functions" value="主功能区" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=19;fontFamily=思源黑体 CN Bold;fontColor=#333333;" parent="1" vertex="1">
+          <mxGeometry x="300" y="280" width="200" height="270" as="geometry" />
+        </mxCell>
+        <mxCell id="browse" value="浏览种子列表" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;fontSize=19;fontFamily=思源黑体 CN Bold;fontColor=#333333;" parent="main_functions" vertex="1">
+          <mxGeometry y="30" width="200" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="search" value="搜索种子" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;fontSize=19;fontFamily=思源黑体 CN Bold;fontColor=#333333;" parent="main_functions" vertex="1">
+          <mxGeometry y="60" width="200" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="upload" value="上传新种子" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;fontSize=19;fontFamily=思源黑体 CN Bold;fontColor=#333333;" parent="main_functions" vertex="1">
+          <mxGeometry y="90" width="200" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="manage" value="管理个人种子" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;fontSize=19;fontFamily=思源黑体 CN Bold;fontColor=#333333;" parent="main_functions" vertex="1">
+          <mxGeometry y="120" width="200" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="user_settings" value="个人设置" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;fontSize=19;fontFamily=思源黑体 CN Bold;fontColor=#333333;" parent="main_functions" vertex="1">
+          <mxGeometry y="150" width="200" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="api_access" value="API访问管理" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;fontSize=19;fontFamily=思源黑体 CN Bold;fontColor=#333333;" parent="main_functions" vertex="1">
+          <mxGeometry y="180" width="200" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="notification" value="通知管理" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;fontSize=19;fontFamily=思源黑体 CN Bold;fontColor=#333333;" parent="main_functions" vertex="1">
+          <mxGeometry y="210" width="200" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="favorite" value="收藏管理" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;fontSize=19;fontFamily=思源黑体 CN Bold;fontColor=#333333;" parent="main_functions" vertex="1">
+          <mxGeometry y="240" width="200" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="torrent_actions" value="种子操作" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=19;fontFamily=思源黑体 CN Bold;fontColor=#333333;" parent="1" vertex="1">
+          <mxGeometry x="1130" y="270" width="200" height="270" as="geometry" />
+        </mxCell>
+        <mxCell id="download" value="下载种子文件" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;fontSize=19;fontFamily=思源黑体 CN Bold;fontColor=#333333;" parent="torrent_actions" vertex="1">
+          <mxGeometry y="30" width="200" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="seed" value="做种" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;fontSize=19;fontFamily=思源黑体 CN Bold;fontColor=#333333;" parent="torrent_actions" vertex="1">
+          <mxGeometry y="60" width="200" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="stats" value="查看统计信息" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;fontSize=19;fontFamily=思源黑体 CN Bold;fontColor=#333333;" parent="torrent_actions" vertex="1">
+          <mxGeometry y="90" width="200" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="metadata" value="编辑元数据" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;fontSize=19;fontFamily=思源黑体 CN Bold;fontColor=#333333;" parent="torrent_actions" vertex="1">
+          <mxGeometry y="120" width="200" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="tracker" value="Tracker管理" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;fontSize=19;fontFamily=思源黑体 CN Bold;fontColor=#333333;" parent="torrent_actions" vertex="1">
+          <mxGeometry y="150" width="200" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="peer_manage" value="Peer管理" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;fontSize=19;fontFamily=思源黑体 CN Bold;fontColor=#333333;" parent="torrent_actions" vertex="1">
+          <mxGeometry y="180" width="200" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="comment" value="评论管理" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;fontSize=19;fontFamily=思源黑体 CN Bold;fontColor=#333333;" parent="torrent_actions" vertex="1">
+          <mxGeometry y="210" width="200" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="report" value="举报管理" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;fontSize=19;fontFamily=思源黑体 CN Bold;fontColor=#333333;" parent="torrent_actions" vertex="1">
+          <mxGeometry y="240" width="200" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="n8EWSjARWDN0soGyrfvd-5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=1;entryDx=0;entryDy=0;exitX=0.5;exitY=0;exitDx=0;exitDy=0;fontSize=19;fontFamily=思源黑体 CN Bold;fontColor=#333333;" parent="1" source="admin_functions" target="end" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="admin_functions" value="管理员功能" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#f8cecc;strokeColor=#b85450;fontSize=19;fontFamily=思源黑体 CN Bold;fontColor=#333333;" parent="1" vertex="1">
+          <mxGeometry x="870" y="280" width="200" height="270" as="geometry" />
+        </mxCell>
+        <mxCell id="user_manage" value="用户管理" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;fontSize=19;fontFamily=思源黑体 CN Bold;fontColor=#333333;" parent="admin_functions" vertex="1">
+          <mxGeometry y="30" width="200" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="system_config" value="系统配置" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;fontSize=19;fontFamily=思源黑体 CN Bold;fontColor=#333333;" parent="admin_functions" vertex="1">
+          <mxGeometry y="60" width="200" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="category_manage" value="分类管理" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;fontSize=19;fontFamily=思源黑体 CN Bold;fontColor=#333333;" parent="admin_functions" vertex="1">
+          <mxGeometry y="90" width="200" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="log_view" value="日志查看" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;fontSize=19;fontFamily=思源黑体 CN Bold;fontColor=#333333;" parent="admin_functions" vertex="1">
+          <mxGeometry y="120" width="200" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="smtp_config" value="SMTP配置" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;fontSize=19;fontFamily=思源黑体 CN Bold;fontColor=#333333;" parent="admin_functions" vertex="1">
+          <mxGeometry y="150" width="200" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="subnet_manage" value="子网管理" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;fontSize=19;fontFamily=思源黑体 CN Bold;fontColor=#333333;" parent="admin_functions" vertex="1">
+          <mxGeometry y="180" width="200" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="backup" value="数据备份" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;fontSize=19;fontFamily=思源黑体 CN Bold;fontColor=#333333;" parent="admin_functions" vertex="1">
+          <mxGeometry y="210" width="200" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="audit" value="审计日志" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;fontSize=19;fontFamily=思源黑体 CN Bold;fontColor=#333333;" parent="admin_functions" vertex="1">
+          <mxGeometry y="240" width="200" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="stats_panel" value="统计信息" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=19;fontFamily=思源黑体 CN Bold;fontColor=#333333;" parent="1" vertex="1">
+          <mxGeometry x="1410" y="300" width="200" height="210" as="geometry" />
+        </mxCell>
+        <mxCell id="upload_stats" value="上传统计" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;fontSize=19;fontFamily=思源黑体 CN Bold;fontColor=#333333;" parent="stats_panel" vertex="1">
+          <mxGeometry y="30" width="200" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="download_stats" value="下载统计" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;fontSize=19;fontFamily=思源黑体 CN Bold;fontColor=#333333;" parent="stats_panel" vertex="1">
+          <mxGeometry y="60" width="200" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="seeding_stats" value="做种统计" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;fontSize=19;fontFamily=思源黑体 CN Bold;fontColor=#333333;" parent="stats_panel" vertex="1">
+          <mxGeometry y="90" width="200" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="peer_stats" value="Peer统计" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;fontSize=19;fontFamily=思源黑体 CN Bold;fontColor=#333333;" parent="stats_panel" vertex="1">
+          <mxGeometry y="120" width="200" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="category_stats" value="分类统计" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;fontSize=19;fontFamily=思源黑体 CN Bold;fontColor=#333333;" parent="stats_panel" vertex="1">
+          <mxGeometry y="150" width="200" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="user_stats" value="用户统计" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;fontSize=19;fontFamily=思源黑体 CN Bold;fontColor=#333333;" parent="stats_panel" vertex="1">
+          <mxGeometry y="180" width="200" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="n8EWSjARWDN0soGyrfvd-1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;exitX=0.5;exitY=0;exitDx=0;exitDy=0;fontSize=19;fontFamily=思源黑体 CN Bold;fontColor=#333333;" parent="1" source="forum_functions" target="end" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="forum_functions" value="论坛功能" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=19;fontFamily=思源黑体 CN Bold;fontColor=#333333;" parent="1" vertex="1">
+          <mxGeometry x="627" y="310" width="200" height="210" as="geometry" />
+        </mxCell>
+        <mxCell id="forum_browse" value="浏览论坛" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;fontSize=19;fontFamily=思源黑体 CN Bold;fontColor=#333333;" parent="forum_functions" vertex="1">
+          <mxGeometry y="30" width="200" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="forum_post" value="发布帖子" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;fontSize=19;fontFamily=思源黑体 CN Bold;fontColor=#333333;" parent="forum_functions" vertex="1">
+          <mxGeometry y="60" width="200" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="forum_reply" value="回复帖子" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;fontSize=19;fontFamily=思源黑体 CN Bold;fontColor=#333333;" parent="forum_functions" vertex="1">
+          <mxGeometry y="90" width="200" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="forum_manage" value="帖子管理" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;fontSize=19;fontFamily=思源黑体 CN Bold;fontColor=#333333;" parent="forum_functions" vertex="1">
+          <mxGeometry y="120" width="200" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="forum_report" value="举报帖子" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;fontSize=19;fontFamily=思源黑体 CN Bold;fontColor=#333333;" parent="forum_functions" vertex="1">
+          <mxGeometry y="150" width="200" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="forum_moderate" value="版主管理" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;fontSize=19;fontFamily=思源黑体 CN Bold;fontColor=#333333;" parent="forum_functions" vertex="1">
+          <mxGeometry y="180" width="200" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="main_to_forum" value="" style="endArrow=classic;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;fontSize=19;fontFamily=思源黑体 CN Bold;fontColor=#333333;" parent="1" source="main_functions" target="forum_functions" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="end" value="结束" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=19;fontFamily=思源黑体 CN Bold;fontColor=#333333;" parent="1" vertex="1">
+          <mxGeometry x="1190" y="20" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="start_to_settings" value="" style="endArrow=classic;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=19;fontFamily=思源黑体 CN Bold;fontColor=#333333;" parent="1" source="start" target="system_settings" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="settings_to_register" value="注册开启" style="endArrow=classic;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=19;fontFamily=思源黑体 CN Bold;fontColor=#333333;" parent="1" source="system_settings" target="register" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="settings_to_login" value="登录开启" style="endArrow=classic;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=19;fontFamily=思源黑体 CN Bold;fontColor=#333333;" parent="1" source="system_settings" target="login" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="login_to_auth" value="" style="endArrow=classic;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;fontSize=19;fontFamily=思源黑体 CN Bold;fontColor=#333333;" parent="1" source="login" target="key_auth" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="register_to_main" value="" style="endArrow=classic;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.25;entryY=0;entryDx=0;entryDy=0;fontSize=19;fontFamily=思源黑体 CN Bold;fontColor=#333333;" parent="1" source="register" target="main_functions" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="login_to_main" value="" style="endArrow=classic;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.75;entryY=0;entryDx=0;entryDy=0;fontSize=19;fontFamily=思源黑体 CN Bold;fontColor=#333333;" parent="1" source="login" target="main_functions" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="actions_to_stats" value="" style="endArrow=classic;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;fontSize=19;fontFamily=思源黑体 CN Bold;fontColor=#333333;" parent="1" source="metadata" target="seeding_stats" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="actions_to_end" value="" style="endArrow=classic;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;fontSize=19;fontFamily=思源黑体 CN Bold;fontColor=#333333;" parent="1" source="torrent_actions" target="end" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="n8EWSjARWDN0soGyrfvd-2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.492;entryY=0.967;entryDx=0;entryDy=0;entryPerimeter=0;exitX=0.495;exitY=0.989;exitDx=0;exitDy=0;exitPerimeter=0;fontSize=19;fontFamily=思源黑体 CN Bold;fontColor=#333333;" parent="1" source="favorite" target="report" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="400" y="550" />
+              <mxPoint x="400" y="620" />
+              <mxPoint x="1228" y="620" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="n8EWSjARWDN0soGyrfvd-3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.492;entryY=0.989;entryDx=0;entryDy=0;entryPerimeter=0;fontSize=19;fontFamily=思源黑体 CN Bold;fontColor=#333333;" parent="1" target="audit" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="400" y="550" as="sourcePoint" />
+            <Array as="points">
+              <mxPoint x="400" y="580" />
+              <mxPoint x="968" y="580" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="n8EWSjARWDN0soGyrfvd-4" value="管理员权限" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=19;fontFamily=思源黑体 CN Bold;fontColor=#333333;" parent="n8EWSjARWDN0soGyrfvd-3" vertex="1" connectable="0">
+          <mxGeometry x="-0.0567" y="-2" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

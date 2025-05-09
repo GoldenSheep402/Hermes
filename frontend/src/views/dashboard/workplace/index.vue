@@ -1,7 +1,9 @@
 <script lang="ts" setup>
 import { useUserStore } from '@/store'
 import { onMounted, ref } from 'vue'
+import Announcement from './components/announcement.vue'
 import Banner from './components/banner.vue'
+import SiteStats from './components/site-stats.vue'
 
 const UserStore = useUserStore()
 
@@ -29,9 +31,12 @@ export default {
     <div class="w-full flex flex-col gap-5">
       <div class="w-full bg-[--color-bg-2] p-5">
         <Banner />
-        <!--        <div class="p-5 grid cols-[repeat(auto-fill,minmax(140px,1fr))]"> -->
-
-        <!--        </div> -->
+      </div>
+      <div class="w-full bg-[--color-bg-2] p-5">
+        <SiteStats />
+      </div>
+      <div class="w-full bg-[--color-bg-2] p-5">
+        <Announcement />
       </div>
       <div class="w-full bg-[--color-bg-2] p-5">
         <a-space size="large">

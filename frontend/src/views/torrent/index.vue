@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { TorrentService, TrackerService, UserService } from '@/services/grpc.ts'
+import { CategoryService, TorrentService, TrackerService, UserService } from '@/services/grpc.ts'
 import { Notification } from '@arco-design/web-vue'
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
@@ -16,10 +16,38 @@ interface TorrentMessage {
   finished: number
 }
 
+interface Category {
+  id: string
+  name: string
+  description: string
+}
+
 const torrentList = ref<TorrentMessage[]>([])
+const categoryList = ref<Category[]>([])
+const selectedCategory = ref<string>('')
+const searchKeyword = ref<string>('')
+const allTorrents = ref<TorrentMessage[]>([])
+
+async function fetchCategoryList() {
+  CategoryService.GetCategoryList({}).then((res) => {
+    for (let i = 0; i < res.category!.length; i++) {
+      categoryList.value.push({
+        id: res.category![i].id!,
+        name: res.category![i].name!,
+        description: res.category![i].description!,
+      })
+    }
+  }).catch((err) => {
+    console.error('Failed to fetch category list', err)
+  })
+}
 
 async function fetchTorrentData() {
-  TorrentService.GetTorrentV1List({}).then(async (res) => {
+  allTorrents.value = []
+  const req = {
+    categoryId: selectedCategory.value || undefined,
+  }
+  TorrentService.GetTorrentV1List(req).then(async (res) => {
     for (let i = 0; i < res.torrents!.length; i++) {
       const downloadingCount = ref<number>(0)
       const seedingCount = ref<number>(0)
@@ -34,7 +62,7 @@ async function fetchTorrentData() {
           console.error('Failed to get torrent status', err)
         })
 
-      torrentList.value.push({
+      allTorrents.value.push({
         id: res.torrents![i].id!,
         name: res.torrents![i].name!,
         description: res.torrents![i].description!,
@@ -45,9 +73,29 @@ async function fetchTorrentData() {
         finished: finishedCount.value,
       })
     }
+    filterTorrents()
   }).catch((err) => {
     console.error('Failed to fetch torrent list', err)
   })
+}
+
+function filterTorrents() {
+  torrentList.value = allTorrents.value.filter((torrent) => {
+    if (searchKeyword.value) {
+      return torrent.name.toLowerCase().includes(searchKeyword.value.toLowerCase())
+    }
+    return true
+  })
+}
+
+function handleSearch() {
+  fetchTorrentData()
+}
+
+function handleReset() {
+  selectedCategory.value = ''
+  searchKeyword.value = ''
+  fetchTorrentData()
 }
 
 function base64ToUint8Array(base64: string): Uint8Array {
@@ -131,8 +179,8 @@ function genUrl(id: string) {
 
 onMounted(() => {
   getPasskey()
+  fetchCategoryList()
   fetchTorrentData()
-  console.log(torrentList.value)
 })
 </script>
 
@@ -143,6 +191,57 @@ onMounted(() => {
         种子列表
       </div>
 
+      <a-card class="search-card mb-4" :bordered="true">
+        <template #title>
+          <div class="flex items-center">
+            <icon-search class="mr-2 text-[var(--color-text-3)]" />
+            <span class="text-[var(--color-text-1)]">搜索条件</span>
+          </div>
+        </template>
+        <a-form layout="inline" :model="{ category: selectedCategory, keyword: searchKeyword }" @submit="handleSearch">
+          <a-form-item field="category" label="类别" class="!mb-0">
+            <a-select
+              v-model="selectedCategory"
+              placeholder="选择类别"
+              allow-clear
+              style="width: 200px"
+            >
+              <a-option
+                v-for="category in categoryList"
+                :key="category.id"
+                :value="category.id"
+              >
+                {{ category.name }}
+              </a-option>
+            </a-select>
+          </a-form-item>
+          <a-form-item field="keyword" label="关键词" class="!mb-0">
+            <a-input
+              v-model="searchKeyword"
+              placeholder="搜索种子名称"
+              allow-clear
+              style="width: 300px"
+            />
+          </a-form-item>
+          <a-form-item class="!mb-0">
+            <a-space>
+              <a-button type="primary" html-type="submit">
+                <template #icon>
+                  <icon-search />
+                </template>
+                搜索
+              </a-button>
+              <a-button @click="handleReset">
+                <template #icon>
+                  <icon-refresh />
+                </template>
+                重置
+              </a-button>
+            </a-space>
+          </a-form-item>
+        </a-form>
+      </a-card>
+
       <a-table :data="torrentList">
         <template #columns>
           <a-table-column key="name" data-index="name" title="名称" />
@@ -151,6 +250,11 @@ onMounted(() => {
           <a-table-column key="status" title="状态">
             <template #cell="{ record }">
               <div class="flex flex-row gap-2">
+                <a-statistic :value="record.downloading">
+                  <template #suffix>
+                    <icon-arrow-down />
+                  </template>
+                </a-statistic>
                 <a-statistic :value="record.seeding">
                   <template #suffix>
                     <icon-arrow-up />
@@ -188,5 +292,8 @@ onMounted(() => {
 </template>
 
 <style lang="less" scoped>
-
+.search-card {
+  border: 1px solid var(--color-border);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
 </style>

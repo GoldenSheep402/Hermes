@@ -2,6 +2,8 @@
   "compilerOptions": {
     "target": "ES2020",
     "jsx": "preserve",
+    "jsxFactory": "h",
+    "jsxFragmentFactory": "Fragment",
     "lib": ["es2020", "dom"],
     "baseUrl": ".",
     "module": "ES2020",
@@ -13,10 +15,11 @@
     "types": ["vite/client"],
     "allowImportingTsExtensions": true,
     "strict": true,
+    "noEmit": true,
     "sourceMap": true,
     "esModuleInterop": true,
     "skipLibCheck": true
   },
-  "include": ["src/**/*", "src/**/*.vue"],
+  "include": ["src/**/*", "src/**/*.vue", "src/types/**/*.d.ts"],
   "exclude": ["node_modules"]
 }

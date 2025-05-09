@@ -19,7 +19,7 @@ const SYSTEM: AppRouteRecordRaw = {
       component: () => import('@/views/system/index.vue'),
       meta: {
         label: '系统设置',
-        requiresAuth: true,
+        requiresAuth: false,
         roles: ['admin'],
       },
     },

@@ -16,6 +16,7 @@ export type GetUserRequest = {
 }
 
 export type GetUserResponse = {
+  info: any
   user?: User
 }
 
@@ -32,6 +33,7 @@ export type GetUserInfoResponse = {
   torrentDownloaded?: number
   torrentSeeding?: number
   key?: string
+  magicPoints?: number
 }
 
 export type UpdateUserRequest = {

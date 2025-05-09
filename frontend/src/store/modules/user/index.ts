@@ -41,26 +41,26 @@ const useUserStore = defineStore('hermes', {
 
     // Reset user's information
     resetInfo() {
-      // this.$reset();
+      this.$reset()
     },
 
     // Get user's information
     info() {
-      // rbacValues res = await getUserInfo();
-      // UserService.GetUser({}).then((res) => {
-      //   this.userId = res.info?.id;
-      //   this.name = res.info?.name;
-      //   this.email = res.info?.email;
-      //   this.projectLimit = res.info?.limit;
-      //   if (res.info?.isAdmin) {
-      //     this.role = 'admin';
-      //   }else {
-      //     this.role = 'user';
-      //   }
-      // })
+      UserService.GetUser({}).then((res) => {
+        this.userId = res.user?.id
+        this.name = res.user?.name
+        this.email = res.user?.role
+        // this.projectLimit = res.info?.limit;
+        if (res.info?.isAdmin) {
+          this.role = 'admin'
+        }
+        else {
+          this.role = 'user'
+        }
+      })
 
       this.setInfo({
-        // name: 'Admin',
+        avatar: 'https://www.z4a.net/images/2025/04/09/Snipaste_2025-04-09_01-17-44.png',
       })
     },
 

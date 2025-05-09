@@ -23,6 +23,26 @@ const DASHBOARD: AppRouteRecordRaw = {
         roles: ['*'],
       },
     },
+    {
+      path: 'site-stats',
+      name: 'SiteStats',
+      component: () => import('@/views/dashboard/site-stats/index.vue'),
+      meta: {
+        label: '全站数据',
+        requiresAuth: true,
+        roles: ['*'],
+      },
+    },
+    {
+      path: 'tracker-stats',
+      name: 'TrackerStats',
+      component: () => import('@/views/dashboard/tracker-stats/index.vue'),
+      meta: {
+        label: 'Tracker负载',
+        requiresAuth: true,
+        roles: ['*'],
+      },
+    },
   ],
 }
 

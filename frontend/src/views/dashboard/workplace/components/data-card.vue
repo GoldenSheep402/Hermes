@@ -33,8 +33,8 @@ export default {
         :value="value"
         :precision="0"
         :value-from="0"
-        animation
-        show-group-separator
+
+        show-group-separator animation
       />
     </a-space>
   </a-grid-item>

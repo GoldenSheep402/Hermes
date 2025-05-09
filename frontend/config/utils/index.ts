@@ -5,5 +5,10 @@
 export default {}
 
 export function isReportMode(): boolean {
-  return import.meta.env.REPORT === 'true'
+  try {
+    return import.meta.env?.VITE_REPORT === 'true'
+  }
+  catch {
+    return false
+  }
 }

@@ -14,6 +14,7 @@ import (
 	"github.com/GoldenSheep402/Hermes/pkg/ctxKey"
 	userV1 "github.com/GoldenSheep402/Hermes/pkg/proto/user/v1"
 	"github.com/GoldenSheep402/Hermes/pkg/stdao"
+	"github.com/GoldenSheep402/Hermes/pkg/utils/crypto"
 )
 
 var _ userV1.UserServiceServer = (*S)(nil)
@@ -124,13 +125,57 @@ func (s *S) UpdateUser(ctx context.Context, req *userV1.UpdateUserRequest) (*use
 }
 
 func (s *S) UpdatePassword(ctx context.Context, req *userV1.UpdatePasswordRequest) (*userV1.UpdatePasswordResponse, error) {
-	// TODO: implement password verification algorithm
-	return nil, status.Error(codes.Unimplemented, "not implemented")
+	userID, ok := ctx.Value(ctxKey.UID).(string)
+	if !ok || userID == "" {
+		return nil, status.Error(codes.Unauthenticated, "unauthenticated")
+	}
+
+	user, err := dao.User.GetByID(ctx, userID)
+	if err != nil {
+		return nil, status.Error(codes.NotFound, "user not found")
+	}
+
+	if crypto.Md5CryptoWithSalt(req.OldPassword, user.Salt) != user.Password {
+		return nil, status.Error(codes.InvalidArgument, "incorrect old password")
+	}
+
+	salt, err := crypto.GenerateSalt(16)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "failed to generate salt")
+	}
+
+	user.Salt = salt
+	user.Password = crypto.Md5CryptoWithSalt(req.NewPassword, salt)
+
+	if err := dao.User.UpdateInfo(ctx, user); err != nil {
+		s.Log.Errorw("failed to update password", "error", err)
+		return nil, status.Error(codes.Internal, "failed to update password")
+	}
+
+	return &userV1.UpdatePasswordResponse{}, nil
 }
 
 func (s *S) ResetPasskey(ctx context.Context, req *userV1.ResetPasskeyRequest) (*userV1.ResetPasskeyResponse, error) {
-	// TODO: implement passkey generation
-	return nil, status.Error(codes.Unimplemented, "not implemented")
+	userID, ok := ctx.Value(ctxKey.UID).(string)
+	if !ok || userID == "" {
+		return nil, status.Error(codes.Unauthenticated, "unauthenticated")
+	}
+
+	user, err := dao.User.GetByID(ctx, userID)
+	if err != nil {
+		return nil, status.Error(codes.NotFound, "user not found")
+	}
+
+	user.Passkey = ulid.Make().String()
+
+	if err := dao.User.UpdateInfo(ctx, user); err != nil {
+		s.Log.Errorw("failed to reset passkey", "error", err)
+		return nil, status.Error(codes.Internal, "failed to reset passkey")
+	}
+
+	return &userV1.ResetPasskeyResponse{
+		Passkey: user.Passkey,
+	}, nil
 }
 
 func (s *S) GetUserPasskey(ctx context.Context, req *userV1.GetUserPasskeyRequest) (*userV1.GetUserPasskeyResponse, error) {

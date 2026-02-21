@@ -4,6 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net"
+	"strings"
+	"sync"
+
 	"github.com/GoldenSheep402/Hermes/conf"
 	"github.com/GoldenSheep402/Hermes/core/kernel"
 	"github.com/GoldenSheep402/Hermes/core/logx"
@@ -23,9 +27,6 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/reflection"
-	"net"
-	"strings"
-	"sync"
 )
 
 var _ kernel.Module = (*Mod)(nil)
@@ -81,6 +82,21 @@ func (m *Mod) PostInit(h *kernel.Hub) error {
 	var tracer opentracing.Tracer
 	if h.Load(&tracer) != nil {
 		h.Log.Info("no tracer find from kernel, skip tracing for gRPC gateway")
+
+		// Rebuild gRPC server without tracer but WITH casbin
+		m.grpc = grpc.NewServer(
+			grpc.UnaryInterceptor(
+				grpcMiddleware.ChainUnaryServer(
+					grpcCtxTags.UnaryServerInterceptor(),
+					grpcZap.UnaryServerInterceptor(logx.NameSpace("grpc").Desugar()),
+					grpcRecovery.UnaryServerInterceptor(),
+					grpcAuth.UnaryServerInterceptor(middleware.AuthInterceptor),
+				),
+			),
+		)
+		reflection.Register(m.grpc)
+		h.Map(m.grpc)
+
 	} else {
 		h.Log.Info("tracer find from kernel, enable tracing for gRPC gateway ...")
 		h.Log.Info("tracer find from kernel, set StatusHandler for gRPC server ...")

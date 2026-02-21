@@ -2,6 +2,7 @@ package casbinX
 
 import (
 	"fmt"
+
 	"github.com/GoldenSheep402/Hermes/core/kernel"
 	"github.com/GoldenSheep402/Hermes/mod/casbinX/rbac"
 	"github.com/GoldenSheep402/Hermes/mod/casbinX/rbacValues"
@@ -47,6 +48,7 @@ func (m *Mod) Load(hub *kernel.Hub) error {
 	ef.EnableAutoSave(true)
 	m.ef = ef
 	rbac.Init(m.ef)
+	rbac.CasbinManager.SetupGlobalAdminPolicy()
 	hub.Map(&m.ef)
 	return nil
 }

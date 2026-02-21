@@ -1,8 +1,9 @@
 package rbac
 
 import (
-	"github.com/GoldenSheep402/Hermes/mod/casbinX/rbacValues"
 	"github.com/casbin/casbin/v2"
+
+	"github.com/GoldenSheep402/Hermes/mod/casbinX/rbacValues"
 )
 
 type casbinManager struct {
@@ -131,4 +132,37 @@ func (c *casbinManager) SetSubgroup(parentGroup, subGroup string) error {
 		return err
 	}
 	return nil
+}
+
+// SetUserGlobalAdmin Global Admin Rights
+func (c *casbinManager) SetUserGlobalAdmin(userID string) error {
+	userString := rbacValues.UserIDPrefix(userID)
+	_, err := c.Enforcer.AddGroupingPolicy(userString, rbacValues.ADMIN_PREFIX)
+	return err
+}
+
+func (c *casbinManager) RemoveUserGlobalAdmin(userID string) error {
+	userString := rbacValues.UserIDPrefix(userID)
+	_, err := c.Enforcer.RemoveGroupingPolicy(userString, rbacValues.ADMIN_PREFIX)
+	return err
+}
+
+func (c *casbinManager) CheckUserIsGlobalAdmin(userID string) (bool, error) {
+	// Let's enforce if the user has wildcard "*" access on resource "*", action "*"
+	// which we can define as the "Admin" role policy
+	userString := rbacValues.UserIDPrefix(userID)
+	return c.Enforcer.Enforce(userString, "*", "*")
+}
+
+// SetupGlobalAdminPolicy seeds the DB with the wildcard policy for admins
+func (c *casbinManager) SetupGlobalAdminPolicy() error {
+	_, err := c.Enforcer.AddNamedPolicy("p", rbacValues.ADMIN_PREFIX, "*", "invoke")
+	return err
+}
+
+// CheckUserPermission is a quick helper for manually evaluating permissions
+// commonly called inside gRPC services.
+func (c *casbinManager) CheckUserPermission(userID string, resource string, action string) (bool, error) {
+	userString := rbacValues.UserIDPrefix(userID)
+	return c.Enforcer.Enforce(userString, resource, action)
 }

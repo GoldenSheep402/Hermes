@@ -2,21 +2,21 @@ package user
 
 import (
 	"errors"
-	"fmt"
+
+	"github.com/oklog/ulid/v2"
+	"github.com/redis/go-redis/v9"
+	"go.uber.org/zap"
+	"google.golang.org/grpc"
+	"gorm.io/gorm"
 
 	"github.com/GoldenSheep402/Hermes/core/kernel"
 	"github.com/GoldenSheep402/Hermes/mod/grpcGateway/gateway"
 	"github.com/GoldenSheep402/Hermes/mod/user/dao"
 	"github.com/GoldenSheep402/Hermes/mod/user/model"
 	"github.com/GoldenSheep402/Hermes/mod/user/service"
-	"github.com/GoldenSheep402/Hermes/pkg/colorful"
 	userV1 "github.com/GoldenSheep402/Hermes/pkg/proto/user/v1"
 	"github.com/GoldenSheep402/Hermes/pkg/stdao"
 	"github.com/GoldenSheep402/Hermes/pkg/utils/crypto"
-	"github.com/oklog/ulid/v2"
-	"github.com/redis/go-redis/v9"
-	"google.golang.org/grpc"
-	"gorm.io/gorm"
 )
 
 var _ kernel.Module = (*Mod)(nil)
@@ -112,8 +112,7 @@ func (m *Mod) Start(h *kernel.Hub) error {
 				if err := tx.Create(&adminUser).Error; err != nil {
 					return err
 				}
-				fmt.Printf(colorful.Blue("Admin account: ") + colorful.Blue(m.config.AdminAccount) + "\n")
-				fmt.Printf(colorful.Blue("Admin password: ") + colorful.Blue(m.config.AdminPassword) + "\n")
+				zap.S().Infow("admin user created", "username", adminUser.Username, "email", adminUser.Email)
 			} else {
 				return err
 			}

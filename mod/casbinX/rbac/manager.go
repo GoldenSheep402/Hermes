@@ -148,10 +148,10 @@ func (c *casbinManager) RemoveUserGlobalAdmin(userID string) error {
 }
 
 func (c *casbinManager) CheckUserIsGlobalAdmin(userID string) (bool, error) {
-	// Let's enforce if the user has wildcard "*" access on resource "*", action "*"
+	// Let's enforce if the user has wildcard "*" access on resource "*", action "invoke"
 	// which we can define as the "Admin" role policy
 	userString := rbacValues.UserIDPrefix(userID)
-	return c.Enforcer.Enforce(userString, "*", "*")
+	return c.Enforcer.Enforce(userString, "*", "invoke")
 }
 
 // SetupGlobalAdminPolicy seeds the DB with the wildcard policy for admins

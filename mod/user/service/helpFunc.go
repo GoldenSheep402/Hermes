@@ -1,11 +1,33 @@
 package service
 
-// func CheckPermission(ctx context.Context, id string) error {
-// 	isAdmin, err := userDao.User.IsAdmin(ctx, id)
-// 	if err != nil {
-// 		return nil, status.Error(codes.Internal, "Internal error")
-// 	}
-// 	if !isAdmin {
-// 		return nil, status.Error(codes.PermissionDenied, "Permission denied")
-// 	}
-// }
+import (
+	"github.com/GoldenSheep402/Hermes/mod/user/model"
+	userV1 "github.com/GoldenSheep402/Hermes/pkg/proto/user/v1"
+)
+
+// helper to convert model.User to userV1.User
+func convertUserModelToProto(u *model.User) *userV1.User {
+	if u == nil {
+		return nil
+	}
+	protoUser := &userV1.User{
+		Id:          u.ID,
+		Username:    u.Username,
+		Email:       u.Email,
+		Avatar:      u.Avatar,
+		IsAdmin:     u.IsAdmin,
+		IsEnabled:   u.IsEnabled,
+		GroupId:     u.GroupID,
+		BonusPoints: u.BonusPoints,
+		Uploaded:    u.Uploaded,
+		Downloaded:  u.Downloaded,
+		SeedTime:    u.SeedTime,
+		InviteCount: int32(u.InviteCount),
+		Passkey:     u.Passkey,
+		CreatedAt:   u.CreatedAt.String(),
+	}
+	if u.LastLogin != nil {
+		protoUser.LastLogin = u.LastLogin.String()
+	}
+	return protoUser
+}

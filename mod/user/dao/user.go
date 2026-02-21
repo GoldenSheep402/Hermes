@@ -4,11 +4,13 @@ import (
 	"context"
 	"errors"
 
-	"github.com/GoldenSheep402/Hermes/mod/user/model"
-	"github.com/GoldenSheep402/Hermes/pkg/stdao"
 	"github.com/oklog/ulid/v2"
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
+
+	"github.com/GoldenSheep402/Hermes/mod/user/model"
+	"github.com/GoldenSheep402/Hermes/pkg/stdao"
+	pageutil "github.com/GoldenSheep402/Hermes/pkg/utils/page"
 )
 
 var (
@@ -81,7 +83,7 @@ func (u *user) GetByID(ctx context.Context, uid string) (*model.User, error) {
 
 func (u *user) GetByEmail(ctx context.Context, email string) (*model.User, error) {
 	var user model.User
-	if err := u.DB().WithContext(ctx).Where("email = ?", email).First(&user).Error; err != nil {
+	if err := u.Std.GetTxFromCtx(ctx).WithContext(ctx).Where("email = ?", email).First(&user).Error; err != nil {
 		return nil, err
 	}
 	return &user, nil
@@ -89,7 +91,7 @@ func (u *user) GetByEmail(ctx context.Context, email string) (*model.User, error
 
 func (u *user) GetByPasskey(ctx context.Context, passkey string) (*model.User, error) {
 	var user model.User
-	if err := u.DB().WithContext(ctx).Where("passkey = ?", passkey).First(&user).Error; err != nil {
+	if err := u.Std.GetTxFromCtx(ctx).WithContext(ctx).Where("passkey = ?", passkey).First(&user).Error; err != nil {
 		return nil, err
 	}
 	return &user, nil
@@ -97,18 +99,30 @@ func (u *user) GetByPasskey(ctx context.Context, passkey string) (*model.User, e
 
 func (u *user) IsAdmin(ctx context.Context, uid string) (bool, error) {
 	var user model.User
-	if err := u.DB().WithContext(ctx).Where("id = ?", uid).First(&user).Error; err != nil {
+	if err := u.Std.GetTxFromCtx(ctx).WithContext(ctx).Where("id = ?", uid).First(&user).Error; err != nil {
 		return false, err
 	}
 	return user.IsAdmin, nil
 }
 
 func (u *user) UpdateInfo(ctx context.Context, _user *model.User) error {
-	return u.DB().WithContext(ctx).Model(&model.User{}).Where("id = ?", _user.ID).Updates(_user).Error
+	return u.Std.GetTxFromCtx(ctx).WithContext(ctx).Model(&model.User{}).Where("id = ?", _user.ID).Updates(_user).Error
 }
 
 func (u *user) GetList(ctx context.Context) ([]*model.User, error) {
 	var users []*model.User
 	err := u.GetTxFromCtx(ctx).Find(&users).Error
 	return users, err
+}
+
+func (u *user) GetListPaginated(ctx context.Context, page, pageSize int) ([]*model.User, int64, error) {
+	var users []*model.User
+	var total int64
+	tx := u.GetTxFromCtx(ctx).Model(&model.User{})
+	if err := tx.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+	p := pageutil.Paginate{Current: page, PageSize: pageSize}
+	err := tx.Scopes(p.Paginate()).Find(&users).Error
+	return users, total, err
 }

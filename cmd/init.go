@@ -1,18 +1,20 @@
 package cmd
 
 import (
+	"os"
+
+	"github.com/spf13/cobra"
+
 	"github.com/GoldenSheep402/Hermes/cmd/config"
 	"github.com/GoldenSheep402/Hermes/cmd/create"
 	"github.com/GoldenSheep402/Hermes/cmd/server"
-	"github.com/spf13/cobra"
-	"os"
 )
 
 var rootCmd = &cobra.Command{
-	Use:          "jframe",
+	Use:          "hermes",
 	SilenceUsage: true,
-	Short:        "jframe is a Golang framework with unlimited creativity",
-	Example:      "jframe server -c ./config.yaml",
+	Short:        "hermes is a Golang framework with unlimited creativity",
+	Example:      "hermes server -c ./config.yaml",
 }
 
 func init() {

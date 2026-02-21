@@ -6,26 +6,16 @@ import (
 )
 
 var (
-	Torrent         = &torrent{}
-	TorrentMetadata = &torrentMetadata{}
-	File            = &file{}
+	Torrent     = &torrent{}
+	TorrentFile = &torrentFile{}
 )
 
 func Init(db *gorm.DB, rds *redis.Client) error {
-	err := Torrent.Init(db)
-	if err != nil {
+	if err := Torrent.Init(db); err != nil {
 		return err
 	}
-
-	err = File.Init(db)
-	if err != nil {
+	if err := TorrentFile.Init(db); err != nil {
 		return err
 	}
-
-	err = TorrentMetadata.Init(db)
-	if err != nil {
-		return err
-	}
-
 	return nil
 }

@@ -4,190 +4,189 @@ option go_package = "github.com/GoldenSheep402/Hermes/pkg/proto/user/v1;userV1";
 
 import "google/api/annotations.proto";
 
+// ─── Messages ───────────────────────────────────────────────────────────────
+
 message User {
   string id = 1;
-  string name = 2;
-  string role = 3;
+  string username = 2;
+  string email = 3;
+  string avatar = 4;
+  bool isAdmin = 5;
+  bool isEnabled = 6;
+  string groupId = 7;
+  int64 bonusPoints = 8;
+  int64 uploaded = 9;
+  int64 downloaded = 10;
+  int64 seedTime = 11;
+  int32 inviteCount = 12;
+  string passkey = 13;
+  string lastLogin = 14;
+  string createdAt = 15;
 }
+
+message UserGroup {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+  int32 level = 4;
+  int64 minUpload = 5;
+  double minRatio = 6;
+  int64 minSeedTime = 7;
+  int32 maxDownloads = 8;
+  bool canUpload = 9;
+  bool canInvite = 10;
+  bool isImmuneToRatio = 11;
+  string color = 12;
+  string icon = 13;
+}
+
+// ─── Service ────────────────────────────────────────────────────────────────
 
 service UserService {
   rpc GetUser(GetUserRequest) returns (GetUserResponse) {
     option (google.api.http) = {
-      get: "/gapi/user/v1/info"
+      post : "/gapi/user/v1/info"
+      body : "*"
     };
   }
 
-  rpc GetUserInfo(GetUserInfoRequest) returns (GetUserInfoResponse) {
+  rpc GetUserProfile(GetUserProfileRequest) returns (GetUserProfileResponse) {
     option (google.api.http) = {
-      post: "/gapi/user/v1/info/full"
-      body: "*"
+      post : "/gapi/user/v1/profile"
+      body : "*"
     };
   }
 
   rpc UpdateUser(UpdateUserRequest) returns (UpdateUserResponse) {
     option (google.api.http) = {
-      put: "/gapi/user/v1/info"
-      body: "*"
+      put : "/gapi/user/v1/info"
+      body : "*"
     };
   }
 
   rpc UpdatePassword(UpdatePasswordRequest) returns (UpdatePasswordResponse) {
     option (google.api.http) = {
-      put: "/gapi/user/v1/password"
-      body: "*"
+      post : "/gapi/user/v1/password"
+      body : "*"
     };
   }
 
-  // GROUP
-  rpc CreateGroup(CreateGroupRequest) returns (CreateGroupResponse) {
+  rpc ResetPasskey(ResetPasskeyRequest) returns (ResetPasskeyResponse) {
     option (google.api.http) = {
-      post: "/gapi/group/v1/create"
-      body: "*"
+      post : "/gapi/user/v1/passkey/reset"
+      body : "*"
     };
   }
 
-  rpc GetGroup(GetGroupRequest) returns (GetGroupResponse) {
+  rpc GetUserPasskey(GetUserPasskeyRequest) returns (GetUserPasskeyResponse) {
     option (google.api.http) = {
-      post: "/gapi/group/v1/get"
-      body: "*"
+      post : "/gapi/user/v1/passkey"
+      body : "*"
     };
   }
 
-
-  rpc UpdateGroup(UpdateGroupRequest) returns (UpdateGroupResponse) {
+  rpc ListUsers(ListUsersRequest) returns (ListUsersResponse) {
     option (google.api.http) = {
-      post: "/gapi/group/v1/update"
-      body: "*"
+      post : "/gapi/user/v1/list"
+      body : "*"
     };
   }
 
-  rpc GroupAddUser(GroupAddUserRequest) returns (GroupAddUserResponse){
+  rpc CreateUserGroup(CreateUserGroupRequest)
+      returns (CreateUserGroupResponse) {
     option (google.api.http) = {
-      post: "/gapi/group/v1/user/add"
-      body: "*",
+      post : "/gapi/user/v1/group/create"
+      body : "*"
     };
   }
 
-  rpc GroupRemoveUser(GroupRemoveUserRequest) returns (GroupRemoveUserResponse){
+  rpc GetUserGroup(GetUserGroupRequest) returns (GetUserGroupResponse) {
     option (google.api.http) = {
-      post: "/gapi/group/v1/user/remove"
-      body: "*",
+      post : "/gapi/user/v1/group/get"
+      body : "*"
     };
   }
 
-  rpc GroupUserUpdate(GroupUserUpdateRequest) returns (GroupUserUpdateResponse){
-    option(google.api.http) = {
-      post: "/gapi/group/v1/user/update"
-      body: "*",
-    };
-  }
-
-  rpc GetUserPassKey(GetUserPassKeyRequest) returns (GetUserPassKeyResponse) {
+  rpc ListUserGroups(ListUserGroupsRequest) returns (ListUserGroupsResponse) {
     option (google.api.http) = {
-      post: "/gapi/user/v1/passkey"
-      body: "*"
+      post : "/gapi/user/v1/group/list"
+      body : "*"
+    };
+  }
+
+  rpc UpdateUserGroup(UpdateUserGroupRequest)
+      returns (UpdateUserGroupResponse) {
+    option (google.api.http) = {
+      post : "/gapi/user/v1/group/update"
+      body : "*"
+    };
+  }
+
+  rpc DeleteUserGroup(DeleteUserGroupRequest)
+      returns (DeleteUserGroupResponse) {
+    option (google.api.http) = {
+      post : "/gapi/user/v1/group/delete"
+      body : "*"
     };
   }
 }
 
-message GetUserRequest {
-  string id = 1;
-}
+// ─── User Requests/Responses ────────────────────────────────────────────────
 
-message GetUserResponse {
+message GetUserRequest {}
+message GetUserResponse { User user = 1; }
+
+message GetUserProfileRequest { string id = 1; }
+message GetUserProfileResponse {
   User user = 1;
-}
-
-message GetUserInfoRequest {
-  string id = 1;
-}
-message GetUserInfoResponse {
-  string name = 1;
-  string email = 2;
-  int32  download = 3;
-  int32  upload = 4;
-  int32  torrentPublished = 5;
-  int32  torrentDownloaded = 6;
-  int32  torrentSeeding = 7;
-  string key = 8;
+  int64 realUpload = 2;
+  int64 realDownload = 3;
+  double ratio = 4;
+  int32 publishedCount = 5;
+  int32 seedingCount = 6;
+  int32 downloadCount = 7;
 }
 
 message UpdateUserRequest {
-  User user = 1;
+  string username = 1;
+  string avatar = 2;
 }
-
-message UpdateUserResponse {
-  User user = 1;
-}
+message UpdateUserResponse { User user = 1; }
 
 message UpdatePasswordRequest {
   string oldPassword = 1;
   string newPassword = 2;
 }
-
 message UpdatePasswordResponse {}
 
-// GROUP
-message Group {
-  string id = 1;
-  string name = 2;
-  string description = 3;
-  repeated GroupMetaData metaData = 4;
+message ResetPasskeyRequest {}
+message ResetPasskeyResponse { string passkey = 1; }
+
+message GetUserPasskeyRequest {}
+message GetUserPasskeyResponse { string passkey = 1; }
+
+message ListUsersRequest {
+  int32 page = 1;
+  int32 pageSize = 2;
+}
+message ListUsersResponse {
+  repeated User users = 1;
+  int64 total = 2;
 }
 
-message GroupMetaData {
-  string groupMetaDataOriginalID = 1;
-  string id = 2;
-  string key = 3;
-  int32  order = 4;
-  string description = 5;
-  string type = 6;
-  string value = 7;
-  string defaultValue = 8;
-}
+// ─── UserGroup Requests/Responses ───────────────────────────────────────────
 
-message CreateGroupRequest {
-  Group group = 1;
-}
-message CreateGroupResponse {}
+message CreateUserGroupRequest { UserGroup group = 1; }
+message CreateUserGroupResponse {}
 
-message GetGroupRequest {
-  string id = 1;
-}
+message GetUserGroupRequest { string id = 1; }
+message GetUserGroupResponse { UserGroup group = 1; }
 
-message GetGroupResponse {
-  Group group = 1;
-}
+message ListUserGroupsRequest {}
+message ListUserGroupsResponse { repeated UserGroup groups = 1; }
 
-message UpdateGroupRequest {
-  Group group = 1;
-}
-message UpdateGroupResponse {}
+message UpdateUserGroupRequest { UserGroup group = 1; }
+message UpdateUserGroupResponse {}
 
-message GroupAddUserRequest {
-  string userId = 1;
-  string groupId = 2;
-  repeated GroupMetaData metaData = 3;
-}
-
-message GroupAddUserResponse {}
-
-message  GroupRemoveUserRequest {
-  string userId = 1;
-  string groupId = 2;
-}
-message GroupRemoveUserResponse {}
-
-message GroupUserUpdateRequest {
-  string userId = 1;
-  string groupId = 2;
-  repeated GroupMetaData metaData = 3;
-}
-message GroupUserUpdateResponse {}
-
-message GetUserPassKeyRequest {
-  string id = 1;
-}
-message GetUserPassKeyResponse {
-  string passKey = 1;
-}
+message DeleteUserGroupRequest { string id = 1; }
+message DeleteUserGroupResponse {}

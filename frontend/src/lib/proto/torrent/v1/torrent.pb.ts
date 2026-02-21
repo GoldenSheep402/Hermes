@@ -5,78 +5,82 @@
 */
 
 import * as fm from "../../fetch.pb"
-export type Torrent = {
-  data?: Uint8Array
+export type TorrentInfo = {
+  id?: string
+  infoHash?: string
+  uploaderId?: string
+  name?: string
+  size?: string
+  isSingleFile?: boolean
+  fileCount?: number
+  seedCount?: number
+  leechCount?: number
+  snatchCount?: number
+  isActive?: boolean
+  createdAt?: string
 }
 
-export type TorrentMetaData = {
+export type TorrentFile = {
   id?: string
-  categoryId?: string
   torrentId?: string
-  key?: string
-  order?: number
-  description?: string
-  type?: string
-  value?: string
+  path?: string
+  size?: string
 }
 
-export type GetTorrentV1Request = {
+export type UploadTorrentRequest = {
+  torrentData?: Uint8Array
+}
+
+export type UploadTorrentResponse = {
+  torrentId?: string
+  infoHash?: string
+}
+
+export type DownloadTorrentRequest = {
+  torrentId?: string
+}
+
+export type DownloadTorrentResponse = {
+  torrentData?: Uint8Array
+}
+
+export type GetTorrentRequest = {
   id?: string
 }
 
-export type GetTorrentV1Response = {
-  metadata?: TorrentMetaData[]
+export type GetTorrentResponse = {
+  torrent?: TorrentInfo
 }
 
-export type GetTorrentV1ListRequest = {
-  categoryId?: string
-  id?: string
-  limit?: string
+export type ListTorrentFilesRequest = {
+  torrentId?: string
 }
 
-export type GetTorrentV1ListResponse = {
-  torrents?: TorrentBasic[]
+export type ListTorrentFilesResponse = {
+  files?: TorrentFile[]
 }
 
-export type TorrentBasic = {
-  id?: string
-  name?: string
-  description?: string
-  categoryId?: string
-  categoryName?: string
-}
-
-export type CreateTorrentV1Request = {
-  categoryId?: string
-  name?: string
-  comment?: string
-  metadata?: TorrentMetaData[]
-  torrent?: Torrent
-}
-
-export type CreateTorrentV1Response = {
+export type DeleteTorrentRequest = {
   id?: string
 }
 
-export type DownloadTorrentV1Request = {
-  id?: string
-}
-
-export type DownloadTorrentV1Response = {
-  data?: string
+export type DeleteTorrentResponse = {
 }
 
 export class TorrentService {
-  static GetTorrentV1(req: GetTorrentV1Request, initReq?: fm.InitReq): Promise<GetTorrentV1Response> {
-    return fm.fetchReq<GetTorrentV1Request, GetTorrentV1Response>(`/gapi/torrent/v1/info/v1`, {...initReq, method: "POST", body: JSON.stringify(req, fm.replacer)})
+  static UploadTorrent(req: UploadTorrentRequest, initReq?: fm.InitReq): Promise<UploadTorrentResponse> {
+    return fm.fetchReq<UploadTorrentRequest, UploadTorrentResponse>(`/gapi/torrent/v1/upload`, {...initReq, method: "POST", body: JSON.stringify(req, fm.replacer)})
   }
-  static GetTorrentV1List(req: GetTorrentV1ListRequest, initReq?: fm.InitReq): Promise<GetTorrentV1ListResponse> {
-    return fm.fetchReq<GetTorrentV1ListRequest, GetTorrentV1ListResponse>(`/gapi/torrent/v1/list/v1`, {...initReq, method: "POST", body: JSON.stringify(req, fm.replacer)})
+  static DownloadTorrent(req: DownloadTorrentRequest, initReq?: fm.InitReq): Promise<DownloadTorrentResponse> {
+    return fm.fetchReq<DownloadTorrentRequest, DownloadTorrentResponse>(`/gapi/torrent/v1/download`, {...initReq, method: "POST", body: JSON.stringify(req, fm.replacer)})
   }
-  static CreateTorrentV1(req: CreateTorrentV1Request, initReq?: fm.InitReq): Promise<CreateTorrentV1Response> {
-    return fm.fetchReq<CreateTorrentV1Request, CreateTorrentV1Response>(`/gapi/torrent/v1/create/v1`, {...initReq, method: "POST", body: JSON.stringify(req, fm.replacer)})
+  static GetTorrent(req: GetTorrentRequest, initReq?: fm.InitReq): Promise<GetTorrentResponse> {
+    return fm.fetchReq<GetTorrentRequest, GetTorrentResponse>(`/gapi/torrent/v1/info`, {...initReq, method: "POST", body: JSON.stringify(req, fm.replacer)})
   }
-  static DownloadTorrentV1(req: DownloadTorrentV1Request, initReq?: fm.InitReq): Promise<DownloadTorrentV1Response> {
-    return fm.fetchReq<DownloadTorrentV1Request, DownloadTorrentV1Response>(`/gapi/torrent/v1/download/v1`, {...initReq, method: "POST", body: JSON.stringify(req, fm.replacer)})
+  static ListTorrentFiles(req: ListTorrentFilesRequest, initReq?: fm.InitReq): Promise<ListTorrentFilesResponse> {
+    return fm.fetchReq<ListTorrentFilesRequest, ListTorrentFilesResponse>(`/gapi/torrent/v1/files`, {...initReq, method: "POST", body: JSON.stringify(req, fm.replacer)})
+  }
+  static DeleteTorrent(req: DeleteTorrentRequest, initReq?: fm.InitReq): Promise<DeleteTorrentResponse> {
+    return fm.fetchReq<DeleteTorrentRequest, DeleteTorrentResponse>(`/gapi/torrent/v1/delete`, {...initReq, method: "POST", body: JSON.stringify(req, fm.replacer)})
   }
 }

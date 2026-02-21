@@ -16,6 +16,70 @@
     "application/json"
   ],
   "paths": {
+    "/gapi/system/v1/setting/delete": {
+      "post": {
+        "operationId": "SystemService_DeleteSetting",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1DeleteSettingResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1DeleteSettingRequest"
+            }
+          }
+        ],
+        "tags": [
+          "SystemService"
+        ]
+      }
+    },
+    "/gapi/system/v1/setting/get": {
+      "post": {
+        "operationId": "SystemService_GetSetting",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GetSettingResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1GetSettingRequest"
+            }
+          }
+        ],
+        "tags": [
+          "SystemService"
+        ]
+      }
+    },
     "/gapi/system/v1/settings/get": {
       "post": {
         "operationId": "SystemService_GetSettings",
@@ -79,6 +143,38 @@
           "SystemService"
         ]
       }
+    },
+    "/gapi/system/v1/stats": {
+      "post": {
+        "operationId": "SystemService_GetSiteStats",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GetSiteStatsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1GetSiteStatsRequest"
+            }
+          }
+        ],
+        "tags": [
+          "SystemService"
+        ]
+      }
     }
   },
   "definitions": {
@@ -110,6 +206,33 @@
         }
       }
     },
+    "v1DeleteSettingRequest": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "type": "string"
+        }
+      }
+    },
+    "v1DeleteSettingResponse": {
+      "type": "object"
+    },
+    "v1GetSettingRequest": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "type": "string"
+        }
+      }
+    },
+    "v1GetSettingResponse": {
+      "type": "object",
+      "properties": {
+        "setting": {
+          "$ref": "#/definitions/v1Setting"
+        }
+      }
+    },
     "v1GetSettingsRequest": {
       "type": "object"
     },
@@ -117,24 +240,43 @@
       "type": "object",
       "properties": {
         "settings": {
-          "$ref": "#/definitions/v1Settings"
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1Setting"
+          }
         }
       }
     },
-    "v1InnetTracker": {
+    "v1GetSiteStatsRequest": {
+      "type": "object"
+    },
+    "v1GetSiteStatsResponse": {
       "type": "object",
       "properties": {
-        "id": {
-          "type": "string"
+        "totalUsers": {
+          "type": "string",
+          "format": "int64"
         },
-        "addr": {
-          "type": "string"
+        "totalTorrents": {
+          "type": "string",
+          "format": "int64"
         },
-        "enable": {
-          "type": "boolean"
+        "totalResources": {
+          "type": "string",
+          "format": "int64"
         },
-        "toBeDeleted": {
-          "type": "boolean"
+        "totalTraffic": {
+          "type": "string",
+          "format": "int64"
+        },
+        "totalSeeders": {
+          "type": "string",
+          "format": "int64"
+        },
+        "totalLeechers": {
+          "type": "string",
+          "format": "int64"
         }
       }
     },
@@ -142,57 +284,31 @@
       "type": "object",
       "properties": {
         "settings": {
-          "$ref": "#/definitions/v1Settings"
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1Setting"
+          }
         }
       }
     },
     "v1SetSettingsResponse": {
       "type": "object"
     },
-    "v1Settings": {
+    "v1Setting": {
       "type": "object",
       "properties": {
-        "peerExpireTime": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "allowedNets": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "smtpEnable": {
-          "type": "boolean"
-        },
-        "smtpHost": {
+        "key": {
           "type": "string"
         },
-        "smtpPort": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "smtpUser": {
+        "value": {
           "type": "string"
         },
-        "smtpPassword": {
+        "type": {
           "type": "string"
         },
-        "registerEnable": {
-          "type": "boolean"
-        },
-        "loginEnable": {
-          "type": "boolean"
-        },
-        "publishEnable": {
-          "type": "boolean"
-        },
-        "innetTracker": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "$ref": "#/definitions/v1InnetTracker"
-          }
+        "desc": {
+          "type": "string"
         }
       }
     }

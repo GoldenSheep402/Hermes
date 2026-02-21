@@ -16,14 +16,14 @@
     "application/json"
   ],
   "paths": {
-    "/gapi/trackerV1/v1/status": {
+    "/gapi/tracker/v1/peers": {
       "post": {
-        "operationId": "TrackerService_GetTorrentDownloadingStatus",
+        "operationId": "TrackerService_GetTorrentPeers",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1GetTorrentDownloadingStatusResponse"
+              "$ref": "#/definitions/v1GetTorrentPeersResponse"
             }
           },
           "default": {
@@ -39,7 +39,71 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/v1GetTorrentDownloadingStatusRequest"
+              "$ref": "#/definitions/v1GetTorrentPeersRequest"
+            }
+          }
+        ],
+        "tags": [
+          "TrackerService"
+        ]
+      }
+    },
+    "/gapi/tracker/v1/snatches": {
+      "post": {
+        "operationId": "TrackerService_ListSnatches",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ListSnatchesResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1ListSnatchesRequest"
+            }
+          }
+        ],
+        "tags": [
+          "TrackerService"
+        ]
+      }
+    },
+    "/gapi/tracker/v1/user/snatches": {
+      "post": {
+        "operationId": "TrackerService_GetUserSnatches",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GetUserSnatchesResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1GetUserSnatchesRequest"
             }
           }
         ],
@@ -78,7 +142,7 @@
         }
       }
     },
-    "v1GetTorrentDownloadingStatusRequest": {
+    "v1GetTorrentPeersRequest": {
       "type": "object",
       "properties": {
         "torrentId": {
@@ -86,20 +150,145 @@
         }
       }
     },
-    "v1GetTorrentDownloadingStatusResponse": {
+    "v1GetTorrentPeersResponse": {
       "type": "object",
       "properties": {
-        "downloading": {
+        "seederCount": {
           "type": "integer",
           "format": "int32"
         },
-        "finished": {
+        "leecherCount": {
           "type": "integer",
           "format": "int32"
         },
-        "seeding": {
+        "seeders": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1PeerInfo"
+          }
+        },
+        "leechers": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1PeerInfo"
+          }
+        }
+      }
+    },
+    "v1GetUserSnatchesRequest": {
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string"
+        },
+        "page": {
           "type": "integer",
           "format": "int32"
+        },
+        "pageSize": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "v1GetUserSnatchesResponse": {
+      "type": "object",
+      "properties": {
+        "snatches": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1SnatchInfo"
+          }
+        },
+        "total": {
+          "type": "string",
+          "format": "int64"
+        }
+      }
+    },
+    "v1ListSnatchesRequest": {
+      "type": "object",
+      "properties": {
+        "torrentId": {
+          "type": "string"
+        },
+        "page": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "pageSize": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "v1ListSnatchesResponse": {
+      "type": "object",
+      "properties": {
+        "snatches": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1SnatchInfo"
+          }
+        },
+        "total": {
+          "type": "string",
+          "format": "int64"
+        }
+      }
+    },
+    "v1PeerInfo": {
+      "type": "object",
+      "properties": {
+        "peerId": {
+          "type": "string",
+          "format": "byte"
+        },
+        "ip": {
+          "type": "string"
+        },
+        "port": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "v1SnatchInfo": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "torrentId": {
+          "type": "string"
+        },
+        "userId": {
+          "type": "string"
+        },
+        "uploaded": {
+          "type": "string",
+          "format": "int64"
+        },
+        "downloaded": {
+          "type": "string",
+          "format": "int64"
+        },
+        "seedTime": {
+          "type": "string",
+          "format": "int64"
+        },
+        "isActive": {
+          "type": "boolean"
+        },
+        "finishedAt": {
+          "type": "string"
+        },
+        "lastAction": {
+          "type": "string"
         }
       }
     }

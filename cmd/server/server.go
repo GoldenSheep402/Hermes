@@ -2,19 +2,21 @@ package server
 
 import (
 	"fmt"
+	"net"
+	"os"
+	"os/signal"
+	"syscall"
+
+	"github.com/soheilhy/cmux"
+	"github.com/spf13/cobra"
+	"go.uber.org/zap/zapcore"
+
 	"github.com/GoldenSheep402/Hermes/cmd/server/modList"
 	"github.com/GoldenSheep402/Hermes/conf"
 	"github.com/GoldenSheep402/Hermes/core/kernel"
 	"github.com/GoldenSheep402/Hermes/core/logx"
 	"github.com/GoldenSheep402/Hermes/pkg/ip"
 	"github.com/GoldenSheep402/Hermes/pkg/sentry"
-	"github.com/soheilhy/cmux"
-	"github.com/spf13/cobra"
-	"go.uber.org/zap/zapcore"
-	"net"
-	"os"
-	"os/signal"
-	"syscall"
 )
 
 var log = logx.NameSpace("cmd.server")
@@ -24,7 +26,7 @@ var (
 	StartCmd   = &cobra.Command{
 		Use:     "server",
 		Short:   "Start server",
-		Example: "jframe server -c ./config.yaml",
+		Example: "hermes server -c ./config.yaml",
 		Run: func(cmd *cobra.Command, args []string) {
 			log.Info("loading config...")
 			fmt.Printf("config path at:%s\n", configPath)

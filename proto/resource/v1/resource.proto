@@ -1,0 +1,165 @@
+syntax = "proto3";
+package resource.v1;
+option go_package = "github.com/GoldenSheep402/Hermes/pkg/proto/resource/v1;resourceV1";
+
+import "google/api/annotations.proto";
+
+// ─── Messages ───────────────────────────────────────────────────────────────
+
+message Resource {
+  string id = 1;
+  string title = 2;
+  string subtitle = 3;
+  string description = 4;
+  string categoryId = 5;
+  string torrentId = 6;
+  string uploaderId = 7;
+  int32 status = 8;
+  bool isSticky = 9;
+  bool isFree = 10;
+  string freeUntil = 11;
+  bool doubleUpload = 12;
+  string doubleUntil = 13;
+  int32 viewCount = 14;
+  int32 commentCount = 15;
+  int32 thankCount = 16;
+  string createdAt = 17;
+  string updatedAt = 18;
+  string uploaderName = 19;
+  string categoryName = 20;
+  int64 torrentSize = 21;
+  int32 seedCount = 22;
+  int32 leechCount = 23;
+  int32 snatchCount = 24;
+  repeated ResourceMeta metadata = 30;
+  repeated Tag tags = 31;
+  repeated ResourceScreenshot screenshots = 32;
+}
+
+message ResourceMeta {
+  string id = 1;
+  string key = 2;
+  string value = 3;
+}
+
+message Tag {
+  string id = 1;
+  string name = 2;
+}
+
+message ResourceScreenshot {
+  string id = 1;
+  string url = 2;
+  int32 sortOrder = 3;
+}
+
+// ─── Service ────────────────────────────────────────────────────────────────
+
+service ResourceService {
+  rpc CreateResource(CreateResourceRequest) returns (CreateResourceResponse) {
+    option (google.api.http) = {
+      post : "/gapi/resource/v1/create"
+      body : "*"
+    };
+  }
+
+  rpc GetResource(GetResourceRequest) returns (GetResourceResponse) {
+    option (google.api.http) = {
+      post : "/gapi/resource/v1/info"
+      body : "*"
+    };
+  }
+
+  rpc ListResources(ListResourcesRequest) returns (ListResourcesResponse) {
+    option (google.api.http) = {
+      post : "/gapi/resource/v1/list"
+      body : "*"
+    };
+  }
+
+  rpc UpdateResource(UpdateResourceRequest) returns (UpdateResourceResponse) {
+    option (google.api.http) = {
+      post : "/gapi/resource/v1/update"
+      body : "*"
+    };
+  }
+
+  rpc DeleteResource(DeleteResourceRequest) returns (DeleteResourceResponse) {
+    option (google.api.http) = {
+      post : "/gapi/resource/v1/delete"
+      body : "*"
+    };
+  }
+
+  rpc ThankResource(ThankResourceRequest) returns (ThankResourceResponse) {
+    option (google.api.http) = {
+      post : "/gapi/resource/v1/thank"
+      body : "*"
+    };
+  }
+
+  rpc SetPromotion(SetPromotionRequest) returns (SetPromotionResponse) {
+    option (google.api.http) = {
+      post : "/gapi/resource/v1/promotion"
+      body : "*"
+    };
+  }
+}
+
+// ─── Requests / Responses ───────────────────────────────────────────────────
+
+message CreateResourceRequest {
+  string title = 1;
+  string subtitle = 2;
+  string description = 3;
+  string categoryId = 4;
+  bytes torrentData = 5;
+  repeated ResourceMeta metadata = 6;
+  repeated string tagNames = 7;
+  repeated string screenshotUrls = 8;
+}
+message CreateResourceResponse { string id = 1; }
+
+message GetResourceRequest { string id = 1; }
+message GetResourceResponse { Resource resource = 1; }
+
+message ListResourcesRequest {
+  string categoryId = 1;
+  string keyword = 2;
+  int32 status = 3;
+  int32 page = 10;
+  int32 pageSize = 11;
+  string sortBy = 12;
+  string sortOrder = 13;
+}
+message ListResourcesResponse {
+  repeated Resource resources = 1;
+  int64 total = 2;
+}
+
+message UpdateResourceRequest {
+  string id = 1;
+  string title = 2;
+  string subtitle = 3;
+  string description = 4;
+  string categoryId = 5;
+  repeated ResourceMeta metadata = 6;
+  repeated string tagNames = 7;
+  repeated string screenshotUrls = 8;
+}
+message UpdateResourceResponse {}
+
+message DeleteResourceRequest { string id = 1; }
+message DeleteResourceResponse {}
+
+message ThankResourceRequest { string resourceId = 1; }
+message ThankResourceResponse {}
+
+message SetPromotionRequest {
+  string resourceId = 1;
+  bool isFree = 2;
+  string freeUntil = 3;
+  bool doubleUpload = 4;
+  string doubleUntil = 5;
+}
+message SetPromotionResponse {}

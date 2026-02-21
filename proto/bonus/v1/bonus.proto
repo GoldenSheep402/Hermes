@@ -4,5 +4,60 @@ option go_package = "github.com/GoldenSheep402/Hermes/pkg/proto/bonus/v1;bonusV1
 
 import "google/api/annotations.proto";
 
-service BonusService{
+// ─── Messages ───────────────────────────────────────────────────────────────
+
+message BonusLogItem {
+  string id = 1;
+  string userId = 2;
+  int64 amount = 3;
+  string reason = 4;
+  string description = 5;
+  string relatedId = 6;
+  string createdAt = 7;
 }
+
+// ─── Service ────────────────────────────────────────────────────────────────
+
+service BonusService {
+  rpc GetBonusBalance(GetBonusBalanceRequest)
+      returns (GetBonusBalanceResponse) {
+    option (google.api.http) = {
+      post : "/gapi/bonus/v1/balance"
+      body : "*"
+    };
+  }
+
+  rpc ListBonusLogs(ListBonusLogsRequest) returns (ListBonusLogsResponse) {
+    option (google.api.http) = {
+      post : "/gapi/bonus/v1/logs"
+      body : "*"
+    };
+  }
+
+  rpc ExchangeBonus(ExchangeBonusRequest) returns (ExchangeBonusResponse) {
+    option (google.api.http) = {
+      post : "/gapi/bonus/v1/exchange"
+      body : "*"
+    };
+  }
+}
+
+// ─── Requests / Responses ───────────────────────────────────────────────────
+
+message GetBonusBalanceRequest {}
+message GetBonusBalanceResponse { int64 balance = 1; }
+
+message ListBonusLogsRequest {
+  int32 page = 1;
+  int32 pageSize = 2;
+}
+message ListBonusLogsResponse {
+  repeated BonusLogItem logs = 1;
+  int64 total = 2;
+}
+
+message ExchangeBonusRequest {
+  int64 amount = 1;
+  string target = 2;
+}
+message ExchangeBonusResponse { int64 remainingBalance = 1; }

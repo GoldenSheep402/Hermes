@@ -4,88 +4,125 @@ option go_package = "github.com/GoldenSheep402/Hermes/pkg/proto/category/v1;cate
 
 import "google/api/annotations.proto";
 
+// ─── Messages ───────────────────────────────────────────────────────────────
+
+message Category {
+  string id = 1;
+  string name = 2;
+  string slug = 3;
+  string description = 4;
+  string parentId = 5;
+  string icon = 6;
+  int32 sortOrder = 7;
+  bool isEnabled = 8;
+  repeated CategoryMetaTemplate metaTemplates = 9;
+  repeated Category children = 10;
+}
+
+message CategoryMetaTemplate {
+  string id = 1;
+  string categoryId = 2;
+  string key = 3;
+  string label = 4;
+  string type = 5;
+  bool required = 6;
+  string options = 7;
+  int32 sortOrder = 8;
+  string defaultValue = 9;
+}
+
+// ─── Service ────────────────────────────────────────────────────────────────
+
 service CategoryService {
   rpc CreateCategory(CreateCategoryRequest) returns (CreateCategoryResponse) {
     option (google.api.http) = {
-      post: "/gapi/category/v1/info"
-      body: "*"
+      post : "/gapi/category/v1/create"
+      body : "*"
     };
   }
 
   rpc GetCategory(GetCategoryRequest) returns (GetCategoryResponse) {
     option (google.api.http) = {
-      get: "/gapi/category/v1/info"
+      post : "/gapi/category/v1/info"
+      body : "*"
     };
   }
 
-  rpc GetCategoryList(GetCategoryListRequest) returns (GetCategoryListResponse) {
+  rpc ListCategories(ListCategoriesRequest) returns (ListCategoriesResponse) {
     option (google.api.http) = {
-      post: "/gapi/category/v1/list"
-      body: "*"
+      post : "/gapi/category/v1/list"
+      body : "*"
     };
   }
 
   rpc UpdateCategory(UpdateCategoryRequest) returns (UpdateCategoryResponse) {
     option (google.api.http) = {
-      post: "/gapi/category/v1/update"
-      body: "*"
+      post : "/gapi/category/v1/update"
+      body : "*"
     };
   }
 
   rpc DeleteCategory(DeleteCategoryRequest) returns (DeleteCategoryResponse) {
     option (google.api.http) = {
-      post: "/gapi/category/v1/delete"
-      body: "*"
+      post : "/gapi/category/v1/delete"
+      body : "*"
     };
   }
 
+  rpc CreateMetaTemplate(CreateMetaTemplateRequest)
+      returns (CreateMetaTemplateResponse) {
+    option (google.api.http) = {
+      post : "/gapi/category/v1/meta/create"
+      body : "*"
+    };
+  }
+
+  rpc UpdateMetaTemplate(UpdateMetaTemplateRequest)
+      returns (UpdateMetaTemplateResponse) {
+    option (google.api.http) = {
+      post : "/gapi/category/v1/meta/update"
+      body : "*"
+    };
+  }
+
+  rpc DeleteMetaTemplate(DeleteMetaTemplateRequest)
+      returns (DeleteMetaTemplateResponse) {
+    option (google.api.http) = {
+      post : "/gapi/category/v1/meta/delete"
+      body : "*"
+    };
+  }
 }
 
-message Category {
-  string id = 1;
-  string name = 2;
-  string description = 3;
-  repeated CategoryMetaData metaData = 4;
-}
-message CategoryMetaData {
-  string id = 1;
-  string categoryId = 2;
-  string key = 3;
-  int32  order = 4;
-  string description = 5;
-  string type = 6;
-  string value = 7;
-  string defaultValue = 8;
-}
+// ─── Requests / Responses ───────────────────────────────────────────────────
 
-// GetCategory
-message GetCategoryRequest {
-  string id = 1;
-}
-message GetCategoryResponse {
-  Category category = 1;
-}
-
-// GetCategory
-message GetCategoryListRequest {}
-message GetCategoryListResponse {
-  repeated Category category = 1;
-}
-
-// CreateCategory
 message CreateCategoryRequest {
-  Category category = 1;
+  string name = 1;
+  string slug = 2;
+  string description = 3;
+  string parentId = 4;
+  string icon = 5;
+  int32 sortOrder = 6;
 }
-message CreateCategoryResponse {}
+message CreateCategoryResponse { string id = 1; }
 
-// UpdateCategory
-message UpdateCategoryRequest {
-  Category category = 1;
-}
+message GetCategoryRequest { string id = 1; }
+message GetCategoryResponse { Category category = 1; }
+
+message ListCategoriesRequest {}
+message ListCategoriesResponse { repeated Category categories = 1; }
+
+message UpdateCategoryRequest { Category category = 1; }
 message UpdateCategoryResponse {}
 
-// DeleteCategory
-message DeleteCategoryRequest {
-  string id = 1;
-}
+message DeleteCategoryRequest { string id = 1; }
 message DeleteCategoryResponse {}
+
+message CreateMetaTemplateRequest { CategoryMetaTemplate template = 1; }
+message CreateMetaTemplateResponse { string id = 1; }
+
+message UpdateMetaTemplateRequest { CategoryMetaTemplate template = 1; }
+message UpdateMetaTemplateResponse {}
+
+message DeleteMetaTemplateRequest { string id = 1; }
+message DeleteMetaTemplateResponse {}

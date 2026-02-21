@@ -2,6 +2,7 @@ package category
 
 import (
 	"errors"
+
 	"github.com/GoldenSheep402/Hermes/core/kernel"
 	"github.com/GoldenSheep402/Hermes/mod/category/dao"
 	"github.com/GoldenSheep402/Hermes/mod/category/service"
@@ -15,7 +16,7 @@ import (
 var _ kernel.Module = (*Mod)(nil)
 
 type Mod struct {
-	kernel.UnimplementedModule // 请为所有Module引入UnimplementedModule
+	kernel.UnimplementedModule
 }
 
 func (m *Mod) Name() string {
@@ -46,8 +47,7 @@ func (m *Mod) Load(h *kernel.Hub) error {
 	categoryV1.RegisterCategoryServiceServer(&GRPC, &service.S{
 		Log: h.Log.Named("category.service"),
 	})
-	err := gw.Register(categoryV1.RegisterCategoryServiceHandler)
-	if err != nil {
+	if err := gw.Register(categoryV1.RegisterCategoryServiceHandler); err != nil {
 		h.Log.Fatalw("failed to register", "error", err)
 	}
 

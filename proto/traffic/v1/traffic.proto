@@ -1,0 +1,82 @@
+syntax = "proto3";
+package traffic.v1;
+option go_package = "github.com/GoldenSheep402/Hermes/pkg/proto/traffic/v1;trafficV1";
+
+import "google/api/annotations.proto";
+
+// ─── Messages ───────────────────────────────────────────────────────────────
+
+message UserTrafficInfo {
+  string userId = 1;
+  int64 realUpload = 2;
+  int64 realDownload = 3;
+  int64 bonusUpload = 4;
+  int64 bonusDownload = 5;
+  double ratio = 6;
+}
+
+message TransferHistoryItem {
+  string id = 1;
+  string torrentId = 2;
+  string torrentName = 3;
+  int64 uploaded = 4;
+  int64 downloaded = 5;
+  int64 seedTime = 6;
+  bool isFinished = 7;
+  bool isActive = 8;
+  string lastAction = 9;
+}
+
+message TorrentStatsInfo {
+  string torrentId = 1;
+  int32 seedCount = 2;
+  int32 leechCount = 3;
+  int32 snatchCount = 4;
+  int64 totalUpload = 5;
+  int64 totalDownload = 6;
+}
+
+// ─── Service ────────────────────────────────────────────────────────────────
+
+service TrafficService {
+  rpc GetUserTraffic(GetUserTrafficRequest) returns (GetUserTrafficResponse) {
+    option (google.api.http) = {
+      post : "/gapi/traffic/v1/user"
+      body : "*"
+    };
+  }
+
+  rpc ListTransferHistory(ListTransferHistoryRequest)
+      returns (ListTransferHistoryResponse) {
+    option (google.api.http) = {
+      post : "/gapi/traffic/v1/history"
+      body : "*"
+    };
+  }
+
+  rpc GetTorrentStats(GetTorrentStatsRequest)
+      returns (GetTorrentStatsResponse) {
+    option (google.api.http) = {
+      post : "/gapi/traffic/v1/torrent"
+      body : "*"
+    };
+  }
+}
+
+// ─── Requests / Responses ───────────────────────────────────────────────────
+
+message GetUserTrafficRequest { string userId = 1; }
+message GetUserTrafficResponse { UserTrafficInfo traffic = 1; }
+
+message ListTransferHistoryRequest {
+  string userId = 1;
+  int32 page = 2;
+  int32 pageSize = 3;
+}
+message ListTransferHistoryResponse {
+  repeated TransferHistoryItem items = 1;
+  int64 total = 2;
+}
+
+message GetTorrentStatsRequest { string torrentId = 1; }
+message GetTorrentStatsResponse { TorrentStatsInfo stats = 1; }

@@ -16,6 +16,38 @@
     "application/json"
   ],
   "paths": {
+    "/gapi/category/v1/create": {
+      "post": {
+        "operationId": "CategoryService_CreateCategory",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1CreateCategoryResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1CreateCategoryRequest"
+            }
+          }
+        ],
+        "tags": [
+          "CategoryService"
+        ]
+      }
+    },
     "/gapi/category/v1/delete": {
       "post": {
         "operationId": "CategoryService_DeleteCategory",
@@ -49,7 +81,7 @@
       }
     },
     "/gapi/category/v1/info": {
-      "get": {
+      "post": {
         "operationId": "CategoryService_GetCategory",
         "responses": {
           "200": {
@@ -67,39 +99,11 @@
         },
         "parameters": [
           {
-            "name": "id",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          }
-        ],
-        "tags": [
-          "CategoryService"
-        ]
-      },
-      "post": {
-        "operationId": "CategoryService_CreateCategory",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1CreateCategoryResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
             "name": "body",
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/v1CreateCategoryRequest"
+              "$ref": "#/definitions/v1GetCategoryRequest"
             }
           }
         ],
@@ -110,12 +114,12 @@
     },
     "/gapi/category/v1/list": {
       "post": {
-        "operationId": "CategoryService_GetCategoryList",
+        "operationId": "CategoryService_ListCategories",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1GetCategoryListResponse"
+              "$ref": "#/definitions/v1ListCategoriesResponse"
             }
           },
           "default": {
@@ -131,7 +135,103 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/v1GetCategoryListRequest"
+              "$ref": "#/definitions/v1ListCategoriesRequest"
+            }
+          }
+        ],
+        "tags": [
+          "CategoryService"
+        ]
+      }
+    },
+    "/gapi/category/v1/meta/create": {
+      "post": {
+        "operationId": "CategoryService_CreateMetaTemplate",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1CreateMetaTemplateResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1CreateMetaTemplateRequest"
+            }
+          }
+        ],
+        "tags": [
+          "CategoryService"
+        ]
+      }
+    },
+    "/gapi/category/v1/meta/delete": {
+      "post": {
+        "operationId": "CategoryService_DeleteMetaTemplate",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1DeleteMetaTemplateResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1DeleteMetaTemplateRequest"
+            }
+          }
+        ],
+        "tags": [
+          "CategoryService"
+        ]
+      }
+    },
+    "/gapi/category/v1/meta/update": {
+      "post": {
+        "operationId": "CategoryService_UpdateMetaTemplate",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1UpdateMetaTemplateResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1UpdateMetaTemplateRequest"
             }
           }
         ],
@@ -211,19 +311,42 @@
         "name": {
           "type": "string"
         },
+        "slug": {
+          "type": "string"
+        },
         "description": {
           "type": "string"
         },
-        "metaData": {
+        "parentId": {
+          "type": "string"
+        },
+        "icon": {
+          "type": "string"
+        },
+        "sortOrder": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "isEnabled": {
+          "type": "boolean"
+        },
+        "metaTemplates": {
           "type": "array",
           "items": {
             "type": "object",
-            "$ref": "#/definitions/v1CategoryMetaData"
+            "$ref": "#/definitions/v1CategoryMetaTemplate"
+          }
+        },
+        "children": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1Category"
           }
         }
       }
     },
-    "v1CategoryMetaData": {
+    "v1CategoryMetaTemplate": {
       "type": "object",
       "properties": {
         "id": {
@@ -235,18 +358,21 @@
         "key": {
           "type": "string"
         },
-        "order": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "description": {
+        "label": {
           "type": "string"
         },
         "type": {
           "type": "string"
         },
-        "value": {
+        "required": {
+          "type": "boolean"
+        },
+        "options": {
           "type": "string"
+        },
+        "sortOrder": {
+          "type": "integer",
+          "format": "int32"
         },
         "defaultValue": {
           "type": "string"
@@ -256,14 +382,50 @@
     "v1CreateCategoryRequest": {
       "type": "object",
       "properties": {
-        "category": {
-          "$ref": "#/definitions/v1Category"
+        "name": {
+          "type": "string"
+        },
+        "slug": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "parentId": {
+          "type": "string"
+        },
+        "icon": {
+          "type": "string"
+        },
+        "sortOrder": {
+          "type": "integer",
+          "format": "int32"
         }
-      },
-      "title": "CreateCategory"
+      }
     },
     "v1CreateCategoryResponse": {
-      "type": "object"
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        }
+      }
+    },
+    "v1CreateMetaTemplateRequest": {
+      "type": "object",
+      "properties": {
+        "template": {
+          "$ref": "#/definitions/v1CategoryMetaTemplate"
+        }
+      }
+    },
+    "v1CreateMetaTemplateResponse": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        }
+      }
     },
     "v1DeleteCategoryRequest": {
       "type": "object",
@@ -271,25 +433,27 @@
         "id": {
           "type": "string"
         }
-      },
-      "title": "DeleteCategory"
+      }
     },
     "v1DeleteCategoryResponse": {
       "type": "object"
     },
-    "v1GetCategoryListRequest": {
-      "type": "object",
-      "title": "GetCategory"
-    },
-    "v1GetCategoryListResponse": {
+    "v1DeleteMetaTemplateRequest": {
       "type": "object",
       "properties": {
-        "category": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "$ref": "#/definitions/v1Category"
-          }
+        "id": {
+          "type": "string"
+        }
+      }
+    },
+    "v1DeleteMetaTemplateResponse": {
+      "type": "object"
+    },
+    "v1GetCategoryRequest": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
         }
       }
     },
@@ -301,16 +465,41 @@
         }
       }
     },
+    "v1ListCategoriesRequest": {
+      "type": "object"
+    },
+    "v1ListCategoriesResponse": {
+      "type": "object",
+      "properties": {
+        "categories": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1Category"
+          }
+        }
+      }
+    },
     "v1UpdateCategoryRequest": {
       "type": "object",
       "properties": {
         "category": {
           "$ref": "#/definitions/v1Category"
         }
-      },
-      "title": "UpdateCategory"
+      }
     },
     "v1UpdateCategoryResponse": {
+      "type": "object"
+    },
+    "v1UpdateMetaTemplateRequest": {
+      "type": "object",
+      "properties": {
+        "template": {
+          "$ref": "#/definitions/v1CategoryMetaTemplate"
+        }
+      }
+    },
+    "v1UpdateMetaTemplateResponse": {
       "type": "object"
     }
   }

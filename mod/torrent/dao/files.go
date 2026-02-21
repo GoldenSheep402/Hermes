@@ -6,10 +6,10 @@ import (
 	"gorm.io/gorm"
 )
 
-type file struct {
-	stdao.Std[*model.File]
+type torrentFile struct {
+	stdao.Std[*model.TorrentFile]
 }
 
-func (f *file) Init(db *gorm.DB) error {
+func (f *torrentFile) Init(db *gorm.DB) error {
 	return f.Std.Init(db)
 }

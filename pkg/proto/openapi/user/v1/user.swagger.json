@@ -16,15 +16,14 @@
     "application/json"
   ],
   "paths": {
-    "/gapi/group/v1/create": {
+    "/gapi/user/v1/group/create": {
       "post": {
-        "summary": "GROUP",
-        "operationId": "UserService_CreateGroup",
+        "operationId": "UserService_CreateUserGroup",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1CreateGroupResponse"
+              "$ref": "#/definitions/v1CreateUserGroupResponse"
             }
           },
           "default": {
@@ -40,7 +39,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/v1CreateGroupRequest"
+              "$ref": "#/definitions/v1CreateUserGroupRequest"
             }
           }
         ],
@@ -49,14 +48,14 @@
         ]
       }
     },
-    "/gapi/group/v1/get": {
+    "/gapi/user/v1/group/delete": {
       "post": {
-        "operationId": "UserService_GetGroup",
+        "operationId": "UserService_DeleteUserGroup",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1GetGroupResponse"
+              "$ref": "#/definitions/v1DeleteUserGroupResponse"
             }
           },
           "default": {
@@ -72,7 +71,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/v1GetGroupRequest"
+              "$ref": "#/definitions/v1DeleteUserGroupRequest"
             }
           }
         ],
@@ -81,14 +80,14 @@
         ]
       }
     },
-    "/gapi/group/v1/update": {
+    "/gapi/user/v1/group/get": {
       "post": {
-        "operationId": "UserService_UpdateGroup",
+        "operationId": "UserService_GetUserGroup",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1UpdateGroupResponse"
+              "$ref": "#/definitions/v1GetUserGroupResponse"
             }
           },
           "default": {
@@ -104,7 +103,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/v1UpdateGroupRequest"
+              "$ref": "#/definitions/v1GetUserGroupRequest"
             }
           }
         ],
@@ -113,14 +112,14 @@
         ]
       }
     },
-    "/gapi/group/v1/user/add": {
+    "/gapi/user/v1/group/list": {
       "post": {
-        "operationId": "UserService_GroupAddUser",
+        "operationId": "UserService_ListUserGroups",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1GroupAddUserResponse"
+              "$ref": "#/definitions/v1ListUserGroupsResponse"
             }
           },
           "default": {
@@ -136,7 +135,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/v1GroupAddUserRequest"
+              "$ref": "#/definitions/v1ListUserGroupsRequest"
             }
           }
         ],
@@ -145,14 +144,14 @@
         ]
       }
     },
-    "/gapi/group/v1/user/remove": {
+    "/gapi/user/v1/group/update": {
       "post": {
-        "operationId": "UserService_GroupRemoveUser",
+        "operationId": "UserService_UpdateUserGroup",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1GroupRemoveUserResponse"
+              "$ref": "#/definitions/v1UpdateUserGroupResponse"
             }
           },
           "default": {
@@ -168,39 +167,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/v1GroupRemoveUserRequest"
-            }
-          }
-        ],
-        "tags": [
-          "UserService"
-        ]
-      }
-    },
-    "/gapi/group/v1/user/update": {
-      "post": {
-        "operationId": "UserService_GroupUserUpdate",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1GroupUserUpdateResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/v1GroupUserUpdateRequest"
+              "$ref": "#/definitions/v1UpdateUserGroupRequest"
             }
           }
         ],
@@ -210,7 +177,7 @@
       }
     },
     "/gapi/user/v1/info": {
-      "get": {
+      "post": {
         "operationId": "UserService_GetUser",
         "responses": {
           "200": {
@@ -228,10 +195,12 @@
         },
         "parameters": [
           {
-            "name": "id",
-            "in": "query",
-            "required": false,
-            "type": "string"
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1GetUserRequest"
+            }
           }
         ],
         "tags": [
@@ -269,14 +238,14 @@
         ]
       }
     },
-    "/gapi/user/v1/info/full": {
+    "/gapi/user/v1/list": {
       "post": {
-        "operationId": "UserService_GetUserInfo",
+        "operationId": "UserService_ListUsers",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1GetUserInfoResponse"
+              "$ref": "#/definitions/v1ListUsersResponse"
             }
           },
           "default": {
@@ -292,7 +261,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/v1GetUserInfoRequest"
+              "$ref": "#/definitions/v1ListUsersRequest"
             }
           }
         ],
@@ -303,12 +272,12 @@
     },
     "/gapi/user/v1/passkey": {
       "post": {
-        "operationId": "UserService_GetUserPassKey",
+        "operationId": "UserService_GetUserPasskey",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1GetUserPassKeyResponse"
+              "$ref": "#/definitions/v1GetUserPasskeyResponse"
             }
           },
           "default": {
@@ -324,7 +293,39 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/v1GetUserPassKeyRequest"
+              "$ref": "#/definitions/v1GetUserPasskeyRequest"
+            }
+          }
+        ],
+        "tags": [
+          "UserService"
+        ]
+      }
+    },
+    "/gapi/user/v1/passkey/reset": {
+      "post": {
+        "operationId": "UserService_ResetPasskey",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ResetPasskeyResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1ResetPasskeyRequest"
             }
           }
         ],
@@ -334,7 +335,7 @@
       }
     },
     "/gapi/user/v1/password": {
-      "put": {
+      "post": {
         "operationId": "UserService_UpdatePassword",
         "responses": {
           "200": {
@@ -357,6 +358,38 @@
             "required": true,
             "schema": {
               "$ref": "#/definitions/v1UpdatePasswordRequest"
+            }
+          }
+        ],
+        "tags": [
+          "UserService"
+        ]
+      }
+    },
+    "/gapi/user/v1/profile": {
+      "post": {
+        "operationId": "UserService_GetUserProfile",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GetUserProfileResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1GetUserProfileRequest"
             }
           }
         ],
@@ -395,18 +428,18 @@
         }
       }
     },
-    "v1CreateGroupRequest": {
+    "v1CreateUserGroupRequest": {
       "type": "object",
       "properties": {
         "group": {
-          "$ref": "#/definitions/v1Group"
+          "$ref": "#/definitions/v1UserGroup"
         }
       }
     },
-    "v1CreateGroupResponse": {
+    "v1CreateUserGroupResponse": {
       "type": "object"
     },
-    "v1GetGroupRequest": {
+    "v1DeleteUserGroupRequest": {
       "type": "object",
       "properties": {
         "id": {
@@ -414,15 +447,37 @@
         }
       }
     },
-    "v1GetGroupResponse": {
+    "v1DeleteUserGroupResponse": {
+      "type": "object"
+    },
+    "v1GetUserGroupRequest": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        }
+      }
+    },
+    "v1GetUserGroupResponse": {
       "type": "object",
       "properties": {
         "group": {
-          "$ref": "#/definitions/v1Group"
+          "$ref": "#/definitions/v1UserGroup"
         }
       }
     },
-    "v1GetUserInfoRequest": {
+    "v1GetUserPasskeyRequest": {
+      "type": "object"
+    },
+    "v1GetUserPasskeyResponse": {
+      "type": "object",
+      "properties": {
+        "passkey": {
+          "type": "string"
+        }
+      }
+    },
+    "v1GetUserProfileRequest": {
       "type": "object",
       "properties": {
         "id": {
@@ -430,55 +485,40 @@
         }
       }
     },
-    "v1GetUserInfoResponse": {
+    "v1GetUserProfileResponse": {
       "type": "object",
       "properties": {
-        "name": {
-          "type": "string"
+        "user": {
+          "$ref": "#/definitions/v1User"
         },
-        "email": {
-          "type": "string"
+        "realUpload": {
+          "type": "string",
+          "format": "int64"
         },
-        "download": {
+        "realDownload": {
+          "type": "string",
+          "format": "int64"
+        },
+        "ratio": {
+          "type": "number",
+          "format": "double"
+        },
+        "publishedCount": {
           "type": "integer",
           "format": "int32"
         },
-        "upload": {
+        "seedingCount": {
           "type": "integer",
           "format": "int32"
         },
-        "torrentPublished": {
+        "downloadCount": {
           "type": "integer",
           "format": "int32"
-        },
-        "torrentDownloaded": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "torrentSeeding": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "key": {
-          "type": "string"
         }
       }
     },
-    "v1GetUserPassKeyRequest": {
-      "type": "object",
-      "properties": {
-        "id": {
-          "type": "string"
-        }
-      }
-    },
-    "v1GetUserPassKeyResponse": {
-      "type": "object",
-      "properties": {
-        "passKey": {
-          "type": "string"
-        }
-      }
+    "v1GetUserRequest": {
+      "type": "object"
     },
     "v1GetUserResponse": {
       "type": "object",
@@ -488,124 +528,60 @@
         }
       }
     },
-    "v1Group": {
-      "type": "object",
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "name": {
-          "type": "string"
-        },
-        "description": {
-          "type": "string"
-        },
-        "metaData": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "$ref": "#/definitions/v1GroupMetaData"
-          }
-        }
-      },
-      "title": "GROUP"
+    "v1ListUserGroupsRequest": {
+      "type": "object"
     },
-    "v1GroupAddUserRequest": {
+    "v1ListUserGroupsResponse": {
       "type": "object",
       "properties": {
-        "userId": {
-          "type": "string"
-        },
-        "groupId": {
-          "type": "string"
-        },
-        "metaData": {
+        "groups": {
           "type": "array",
           "items": {
             "type": "object",
-            "$ref": "#/definitions/v1GroupMetaData"
+            "$ref": "#/definitions/v1UserGroup"
           }
         }
       }
     },
-    "v1GroupAddUserResponse": {
-      "type": "object"
-    },
-    "v1GroupMetaData": {
+    "v1ListUsersRequest": {
       "type": "object",
       "properties": {
-        "groupMetaDataOriginalID": {
-          "type": "string"
-        },
-        "id": {
-          "type": "string"
-        },
-        "key": {
-          "type": "string"
-        },
-        "order": {
+        "page": {
           "type": "integer",
           "format": "int32"
         },
-        "description": {
-          "type": "string"
-        },
-        "type": {
-          "type": "string"
-        },
-        "value": {
-          "type": "string"
-        },
-        "defaultValue": {
-          "type": "string"
+        "pageSize": {
+          "type": "integer",
+          "format": "int32"
         }
       }
     },
-    "v1GroupRemoveUserRequest": {
+    "v1ListUsersResponse": {
       "type": "object",
       "properties": {
-        "userId": {
-          "type": "string"
-        },
-        "groupId": {
-          "type": "string"
-        }
-      }
-    },
-    "v1GroupRemoveUserResponse": {
-      "type": "object"
-    },
-    "v1GroupUserUpdateRequest": {
-      "type": "object",
-      "properties": {
-        "userId": {
-          "type": "string"
-        },
-        "groupId": {
-          "type": "string"
-        },
-        "metaData": {
+        "users": {
           "type": "array",
           "items": {
             "type": "object",
-            "$ref": "#/definitions/v1GroupMetaData"
+            "$ref": "#/definitions/v1User"
           }
+        },
+        "total": {
+          "type": "string",
+          "format": "int64"
         }
       }
     },
-    "v1GroupUserUpdateResponse": {
+    "v1ResetPasskeyRequest": {
       "type": "object"
     },
-    "v1UpdateGroupRequest": {
+    "v1ResetPasskeyResponse": {
       "type": "object",
       "properties": {
-        "group": {
-          "$ref": "#/definitions/v1Group"
+        "passkey": {
+          "type": "string"
         }
       }
-    },
-    "v1UpdateGroupResponse": {
-      "type": "object"
     },
     "v1UpdatePasswordRequest": {
       "type": "object",
@@ -621,11 +597,25 @@
     "v1UpdatePasswordResponse": {
       "type": "object"
     },
+    "v1UpdateUserGroupRequest": {
+      "type": "object",
+      "properties": {
+        "group": {
+          "$ref": "#/definitions/v1UserGroup"
+        }
+      }
+    },
+    "v1UpdateUserGroupResponse": {
+      "type": "object"
+    },
     "v1UpdateUserRequest": {
       "type": "object",
       "properties": {
-        "user": {
-          "$ref": "#/definitions/v1User"
+        "username": {
+          "type": "string"
+        },
+        "avatar": {
+          "type": "string"
         }
       }
     },
@@ -643,10 +633,100 @@
         "id": {
           "type": "string"
         },
+        "username": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "avatar": {
+          "type": "string"
+        },
+        "isAdmin": {
+          "type": "boolean"
+        },
+        "isEnabled": {
+          "type": "boolean"
+        },
+        "groupId": {
+          "type": "string"
+        },
+        "bonusPoints": {
+          "type": "string",
+          "format": "int64"
+        },
+        "uploaded": {
+          "type": "string",
+          "format": "int64"
+        },
+        "downloaded": {
+          "type": "string",
+          "format": "int64"
+        },
+        "seedTime": {
+          "type": "string",
+          "format": "int64"
+        },
+        "inviteCount": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "passkey": {
+          "type": "string"
+        },
+        "lastLogin": {
+          "type": "string"
+        },
+        "createdAt": {
+          "type": "string"
+        }
+      }
+    },
+    "v1UserGroup": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
         "name": {
           "type": "string"
         },
-        "role": {
+        "description": {
+          "type": "string"
+        },
+        "level": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "minUpload": {
+          "type": "string",
+          "format": "int64"
+        },
+        "minRatio": {
+          "type": "number",
+          "format": "double"
+        },
+        "minSeedTime": {
+          "type": "string",
+          "format": "int64"
+        },
+        "maxDownloads": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "canUpload": {
+          "type": "boolean"
+        },
+        "canInvite": {
+          "type": "boolean"
+        },
+        "isImmuneToRatio": {
+          "type": "boolean"
+        },
+        "color": {
+          "type": "string"
+        },
+        "icon": {
           "type": "string"
         }
       }

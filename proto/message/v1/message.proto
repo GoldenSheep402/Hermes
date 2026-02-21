@@ -1,0 +1,112 @@
+syntax = "proto3";
+package message.v1;
+option go_package = "github.com/GoldenSheep402/Hermes/pkg/proto/message/v1;messageV1";
+
+import "google/api/annotations.proto";
+
+// ─── Messages ───────────────────────────────────────────────────────────────
+
+message MessageInfo {
+  string id = 1;
+  string senderId = 2;
+  string senderName = 3;
+  string receiverId = 4;
+  string receiverName = 5;
+  string subject = 6;
+  string body = 7;
+  bool isRead = 8;
+  int32 type = 9;
+  string createdAt = 10;
+}
+
+// ─── Service ────────────────────────────────────────────────────────────────
+
+service MessageService {
+  rpc SendMessage(SendMessageRequest) returns (SendMessageResponse) {
+    option (google.api.http) = {
+      post : "/gapi/message/v1/send"
+      body : "*"
+    };
+  }
+
+  rpc GetMessage(GetMessageRequest) returns (GetMessageResponse) {
+    option (google.api.http) = {
+      post : "/gapi/message/v1/info"
+      body : "*"
+    };
+  }
+
+  rpc ListInbox(ListInboxRequest) returns (ListInboxResponse) {
+    option (google.api.http) = {
+      post : "/gapi/message/v1/inbox"
+      body : "*"
+    };
+  }
+
+  rpc ListOutbox(ListOutboxRequest) returns (ListOutboxResponse) {
+    option (google.api.http) = {
+      post : "/gapi/message/v1/outbox"
+      body : "*"
+    };
+  }
+
+  rpc MarkAsRead(MarkAsReadRequest) returns (MarkAsReadResponse) {
+    option (google.api.http) = {
+      post : "/gapi/message/v1/read"
+      body : "*"
+    };
+  }
+
+  rpc DeleteMessage(DeleteMessageRequest) returns (DeleteMessageResponse) {
+    option (google.api.http) = {
+      post : "/gapi/message/v1/delete"
+      body : "*"
+    };
+  }
+
+  rpc GetUnreadCount(GetUnreadCountRequest) returns (GetUnreadCountResponse) {
+    option (google.api.http) = {
+      post : "/gapi/message/v1/unread"
+      body : "*"
+    };
+  }
+}
+
+// ─── Requests / Responses ───────────────────────────────────────────────────
+
+message SendMessageRequest {
+  string receiverId = 1;
+  string subject = 2;
+  string body = 3;
+}
+message SendMessageResponse { string id = 1; }
+
+message GetMessageRequest { string id = 1; }
+message GetMessageResponse { MessageInfo message = 1; }
+
+message ListInboxRequest {
+  int32 page = 1;
+  int32 pageSize = 2;
+}
+message ListInboxResponse {
+  repeated MessageInfo messages = 1;
+  int64 total = 2;
+}
+
+message ListOutboxRequest {
+  int32 page = 1;
+  int32 pageSize = 2;
+}
+message ListOutboxResponse {
+  repeated MessageInfo messages = 1;
+  int64 total = 2;
+}
+
+message MarkAsReadRequest { repeated string ids = 1; }
+message MarkAsReadResponse {}
+
+message DeleteMessageRequest { string id = 1; }
+message DeleteMessageResponse {}
+
+message GetUnreadCountRequest {}
+message GetUnreadCountResponse { int64 count = 1; }

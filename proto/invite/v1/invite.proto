@@ -1,0 +1,65 @@
+syntax = "proto3";
+package invite.v1;
+option go_package = "github.com/GoldenSheep402/Hermes/pkg/proto/invite/v1;inviteV1";
+
+import "google/api/annotations.proto";
+
+// ─── Messages ───────────────────────────────────────────────────────────────
+
+message InviteCodeInfo {
+  string id = 1;
+  string code = 2;
+  string senderId = 3;
+  string senderName = 4;
+  string receiverId = 5;
+  string receiverName = 6;
+  bool isUsed = 7;
+  string expiredAt = 8;
+  string usedAt = 9;
+  string createdAt = 10;
+}
+
+// ─── Service ────────────────────────────────────────────────────────────────
+
+service InviteService {
+  rpc CreateInviteCode(CreateInviteCodeRequest)
+      returns (CreateInviteCodeResponse) {
+    option (google.api.http) = {
+      post : "/gapi/invite/v1/create"
+      body : "*"
+    };
+  }
+
+  rpc ListInviteCodes(ListInviteCodesRequest)
+      returns (ListInviteCodesResponse) {
+    option (google.api.http) = {
+      post : "/gapi/invite/v1/list"
+      body : "*"
+    };
+  }
+
+  rpc ConsumeInviteCode(ConsumeInviteCodeRequest)
+      returns (ConsumeInviteCodeResponse) {
+    option (google.api.http) = {
+      post : "/gapi/invite/v1/consume"
+      body : "*"
+    };
+  }
+}
+
+// ─── Requests / Responses ───────────────────────────────────────────────────
+
+message CreateInviteCodeRequest { int32 count = 1; }
+message CreateInviteCodeResponse { repeated string codes = 1; }
+
+message ListInviteCodesRequest {
+  int32 page = 1;
+  int32 pageSize = 2;
+}
+message ListInviteCodesResponse {
+  repeated InviteCodeInfo codes = 1;
+  int64 total = 2;
+}
+
+message ConsumeInviteCodeRequest { string code = 1; }
+message ConsumeInviteCodeResponse { bool success = 1; }

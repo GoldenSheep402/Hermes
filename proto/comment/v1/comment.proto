@@ -1,0 +1,79 @@
+syntax = "proto3";
+package comment.v1;
+option go_package = "github.com/GoldenSheep402/Hermes/pkg/proto/comment/v1;commentV1";
+
+import "google/api/annotations.proto";
+
+// ─── Messages ───────────────────────────────────────────────────────────────
+
+message CommentInfo {
+  string id = 1;
+  string resourceId = 2;
+  string authorId = 3;
+  string authorName = 4;
+  string authorAvatar = 5;
+  string body = 6;
+  string parentId = 7;
+  string createdAt = 8;
+  repeated CommentInfo replies = 9;
+}
+
+// ─── Service ────────────────────────────────────────────────────────────────
+
+service CommentService {
+  rpc CreateComment(CreateCommentRequest) returns (CreateCommentResponse) {
+    option (google.api.http) = {
+      post : "/gapi/comment/v1/create"
+      body : "*"
+    };
+  }
+
+  rpc ListComments(ListCommentsRequest) returns (ListCommentsResponse) {
+    option (google.api.http) = {
+      post : "/gapi/comment/v1/list"
+      body : "*"
+    };
+  }
+
+  rpc UpdateComment(UpdateCommentRequest) returns (UpdateCommentResponse) {
+    option (google.api.http) = {
+      post : "/gapi/comment/v1/update"
+      body : "*"
+    };
+  }
+
+  rpc DeleteComment(DeleteCommentRequest) returns (DeleteCommentResponse) {
+    option (google.api.http) = {
+      post : "/gapi/comment/v1/delete"
+      body : "*"
+    };
+  }
+}
+
+// ─── Requests / Responses ───────────────────────────────────────────────────
+
+message CreateCommentRequest {
+  string resourceId = 1;
+  string body = 2;
+  string parentId = 3;
+}
+message CreateCommentResponse { string id = 1; }
+
+message ListCommentsRequest {
+  string resourceId = 1;
+  int32 page = 2;
+  int32 pageSize = 3;
+}
+message ListCommentsResponse {
+  repeated CommentInfo comments = 1;
+  int64 total = 2;
+}
+
+message UpdateCommentRequest {
+  string id = 1;
+  string body = 2;
+}
+message UpdateCommentResponse {}
+
+message DeleteCommentRequest { string id = 1; }
+message DeleteCommentResponse {}

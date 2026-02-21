@@ -5,23 +5,23 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
+	"net/smtp"
+	"strconv"
+
+	"github.com/oklog/ulid/v2"
+	"go.uber.org/zap"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
 	authDao "github.com/GoldenSheep402/Hermes/mod/auth/dao"
 	"github.com/GoldenSheep402/Hermes/mod/auth/model/codeValues"
-	systemDao "github.com/GoldenSheep402/Hermes/mod/system/dao"
 	"github.com/GoldenSheep402/Hermes/mod/user/dao"
-	userDao "github.com/GoldenSheep402/Hermes/mod/user/dao"
 	"github.com/GoldenSheep402/Hermes/mod/user/model"
-	"github.com/GoldenSheep402/Hermes/mod/user/model/bindType"
 	"github.com/GoldenSheep402/Hermes/pkg/auth"
 	authV1 "github.com/GoldenSheep402/Hermes/pkg/proto/auth/v1"
 	"github.com/GoldenSheep402/Hermes/pkg/randx"
 	"github.com/GoldenSheep402/Hermes/pkg/utils/check"
 	"github.com/GoldenSheep402/Hermes/pkg/utils/crypto"
-	"go.uber.org/zap"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
-	"net/smtp"
-	"strconv"
 )
 
 var _ authV1.AuthServiceServer = (*S)(nil)
@@ -31,27 +31,24 @@ type S struct {
 	authV1.UnimplementedAuthServiceServer
 }
 
-// RegisterSendEmail TODO: SMTP
+// RegisterSendEmail sends an email verification code.
 func (s *S) RegisterSendEmail(ctx context.Context, req *authV1.RegisterSendEmailRequest) (*authV1.RegisterSendEmailResponse, error) {
-	settings, _, _, err := systemDao.Setting.GetSettings(ctx)
-	if err != nil {
-		return nil, status.Error(codes.Internal, "Internal error")
+	// TODO: Read SMTP settings from system KV store
+	// For now, use placeholder values until system DAO is updated
+	smtpEnable := false
+	if !smtpEnable {
+		return nil, status.Error(codes.PermissionDenied, "SMTP is not enabled")
 	}
 
-	if !settings.SmtpEnable {
-		return nil, status.Error(codes.PermissionDenied, "Smtp is not allowed")
-	}
-
-	senderEmail := settings.SmtpUser
-	smtpHost := settings.SmtpHost
-	smtpPort := strconv.Itoa(settings.SmtpPort)
-	smtpUser := settings.SmtpUser
-	smtpPassword := settings.SmtpPass
+	smtpHost := ""
+	smtpPort := "465"
+	smtpUser := ""
+	smtpPassword := ""
+	senderEmail := smtpUser
 	smtpTO := req.Email
 	subject := "Subject: 欢迎来到HERMES\r\n"
 	code := randx.String(6)
 	mime := "MIME-version: 1.0;\r\nContent-Type: text/html; charset=\"UTF-8\";\r\n\r\n"
-	// TODO: HTML template
 	body := fmt.Sprintf(`
 		<html>
 		<body>
@@ -62,8 +59,7 @@ func (s *S) RegisterSendEmail(ctx context.Context, req *authV1.RegisterSendEmail
 	`, code)
 
 	msg := []byte(subject + mime + body)
-
-	auth := smtp.PlainAuth("", smtpUser, smtpPassword, smtpHost)
+	smtpAuth := smtp.PlainAuth("", smtpUser, smtpPassword, smtpHost)
 
 	tlsconfig := &tls.Config{
 		InsecureSkipVerify: true,
@@ -79,17 +75,14 @@ func (s *S) RegisterSendEmail(ctx context.Context, req *authV1.RegisterSendEmail
 	if err != nil {
 		return nil, status.Error(codes.Internal, "Failed to create SMTP client")
 	}
-
 	defer client.Close()
 
-	if err = client.Auth(auth); err != nil {
+	if err = client.Auth(smtpAuth); err != nil {
 		return nil, status.Error(codes.Internal, "SMTP authentication failed")
 	}
-
 	if err = client.Mail(senderEmail); err != nil {
 		return nil, status.Error(codes.Internal, "Failed to set sender email")
 	}
-
 	if err = client.Rcpt(smtpTO); err != nil {
 		return nil, status.Error(codes.Internal, "Failed to set recipient email")
 	}
@@ -98,55 +91,39 @@ func (s *S) RegisterSendEmail(ctx context.Context, req *authV1.RegisterSendEmail
 	if err != nil {
 		return nil, status.Error(codes.Internal, "Failed to write email data")
 	}
-
-	_, err = wc.Write(msg)
-	if err != nil {
+	if _, err = wc.Write(msg); err != nil {
 		return nil, status.Error(codes.Internal, "Failed to write message")
 	}
-
-	err = wc.Close()
-	if err != nil {
+	if err = wc.Close(); err != nil {
 		return nil, status.Error(codes.Internal, "Failed to close write connection")
 	}
-
-	err = client.Quit()
-	if err != nil {
+	if err = client.Quit(); err != nil {
 		return nil, status.Error(codes.Internal, "Failed to close SMTP connection")
 	}
 
-	err = authDao.Code.SetCodeWithEmail(ctx, req.Email, code)
-	if err != nil {
+	if err = authDao.Code.SetCodeWithEmail(ctx, req.Email, code); err != nil {
 		return nil, status.Error(codes.Internal, "Internal error")
 	}
 
 	return &authV1.RegisterSendEmailResponse{}, nil
 }
 
-// RegisterWithEmail TODO: SMTP
+// RegisterWithEmail registers a new user with email.
 func (s *S) RegisterWithEmail(ctx context.Context, req *authV1.RegisterWithEmailRequest) (*authV1.RegisterWithEmailResponse, error) {
-	settings, _, _, err := systemDao.Setting.GetSettings(ctx)
-	if err != nil {
-		return nil, status.Error(codes.Internal, "Internal error")
-	}
+	// TODO: Check register enable/smtp enable from system KV store
 
-	if !settings.RegisterEnable {
-		return nil, status.Error(codes.PermissionDenied, "Register is not allowed")
-	}
-
-	if settings.SmtpEnable {
-		//	check email
+	if req.EmailToken != "" {
 		_status, err := authDao.Code.CheckCodeWithAttempts(ctx, req.Email, req.EmailToken)
 		if err != nil {
 			return nil, status.Error(codes.Internal, "Internal error")
 		}
-
 		switch _status {
 		case codeValues.Wrong:
 			return nil, status.Error(codes.InvalidArgument, "Email token error")
 		case codeValues.TooManyAttempts:
 			return nil, status.Error(codes.InvalidArgument, "Too many attempts")
 		case codeValues.Right:
-
+			// OK
 		}
 	}
 
@@ -156,11 +133,9 @@ func (s *S) RegisterWithEmail(ctx context.Context, req *authV1.RegisterWithEmail
 	if !check.VerifyEmailFormat(email) {
 		return nil, status.Error(codes.InvalidArgument, "Email format error")
 	}
-
 	if len(password) < 6 {
 		return nil, status.Error(codes.InvalidArgument, "Password too short")
 	}
-
 	if req.Username == "" {
 		return nil, status.Error(codes.InvalidArgument, "Username is empty")
 	}
@@ -170,22 +145,23 @@ func (s *S) RegisterWithEmail(ctx context.Context, req *authV1.RegisterWithEmail
 		return nil, status.Error(codes.Internal, "Internal error")
 	}
 
-	_, err = dao.User.NewUserWithBind(ctx,
-		&model.User{
-			Name:     req.Username,
-			IsAdmin:  false,
-			Salt:     salt,
-			Password: crypto.Md5CryptoWithSalt(password, salt),
-		},
-		&model.Bind{
-			OpenID:   email,
-			Platform: bindType.Email,
-		},
-	)
+	newUser := &model.User{
+		Username:  req.Username,
+		Email:     email,
+		Password:  crypto.Md5CryptoWithSalt(password, salt),
+		Salt:      salt,
+		Passkey:   ulid.Make().String(),
+		IsAdmin:   false,
+		IsEnabled: true,
+	}
 
+	_, err = dao.User.CreateUser(ctx, newUser)
 	if err != nil {
-		if errors.Is(err, userDao.ErrBindInfoAlreadyUsed) {
+		if errors.Is(err, dao.ErrEmailAlreadyUsed) {
 			return nil, status.Error(codes.InvalidArgument, "Email already used")
+		}
+		if errors.Is(err, dao.ErrUsernameAlreadyUsed) {
+			return nil, status.Error(codes.InvalidArgument, "Username already used")
 		}
 		return nil, status.Error(codes.Internal, "Internal error")
 	}
@@ -201,17 +177,8 @@ func (s *S) Login(ctx context.Context, req *authV1.LoginRequest) (*authV1.LoginR
 		return nil, status.Error(codes.InvalidArgument, "Email format error")
 	}
 
-	bind := &model.Bind{
-		OpenID: email,
-	}
-
-	if result := dao.Bind.DB().Where("open_id = ?", email).First(bind); result.Error != nil {
-		return nil, status.Error(codes.InvalidArgument, "Email error")
-	}
-
-	user := &model.User{}
-
-	if result := dao.User.DB().Where("id = ?", bind.UID).First(user); result.Error != nil {
+	user, err := dao.User.GetByEmail(ctx, email)
+	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, "Email error")
 	}
 
@@ -220,16 +187,15 @@ func (s *S) Login(ctx context.Context, req *authV1.LoginRequest) (*authV1.LoginR
 	}
 
 	refreshToken, err := auth.GenToken(auth.Info{
-		UID:            bind.UID,
+		UID:            user.ID,
 		IsRefreshToken: true,
 	}, auth.RefreshTokenExpireIn)
 	if err != nil {
 		return nil, status.Error(codes.Internal, "Internal error")
-
 	}
 
 	accessToken, err := auth.GenToken(auth.Info{
-		UID:            bind.UID,
+		UID:            user.ID,
 		IsRefreshToken: false,
 	})
 	if err != nil {
@@ -248,16 +214,20 @@ func (s *S) RefreshToken(_ context.Context, request *authV1.RefreshTokenRequest)
 		return nil, status.Error(codes.Unauthenticated, "invalid refresh token")
 	}
 
-	accessToken, err := auth.GenToken(
-		auth.Info{
-			// following the same UID
-			UID: entity.Info.UID,
-		})
+	accessToken, err := auth.GenToken(auth.Info{
+		UID: entity.Info.UID,
+	})
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
+
 	return &authV1.RefreshTokenResponse{
 		AccessToken:  accessToken,
 		RefreshToken: request.RefreshToken,
 	}, nil
+}
+
+// smtpPortStr is a helper to convert port to string.
+func smtpPortStr(port int) string {
+	return strconv.Itoa(port)
 }

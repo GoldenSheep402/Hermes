@@ -1,0 +1,301 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "traffic/v1/traffic.proto",
+    "version": "version not set"
+  },
+  "tags": [
+    {
+      "name": "TrafficService"
+    }
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/gapi/traffic/v1/history": {
+      "post": {
+        "operationId": "TrafficService_ListTransferHistory",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ListTransferHistoryResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1ListTransferHistoryRequest"
+            }
+          }
+        ],
+        "tags": [
+          "TrafficService"
+        ]
+      }
+    },
+    "/gapi/traffic/v1/torrent": {
+      "post": {
+        "operationId": "TrafficService_GetTorrentStats",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GetTorrentStatsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1GetTorrentStatsRequest"
+            }
+          }
+        ],
+        "tags": [
+          "TrafficService"
+        ]
+      }
+    },
+    "/gapi/traffic/v1/user": {
+      "post": {
+        "operationId": "TrafficService_GetUserTraffic",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GetUserTrafficResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1GetUserTrafficRequest"
+            }
+          }
+        ],
+        "tags": [
+          "TrafficService"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": {}
+    },
+    "rpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    },
+    "v1GetTorrentStatsRequest": {
+      "type": "object",
+      "properties": {
+        "torrentId": {
+          "type": "string"
+        }
+      }
+    },
+    "v1GetTorrentStatsResponse": {
+      "type": "object",
+      "properties": {
+        "stats": {
+          "$ref": "#/definitions/v1TorrentStatsInfo"
+        }
+      }
+    },
+    "v1GetUserTrafficRequest": {
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string"
+        }
+      }
+    },
+    "v1GetUserTrafficResponse": {
+      "type": "object",
+      "properties": {
+        "traffic": {
+          "$ref": "#/definitions/v1UserTrafficInfo"
+        }
+      }
+    },
+    "v1ListTransferHistoryRequest": {
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string"
+        },
+        "page": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "pageSize": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "v1ListTransferHistoryResponse": {
+      "type": "object",
+      "properties": {
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1TransferHistoryItem"
+          }
+        },
+        "total": {
+          "type": "string",
+          "format": "int64"
+        }
+      }
+    },
+    "v1TorrentStatsInfo": {
+      "type": "object",
+      "properties": {
+        "torrentId": {
+          "type": "string"
+        },
+        "seedCount": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "leechCount": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "snatchCount": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "totalUpload": {
+          "type": "string",
+          "format": "int64"
+        },
+        "totalDownload": {
+          "type": "string",
+          "format": "int64"
+        }
+      }
+    },
+    "v1TransferHistoryItem": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "torrentId": {
+          "type": "string"
+        },
+        "torrentName": {
+          "type": "string"
+        },
+        "uploaded": {
+          "type": "string",
+          "format": "int64"
+        },
+        "downloaded": {
+          "type": "string",
+          "format": "int64"
+        },
+        "seedTime": {
+          "type": "string",
+          "format": "int64"
+        },
+        "isFinished": {
+          "type": "boolean"
+        },
+        "isActive": {
+          "type": "boolean"
+        },
+        "lastAction": {
+          "type": "string"
+        }
+      }
+    },
+    "v1UserTrafficInfo": {
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string"
+        },
+        "realUpload": {
+          "type": "string",
+          "format": "int64"
+        },
+        "realDownload": {
+          "type": "string",
+          "format": "int64"
+        },
+        "bonusUpload": {
+          "type": "string",
+          "format": "int64"
+        },
+        "bonusDownload": {
+          "type": "string",
+          "format": "int64"
+        },
+        "ratio": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    }
+  }
+}

@@ -4,51 +4,74 @@ option go_package = "github.com/GoldenSheep402/Hermes/pkg/proto/system/v1;system
 
 import "google/api/annotations.proto";
 
+// ─── Messages ───────────────────────────────────────────────────────────────
 
+message Setting {
+  string key = 1;
+  string value = 2;
+  string type = 3;
+  string desc = 4;
+}
+
+// ─── Service ────────────────────────────────────────────────────────────────
 
 service SystemService {
   rpc GetSettings(GetSettingsRequest) returns (GetSettingsResponse) {
     option (google.api.http) = {
-      post: "/gapi/system/v1/settings/get"
-      body: "*"
+      post : "/gapi/system/v1/settings/get"
+      body : "*"
+    };
+  }
+
+  rpc GetSetting(GetSettingRequest) returns (GetSettingResponse) {
+    option (google.api.http) = {
+      post : "/gapi/system/v1/setting/get"
+      body : "*"
     };
   }
 
   rpc SetSettings(SetSettingsRequest) returns (SetSettingsResponse) {
     option (google.api.http) = {
-      post: "/gapi/system/v1/settings/set"
-      body: "*"
+      post : "/gapi/system/v1/settings/set"
+      body : "*"
+    };
+  }
+
+  rpc DeleteSetting(DeleteSettingRequest) returns (DeleteSettingResponse) {
+    option (google.api.http) = {
+      post : "/gapi/system/v1/setting/delete"
+      body : "*"
+    };
+  }
+
+  rpc GetSiteStats(GetSiteStatsRequest) returns (GetSiteStatsResponse) {
+    option (google.api.http) = {
+      post : "/gapi/system/v1/stats"
+      body : "*"
     };
   }
 }
 
-message Settings{
-  int32 peerExpireTime = 1;
-  repeated string allowedNets = 2;
-  bool smtpEnable = 3;
-  string smtpHost = 4;
-  int32 smtpPort = 5;
-  string smtpUser = 6;
-  string smtpPassword = 7;
-  bool registerEnable = 8;
-  bool loginEnable = 9;
-  bool publishEnable = 10;
-  repeated InnetTracker innetTracker = 11;
-}
-
-message InnetTracker{
-  string id = 1;
-  string addr = 2;
-  bool enable = 3;
-  bool toBeDeleted = 4;
-}
+// ─── Requests / Responses ───────────────────────────────────────────────────
 
 message GetSettingsRequest {}
-message GetSettingsResponse {
-  Settings settings = 1;
-}
+message GetSettingsResponse { repeated Setting settings = 1; }
 
-message SetSettingsRequest {
-  Settings settings = 1;
-}
+message GetSettingRequest { string key = 1; }
+message GetSettingResponse { Setting setting = 1; }
+
+message SetSettingsRequest { repeated Setting settings = 1; }
 message SetSettingsResponse {}
+
+message DeleteSettingRequest { string key = 1; }
+message DeleteSettingResponse {}
+
+message GetSiteStatsRequest {}
+message GetSiteStatsResponse {
+  int64 totalUsers = 1;
+  int64 totalTorrents = 2;
+  int64 totalResources = 3;
+  int64 totalTraffic = 4;
+  int64 totalSeeders = 5;
+  int64 totalLeechers = 6;
+}

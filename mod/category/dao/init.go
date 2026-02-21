@@ -1,25 +1,31 @@
 package dao
 
 import (
+	"github.com/GoldenSheep402/Hermes/mod/category/model"
+	"github.com/GoldenSheep402/Hermes/pkg/stdao"
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 )
 
 var (
-	Category = &category{}
-	Metadata = &metadata{}
+	Category             = &category{}
+	CategoryMetaTemplate = &categoryMetaTemplate{}
 )
 
-func Init(DB *gorm.DB, rds *redis.Client) error {
-	err := Category.Init(DB)
-	if err != nil {
+type category struct {
+	stdao.Std[*model.Category]
+}
+
+type categoryMetaTemplate struct {
+	stdao.Std[*model.CategoryMetaTemplate]
+}
+
+func Init(db *gorm.DB, rdb *redis.Client) error {
+	if err := Category.Std.Init(db); err != nil {
 		return err
 	}
-
-	err = Metadata.Init(DB)
-	if err != nil {
+	if err := CategoryMetaTemplate.Std.Init(db); err != nil {
 		return err
 	}
-
 	return nil
 }

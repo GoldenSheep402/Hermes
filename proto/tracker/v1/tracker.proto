@@ -1,65 +1,122 @@
 syntax = "proto3";
 package tracker.v1;
-option go_package = "github.com/GoldenSheep402/Hermes/pkg/proto/trackerV1/v1;trackerV1";
+option go_package = "github.com/GoldenSheep402/Hermes/pkg/proto/tracker/v1;trackerV1";
 
 import "google/api/annotations.proto";
 
+// ─── Messages ───────────────────────────────────────────────────────────────
+
+message PeerInfo {
+  bytes peerId = 1;
+  string ip = 2;
+  int32 port = 3;
+}
+
+message SnatchInfo {
+  string id = 1;
+  string torrentId = 2;
+  string userId = 3;
+  int64 uploaded = 4;
+  int64 downloaded = 5;
+  int64 seedTime = 6;
+  bool isActive = 7;
+  string finishedAt = 8;
+  string lastAction = 9;
+}
+
+// ─── Service ────────────────────────────────────────────────────────────────
+
 service TrackerService {
-  rpc GetTorrentDownloadingStatus(GetTorrentDownloadingStatusRequest) returns (GetTorrentDownloadingStatusResponse) {
+  rpc GetTorrentPeers(GetTorrentPeersRequest)
+      returns (GetTorrentPeersResponse) {
     option (google.api.http) = {
-      post: "/gapi/trackerV1/v1/status"
-      body: "*"
+      post : "/gapi/tracker/v1/peers"
+      body : "*"
+    };
+  }
+
+  rpc ListSnatches(ListSnatchesRequest) returns (ListSnatchesResponse) {
+    option (google.api.http) = {
+      post : "/gapi/tracker/v1/snatches"
+      body : "*"
+    };
+  }
+
+  rpc GetUserSnatches(GetUserSnatchesRequest)
+      returns (GetUserSnatchesResponse) {
+    option (google.api.http) = {
+      post : "/gapi/tracker/v1/user/snatches"
+      body : "*"
     };
   }
 }
 
-message GetTorrentDownloadingStatusRequest{
+// ─── Requests / Responses ───────────────────────────────────────────────────
+
+message GetTorrentPeersRequest { string torrentId = 1; }
+message GetTorrentPeersResponse {
+  int32 seederCount = 1;
+  int32 leecherCount = 2;
+  repeated PeerInfo seeders = 3;
+  repeated PeerInfo leechers = 4;
+}
+
+message ListSnatchesRequest {
   string torrentId = 1;
+  int32 page = 2;
+  int32 pageSize = 3;
+}
+message ListSnatchesResponse {
+  repeated SnatchInfo snatches = 1;
+  int64 total = 2;
 }
 
-message GetTorrentDownloadingStatusResponse{
-  int32 downloading = 1;
-  int32 finished = 2;
-  int32 seeding = 3;
+message GetUserSnatchesRequest {
+  string userId = 1;
+  int32 page = 2;
+  int32 pageSize = 3;
+}
+message GetUserSnatchesResponse {
+  repeated SnatchInfo snatches = 1;
+  int64 total = 2;
 }
 
+// ─── Announce/Scrape ────────────────────────────────────────────────────────
 
-message GetTrackerRequest {
-  string key = 1;          // Unique identifier for the request
-  string info_hash = 2;    // Information hash for the torrent (Here is URL encoded)
-  string peer_id = 3;      // Unique identifier for the peer
-  int32 port = 4;         // Port number of the peer
-  int64 uploaded = 5;    // Amount of data uploaded by the peer
-  int64 downloaded = 6;  // Amount of data downloaded by the peer
-  int64 left = 7;        // Amount of data left to download
-  string event = 8;      // Event type (e.g., started, stopped, completed)
-  string ip = 9;         // IP address of the peer
-  int32 num_want = 10;   // Number of peers the client wants to receive
-  int32 compact = 11;    // Compact mode flag (0 for full, 1 for compact)
-  int32 no_peer_id = 12; // Flag indicating whether to send peer IDs (0 or 1)
-  int32 corrupt = 13;    // Number of corrupt pieces
-  int32 support_crypto = 14; // Flag indicating support for encryption (0 or 1)
-  int32 redundant = 15;  // Number of redundant pieces
+message AnnounceRequest {
+  string passkey = 1;
+  string infoHash = 2;
+  string peerId = 3;
+  int32 port = 4;
+  int64 uploaded = 5;
+  int64 downloaded = 6;
+  int64 left = 7;
+  string event = 8;
+  string ip = 9;
+  int32 numWant = 10;
+  int32 compact = 11;
 }
 
-message GetTrackerResponse {
-  string response = 1;  // Response message
+message AnnounceResponse {
+  string failureReason = 1;
+  string warningMessage = 2;
+  int32 interval = 3;
+  int32 minInterval = 4;
+  int32 complete = 5;
+  int32 incomplete = 6;
+  repeated PeerInfo peers = 7;
+  bytes peersCompact = 8;
 }
 
-message GetTrackerResponseDetail {
-  string failure_reason = 1;        // Optional: Reason for failure
-  string warning_message = 2;       // Optional: Warning message
-  int32 interval = 3;               // Required: Update interval in seconds
-  int32 min_interval = 4;           // Optional: Minimum update interval in seconds
-  string tracker_id = 5;            // Optional: Identifier for the tracker
-  int32 complete = 6;               // Required: Number of complete torrents
-  int32 incomplete = 7;             // Required: Number of incomplete torrents
-  repeated PeerInfo peers = 8;      // List of peers in non-compact mode
-  bytes peers_compact = 9;          // List of peers in compact mode
+message ScrapeRequest {
+  string passkey = 1;
+  repeated string infoHashes = 2;
 }
 
-message PeerInfo {
-  bytes peer_id = 1;  // Unique identifier for the peer
-  string ip = 2;      // IP address of the peer
-  int32 port = 3;     // Port number of the peer
+message ScrapeFile {
+  int32 complete = 1;
+  int32 incomplete = 2;
+  int32 downloaded = 3;
 }
+
+message ScrapeResponse { map<string, ScrapeFile> files = 1; }

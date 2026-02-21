@@ -1,18 +1,14 @@
 package model
 
-import "github.com/GoldenSheep402/Hermes/pkg/stdao"
+import (
+	"github.com/GoldenSheep402/Hermes/pkg/stdao"
+)
 
+// Setting stores site-wide configuration as key-value pairs.
 type Setting struct {
 	stdao.Model
-	PeerExpireTime int    `gorm:"column:peer_expire_time;default:60"`
-	SmtpEnable     bool   `gorm:"column:smtp_enable;default:false"`
-	SmtpHost       string `gorm:"column:smtp_host"`
-	SmtpPort       int    `gorm:"column:smtp_port"`
-	SmtpUser       string `gorm:"column:smtp_user"`
-	SmtpPass       string `gorm:"column:smtp_pass"`
-	SmtpSendName   string `gorm:"column:smtp_send_name"`
-	SmtpSendAddr   string `gorm:"column:smtp_send_addr"`
-	RegisterEnable bool   `gorm:"column:register_enable;default:true"`
-	LoginEnable    bool   `gorm:"column:login_enable;default:true"`
-	PublishEnable  bool   `gorm:"column:publish_enable;default:true"`
+	Key   string `gorm:"uniqueIndex;size:128;not null" json:"key"`
+	Value string `gorm:"type:text;not null" json:"value"`
+	Type  string `gorm:"size:32;not null;default:'string'" json:"type"` // string, int, bool, json
+	Desc  string `gorm:"size:256" json:"desc"`
 }

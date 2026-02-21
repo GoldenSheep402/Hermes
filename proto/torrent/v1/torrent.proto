@@ -3,112 +3,88 @@ package torrent.v1;
 option go_package = "github.com/GoldenSheep402/Hermes/pkg/proto/torrent/v1;torrentV1";
 
 import "google/api/annotations.proto";
-import "category/v1/category.proto";
 
-service TorrentService{
-  /*
-     GetTorrentV1
-     @Description
-      Get torrent by id, return torrent data
-      The file follows the torrent file format V1.
-     @Param GetTorrentV1Request
-     @Return GetTorrentV1Response
-     @Http GET /gapi/torrent/v1/info
-  */
-  rpc GetTorrentV1(GetTorrentV1Request) returns (GetTorrentV1Response) {
+// ─── Messages ───────────────────────────────────────────────────────────────
+
+message TorrentInfo {
+  string id = 1;
+  string infoHash = 2;
+  string uploaderId = 3;
+  string name = 4;
+  int64 size = 5;
+  bool isSingleFile = 6;
+  int32 fileCount = 7;
+  int32 seedCount = 8;
+  int32 leechCount = 9;
+  int32 snatchCount = 10;
+  bool isActive = 11;
+  string createdAt = 12;
+}
+
+message TorrentFile {
+  string id = 1;
+  string torrentId = 2;
+  string path = 3;
+  int64 size = 4;
+}
+
+// ─── Service ────────────────────────────────────────────────────────────────
+
+service TorrentService {
+  rpc UploadTorrent(UploadTorrentRequest) returns (UploadTorrentResponse) {
     option (google.api.http) = {
-      post: "/gapi/torrent/v1/info/v1"
-      body: "*"
+      post : "/gapi/torrent/v1/upload"
+      body : "*"
     };
   }
 
-  rpc GetTorrentV1List(GetTorrentV1ListRequest) returns (GetTorrentV1ListResponse) {
+  rpc DownloadTorrent(DownloadTorrentRequest)
+      returns (DownloadTorrentResponse) {
     option (google.api.http) = {
-      post: "/gapi/torrent/v1/list/v1"
-      body: "*"
+      post : "/gapi/torrent/v1/download"
+      body : "*"
     };
   }
 
-  /*
-   CreateTorrentV1
-   @Description
-    Create torrent, return torrent id
-    The file follows the torrent file format V1.
-   @Param CreateTorrentV1Request
-   @Return CreateTorrentV1Response
-   @Http POST /gapi/torrent/v1/info
-*/
-  rpc CreateTorrentV1(CreateTorrentV1Request) returns (CreateTorrentV1Response) {
+  rpc GetTorrent(GetTorrentRequest) returns (GetTorrentResponse) {
     option (google.api.http) = {
-      post: "/gapi/torrent/v1/create/v1"
-      body: "*"
+      post : "/gapi/torrent/v1/info"
+      body : "*"
     };
   }
 
-  rpc DownloadTorrentV1(DownloadTorrentV1Request) returns (DownloadTorrentV1Response) {
+  rpc ListTorrentFiles(ListTorrentFilesRequest)
+      returns (ListTorrentFilesResponse) {
     option (google.api.http) = {
-      post: "/gapi/torrent/v1/download/v1"
-      body: "*"
+      post : "/gapi/torrent/v1/files"
+      body : "*"
+    };
+  }
+
+  rpc DeleteTorrent(DeleteTorrentRequest) returns (DeleteTorrentResponse) {
+    option (google.api.http) = {
+      post : "/gapi/torrent/v1/delete"
+      body : "*"
     };
   }
 }
 
-message Torrent {
-  bytes data = 1;
+// ─── Requests / Responses ───────────────────────────────────────────────────
+
+message UploadTorrentRequest { bytes torrentData = 1; }
+message UploadTorrentResponse {
+  string torrentId = 1;
+  string infoHash = 2;
 }
 
-message TorrentMetaData {
-  string id = 1;
-  string categoryId = 2;
-  string torrentId = 3;
-  string key = 4;
-  int32  order = 5;
-  string description = 6;
-  string type = 7;
-  string value = 8;
-}
+message DownloadTorrentRequest { string torrentId = 1; }
+message DownloadTorrentResponse { bytes torrentData = 1; }
 
-// GetTorrentV1
-message GetTorrentV1Request {
-  string id = 1;
-}
-message GetTorrentV1Response {
-  repeated TorrentMetaData metadata = 1;
-}
+message GetTorrentRequest { string id = 1; }
+message GetTorrentResponse { TorrentInfo torrent = 1; }
 
-// GetTorrentV1List
-message GetTorrentV1ListRequest {
-  string categoryId = 1;
-  string id = 2;
-  int64 limit = 11;
-}
-message GetTorrentV1ListResponse {
-  repeated TorrentBasic torrents = 1;
-}
-message TorrentBasic {
-  string id = 1;
-  string name = 2;
-  string description = 3;
-  string categoryId = 4;
-  string categoryName = 5;
-}
+message ListTorrentFilesRequest { string torrentId = 1; }
+message ListTorrentFilesResponse { repeated TorrentFile files = 1; }
 
-// CreateTorrentV1
-message CreateTorrentV1Request {
-  string categoryId = 1;
-  string name = 2;
-  string comment = 3;
-  repeated TorrentMetaData metadata = 4;
-  Torrent torrent = 5;
-}
-message CreateTorrentV1Response {
-  string id = 1;
-}
-
-// DownloadTorrentV1
-message DownloadTorrentV1Request{
-  string id = 1;
-}
-message DownloadTorrentV1Response{
-  string data = 1;
-}
+message DeleteTorrentRequest { string id = 1; }
+message DeleteTorrentResponse {}

@@ -5,8 +5,11 @@ import (
 
 	"github.com/GoldenSheep402/Hermes/core/kernel"
 	"github.com/GoldenSheep402/Hermes/mod/grpcGateway/gateway"
+	"github.com/GoldenSheep402/Hermes/mod/tracker/dao"
+	"github.com/GoldenSheep402/Hermes/mod/tracker/handlers"
 	"github.com/GoldenSheep402/Hermes/mod/tracker/service"
 	trackerV1 "github.com/GoldenSheep402/Hermes/pkg/proto/tracker/v1"
+	"github.com/juanjiTech/jin"
 	"github.com/redis/go-redis/v9"
 	"google.golang.org/grpc"
 	"gorm.io/gorm"
@@ -42,8 +45,16 @@ func (m *Mod) Load(h *kernel.Hub) error {
 		return errors.New("can't load gorm from kernel")
 	}
 
-	// TODO: dao.Init(db, rdb)
-	// TODO: register announce/scrape HTTP handlers via jin
+	var jinE *jin.Engine
+	if h.Load(&jinE) != nil {
+		return errors.New("can't load jin engine from kernel")
+	}
+
+	if err := dao.Init(db, rdb); err != nil {
+		h.Log.Fatalw("failed to init dao", "error", err)
+	}
+
+	handlers.Registry(jinE)
 
 	var gw gateway.Gateway
 	if h.Load(&gw) != nil {

@@ -151,10 +151,10 @@ func Announce(c *jin.Context) {
 	}
 
 	if compact != 0 {
-		resp["peers"] = BuildCompactPeerList(realIP, peer.PeerID, dbPeers)
+		resp["peers"] = BuildCompactPeerList(realIP, lanIP, peer.PeerID, dbPeers)
 	} else {
 		// Dictionary format
-		resp["peers"] = BuildPeerList(realIP, peer.PeerID, dbPeers)
+		resp["peers"] = BuildPeerList(realIP, lanIP, peer.PeerID, dbPeers)
 	}
 
 	c.Writer.Header().Set("Content-Type", "text/plain")
@@ -209,8 +209,10 @@ func Scrape(c *jin.Context) {
 }
 
 // BuildPeerList constructs the list of peers to be returned to the client,
-// handling LAN IP substitution if peers share the same public IP.
-func BuildPeerList(clientRealIP string, excludePeerID string, dbPeers []*trackerModel.Peer) []map[string]interface{} {
+// handling LAN IP substitution only if peers share the same public IP AND
+// their LAN IPs are in the same subnet (assumed /24 for typical homes).
+// It returns BOTH the real IP and the LAN IP so clients can fallback to the public IP.
+func BuildPeerList(clientRealIP, clientLanIP string, excludePeerID string, dbPeers []*trackerModel.Peer) []map[string]interface{} {
 	var bPeers []map[string]interface{}
 	for _, p := range dbPeers {
 		if p.PeerID == excludePeerID {
@@ -221,17 +223,25 @@ func BuildPeerList(clientRealIP string, excludePeerID string, dbPeers []*tracker
 			continue
 		}
 
-		ipToReturn := p.IP
-		// If both peers share the exact same public (real) IP, and the target peer has a valid LAN IP registered
-		if p.LanIP != "" && p.IP == clientRealIP {
-			ipToReturn = p.LanIP
-		}
-
+		// Always return the standard public IP
 		bPeers = append(bPeers, map[string]interface{}{
 			"peer id": string(rawPeerID),
-			"ip":      ipToReturn,
+			"ip":      p.IP,
 			"port":    p.Port,
 		})
+
+		// If both peers share the exact same public (real) IP, and the target peer has a valid LAN IP registered
+		// AND they are in the exact same /24 subnet for IPv4
+		if p.LanIP != "" && clientLanIP != "" && p.IP == clientRealIP {
+			if isSameSubnet24(p.LanIP, clientLanIP) {
+				// Provide the LAN IP as an additional endpoint for fallback
+				bPeers = append(bPeers, map[string]interface{}{
+					"peer id": string(rawPeerID),
+					"ip":      p.LanIP,
+					"port":    p.Port,
+				})
+			}
+		}
 	}
 	if bPeers == nil {
 		bPeers = []map[string]interface{}{}
@@ -240,25 +250,40 @@ func BuildPeerList(clientRealIP string, excludePeerID string, dbPeers []*tracker
 }
 
 // BuildCompactPeerList constructs the binary compact representation of peers.
-func BuildCompactPeerList(clientRealIP string, excludePeerID string, dbPeers []*trackerModel.Peer) string {
+func BuildCompactPeerList(clientRealIP, clientLanIP string, excludePeerID string, dbPeers []*trackerModel.Peer) string {
 	var buf []byte
 	for _, p := range dbPeers {
 		if p.PeerID == excludePeerID {
 			continue
 		}
 
-		ipToReturn := p.IP
-		if p.LanIP != "" && p.IP == clientRealIP {
-			ipToReturn = p.LanIP
+		// Always add Public IP
+		ipBytes := net.ParseIP(p.IP).To4()
+		if ipBytes != nil {
+			buf = append(buf, ipBytes...)
+			buf = append(buf, byte(p.Port>>8), byte(p.Port&0xFF))
 		}
 
-		ipBytes := net.ParseIP(ipToReturn).To4()
-		if ipBytes == nil {
-			continue // Skip IPv6 in IPv4 compact response
+		// Add LAN IP as an additional fallback endpoint
+		if p.LanIP != "" && clientLanIP != "" && p.IP == clientRealIP {
+			if isSameSubnet24(p.LanIP, clientLanIP) {
+				lanIpBytes := net.ParseIP(p.LanIP).To4()
+				if lanIpBytes != nil {
+					buf = append(buf, lanIpBytes...)
+					buf = append(buf, byte(p.Port>>8), byte(p.Port&0xFF))
+				}
+			}
 		}
-
-		buf = append(buf, ipBytes...)
-		buf = append(buf, byte(p.Port>>8), byte(p.Port&0xFF))
 	}
 	return string(buf)
+}
+
+func isSameSubnet24(ip1, ip2 string) bool {
+	parsed1 := net.ParseIP(ip1).To4()
+	parsed2 := net.ParseIP(ip2).To4()
+	if parsed1 == nil || parsed2 == nil {
+		return false
+	}
+	// Check if first 3 bytes (24 bits) match
+	return parsed1[0] == parsed2[0] && parsed1[1] == parsed2[1] && parsed1[2] == parsed2[2]
 }

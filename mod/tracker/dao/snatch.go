@@ -29,3 +29,49 @@ func (s *snatch) UpdateOrCreate(ctx context.Context, snatchData *model.Snatch) e
 			LastAction: snatchData.LastAction,
 		}).FirstOrCreate(snatchData).Error
 }
+
+func (s *snatch) ListByTorrent(ctx context.Context, torrentID string, page, pageSize int32) ([]model.Snatch, int64, error) {
+	db := s.GetTxFromCtx(ctx).WithContext(ctx).Where("torrent_id = ?", torrentID)
+
+	var count int64
+	if err := db.Model(&model.Snatch{}).Count(&count).Error; err != nil {
+		return nil, 0, err
+	}
+
+	if page < 1 {
+		page = 1
+	}
+	if pageSize < 1 || pageSize > 100 {
+		pageSize = 20
+	}
+	offset := (page - 1) * pageSize
+
+	var list []model.Snatch
+	if err := db.Order("last_action DESC").Offset(int(offset)).Limit(int(pageSize)).Find(&list).Error; err != nil {
+		return nil, 0, err
+	}
+	return list, count, nil
+}
+
+func (s *snatch) ListByUser(ctx context.Context, userID string, page, pageSize int32) ([]model.Snatch, int64, error) {
+	db := s.GetTxFromCtx(ctx).WithContext(ctx).Where("user_id = ?", userID)
+
+	var count int64
+	if err := db.Model(&model.Snatch{}).Count(&count).Error; err != nil {
+		return nil, 0, err
+	}
+
+	if page < 1 {
+		page = 1
+	}
+	if pageSize < 1 || pageSize > 100 {
+		pageSize = 20
+	}
+	offset := (page - 1) * pageSize
+
+	var list []model.Snatch
+	if err := db.Order("last_action DESC").Offset(int(offset)).Limit(int(pageSize)).Find(&list).Error; err != nil {
+		return nil, 0, err
+	}
+	return list, count, nil
+}

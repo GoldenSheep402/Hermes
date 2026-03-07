@@ -1480,13 +1480,13 @@ const file_user_v1_user_proto_rawDesc = "" +
 	"\x17UpdateUserGroupResponse\"(\n" +
 	"\x16DeleteUserGroupRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\"\x19\n" +
-	"\x17DeleteUserGroupResponse2\xe8\n" +
+	"\x17DeleteUserGroupResponse2\xea\n" +
 	"\n" +
 	"\vUserService\x12[\n" +
 	"\aGetUser\x12\x17.user.v1.GetUserRequest\x1a\x18.user.v1.GetUserResponse\"\x1d\x82\xd3\xe4\x93\x02\x17:\x01*\"\x12/gapi/user/v1/info\x12s\n" +
-	"\x0eGetUserProfile\x12\x1e.user.v1.GetUserProfileRequest\x1a\x1f.user.v1.GetUserProfileResponse\" \x82\xd3\xe4\x93\x02\x1a:\x01*\"\x15/gapi/user/v1/profile\x12d\n" +
+	"\x0eGetUserProfile\x12\x1e.user.v1.GetUserProfileRequest\x1a\x1f.user.v1.GetUserProfileResponse\" \x82\xd3\xe4\x93\x02\x1a:\x01*\"\x15/gapi/user/v1/profile\x12f\n" +
 	"\n" +
-	"UpdateUser\x12\x1a.user.v1.UpdateUserRequest\x1a\x1b.user.v1.UpdateUserResponse\"\x1d\x82\xd3\xe4\x93\x02\x17:\x01*\x1a\x12/gapi/user/v1/info\x12t\n" +
+	"UpdateUser\x12\x1a.user.v1.UpdateUserRequest\x1a\x1b.user.v1.UpdateUserResponse\"\x1f\x82\xd3\xe4\x93\x02\x19:\x01*\"\x14/gapi/user/v1/update\x12t\n" +
 	"\x0eUpdatePassword\x12\x1e.user.v1.UpdatePasswordRequest\x1a\x1f.user.v1.UpdatePasswordResponse\"!\x82\xd3\xe4\x93\x02\x1b:\x01*\"\x16/gapi/user/v1/password\x12s\n" +
 	"\fResetPasskey\x12\x1c.user.v1.ResetPasskeyRequest\x1a\x1d.user.v1.ResetPasskeyResponse\"&\x82\xd3\xe4\x93\x02 :\x01*\"\x1b/gapi/user/v1/passkey/reset\x12s\n" +
 	"\x0eGetUserPasskey\x12\x1e.user.v1.GetUserPasskeyRequest\x1a\x1f.user.v1.GetUserPasskeyResponse\" \x82\xd3\xe4\x93\x02\x1a:\x01*\"\x15/gapi/user/v1/passkey\x12a\n" +

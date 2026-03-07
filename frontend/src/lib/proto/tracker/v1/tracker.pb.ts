@@ -9,6 +9,7 @@ export type PeerInfo = {
   peerId?: Uint8Array
   ip?: string
   port?: number
+  lanIp?: string
 }
 
 export type SnatchInfo = {

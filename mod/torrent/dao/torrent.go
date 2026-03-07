@@ -60,7 +60,7 @@ func (t *torrent) Create(ctx context.Context, torrentBase *model.Torrent, files 
 }
 
 func (t *torrent) Get(ctx context.Context, torrentID string) (*model.Torrent, []model.TorrentFile, error) {
-	db := t.DB().WithContext(ctx)
+	db := t.GetTxFromCtx(ctx).WithContext(ctx)
 	var torrent model.Torrent
 	if err := db.Model(&model.Torrent{}).Where("id = ?", torrentID).First(&torrent).Error; err != nil {
 		return nil, nil, status.Error(codes.NotFound, "Torrent not found")

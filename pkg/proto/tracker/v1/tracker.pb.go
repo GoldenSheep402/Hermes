@@ -27,6 +27,7 @@ type PeerInfo struct {
 	PeerId        []byte                 `protobuf:"bytes,1,opt,name=peerId,proto3" json:"peerId,omitempty"`
 	Ip            string                 `protobuf:"bytes,2,opt,name=ip,proto3" json:"ip,omitempty"`
 	Port          int32                  `protobuf:"varint,3,opt,name=port,proto3" json:"port,omitempty"`
+	LanIp         string                 `protobuf:"bytes,4,opt,name=lanIp,proto3" json:"lanIp,omitempty"` // [NEW] 记录用户的局域网 IP
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -80,6 +81,13 @@ func (x *PeerInfo) GetPort() int32 {
 		return x.Port
 	}
 	return 0
+}
+
+func (x *PeerInfo) GetLanIp() string {
+	if x != nil {
+		return x.LanIp
+	}
+	return ""
 }
 
 type SnatchInfo struct {
@@ -911,11 +919,12 @@ var File_tracker_v1_tracker_proto protoreflect.FileDescriptor
 const file_tracker_v1_tracker_proto_rawDesc = "" +
 	"\n" +
 	"\x18tracker/v1/tracker.proto\x12\n" +
-	"tracker.v1\x1a\x1cgoogle/api/annotations.proto\"F\n" +
+	"tracker.v1\x1a\x1cgoogle/api/annotations.proto\"\\\n" +
 	"\bPeerInfo\x12\x16\n" +
 	"\x06peerId\x18\x01 \x01(\fR\x06peerId\x12\x0e\n" +
 	"\x02ip\x18\x02 \x01(\tR\x02ip\x12\x12\n" +
-	"\x04port\x18\x03 \x01(\x05R\x04port\"\x86\x02\n" +
+	"\x04port\x18\x03 \x01(\x05R\x04port\x12\x14\n" +
+	"\x05lanIp\x18\x04 \x01(\tR\x05lanIp\"\x86\x02\n" +
 	"\n" +
 	"SnatchInfo\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1c\n" +

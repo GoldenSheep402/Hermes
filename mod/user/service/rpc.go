@@ -9,6 +9,8 @@ import (
 	"google.golang.org/grpc/status"
 
 	"github.com/GoldenSheep402/Hermes/mod/casbinX/rbac"
+	resourceDao "github.com/GoldenSheep402/Hermes/mod/resource/dao"
+	trafficDao "github.com/GoldenSheep402/Hermes/mod/traffic/dao"
 	"github.com/GoldenSheep402/Hermes/mod/user/dao"
 	"github.com/GoldenSheep402/Hermes/mod/user/model"
 	"github.com/GoldenSheep402/Hermes/pkg/ctxKey"
@@ -75,24 +77,42 @@ func (s *S) GetUserProfile(ctx context.Context, req *userV1.GetUserProfileReques
 		return nil, status.Error(codes.NotFound, "user not found")
 	}
 
-	// Calculate ratio
-	var ratio float64 = 0
-	if user.Downloaded > 0 {
-		ratio = float64(user.Uploaded) / float64(user.Downloaded)
-	} else if user.Uploaded > 0 {
-		ratio = -1 // infinity
+	// Fetch real traffic data
+	traffic, err := trafficDao.UserTraffic.GetByUserID(ctx, id)
+	var realUpload, realDownload int64
+	var ratio float64
+	if err == nil && traffic != nil {
+		realUpload = traffic.RealUpload
+		realDownload = traffic.RealDownload
+		if realDownload > 0 {
+			ratio = float64(realUpload) / float64(realDownload)
+		} else if realUpload > 0 {
+			ratio = -1 // infinity
+		}
+	} else {
+		// Fallback to basic user struct if traffic record not initialized yet
+		realUpload = user.Uploaded
+		realDownload = user.Downloaded
+		if realDownload > 0 {
+			ratio = float64(realUpload) / float64(realDownload)
+		} else if realUpload > 0 {
+			ratio = -1 // infinity
+		}
 	}
 
-	// TODO: Fetch real upload/download records and counts from TransferHistory
-	// For now, return basic user profile stats
+	// Fetch real activity counts
+	publishedCount, _ := resourceDao.Resource.CountPublishedByUser(ctx, id)
+	seedingCount, _ := trafficDao.TransferHistory.CountActiveSeeding(ctx, id)
+	downloadCount, _ := trafficDao.TransferHistory.CountActiveDownloading(ctx, id)
+
 	return &userV1.GetUserProfileResponse{
 		User:           convertUserModelToProto(user),
-		RealUpload:     user.Uploaded,
-		RealDownload:   user.Downloaded,
+		RealUpload:     realUpload,
+		RealDownload:   realDownload,
 		Ratio:          ratio,
-		PublishedCount: 0,
-		SeedingCount:   0,
-		DownloadCount:  0,
+		PublishedCount: int32(publishedCount),
+		SeedingCount:   int32(seedingCount),
+		DownloadCount:  int32(downloadCount),
 	}, nil
 }
 
@@ -284,6 +304,9 @@ func (s *S) CreateUserGroup(ctx context.Context, req *userV1.CreateUserGroupRequ
 }
 
 func (s *S) GetUserGroup(ctx context.Context, req *userV1.GetUserGroupRequest) (*userV1.GetUserGroupResponse, error) {
+	if _, ok := ctx.Value(ctxKey.UID).(string); !ok {
+		return nil, status.Error(codes.Unauthenticated, "unauthenticated")
+	}
 	group, err := dao.UserGroup.Get(ctx, req.Id)
 	if err != nil {
 		return nil, status.Error(codes.NotFound, "group not found")
@@ -294,6 +317,9 @@ func (s *S) GetUserGroup(ctx context.Context, req *userV1.GetUserGroupRequest) (
 }
 
 func (s *S) ListUserGroups(ctx context.Context, req *userV1.ListUserGroupsRequest) (*userV1.ListUserGroupsResponse, error) {
+	if _, ok := ctx.Value(ctxKey.UID).(string); !ok {
+		return nil, status.Error(codes.Unauthenticated, "unauthenticated")
+	}
 	groups, err := dao.UserGroup.List(ctx)
 	if err != nil {
 		return nil, status.Error(codes.Internal, "failed to list groups")

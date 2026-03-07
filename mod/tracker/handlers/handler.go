@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/hex"
+	"net"
 	"net/http"
 	"strconv"
 	"time"
@@ -10,6 +11,7 @@ import (
 	"github.com/oklog/ulid/v2"
 	"github.com/zeebo/bencode"
 
+	"github.com/GoldenSheep402/Hermes/conf"
 	torrentDao "github.com/GoldenSheep402/Hermes/mod/torrent/dao"
 	trackerDao "github.com/GoldenSheep402/Hermes/mod/tracker/dao"
 	trackerModel "github.com/GoldenSheep402/Hermes/mod/tracker/model"
@@ -81,15 +83,14 @@ func Announce(c *jin.Context) {
 	}
 	event := q.Get("event")
 
-	// Allow overriding IP from query if tracker permits it, otherwise use request IP
-	clientIP := c.Request.RemoteAddr
-	// jin doesn't have ClientIP() easily, let's extract from RemoteAddr or headers
-	if forward := c.Request.Header.Get("X-Forwarded-For"); forward != "" {
-		clientIP = forward
+	// Extract Real IP and LanIP (if any)
+	// We dynamically load AllowedSubnets from the global config so it responds to hot-reloads
+	var allowedSubnets []string
+	if c := conf.Get(); c != nil {
+		allowedSubnets = c.TrackerV1.AllowedSubnets
 	}
-	if q.Get("ip") != "" {
-		clientIP = q.Get("ip")
-	}
+
+	realIP, lanIP := ExtractIPs(c.Request, allowedSubnets)
 
 	// 4. Update Peer info in DB (or Redis eventually)
 	isSeeder := left == 0
@@ -99,7 +100,8 @@ func Announce(c *jin.Context) {
 		TorrentID:  torrent.ID,
 		UserID:     user.ID,
 		PeerID:     hex.EncodeToString([]byte(peerIDRaw)),
-		IP:         clientIP,
+		IP:         realIP,
+		LanIP:      lanIP,
 		Port:       port,
 		Uploaded:   uploaded,
 		Downloaded: downloaded,
@@ -149,32 +151,10 @@ func Announce(c *jin.Context) {
 	}
 
 	if compact != 0 {
-		resp["peers"] = ""
+		resp["peers"] = BuildCompactPeerList(realIP, peer.PeerID, dbPeers)
 	} else {
 		// Dictionary format
-		var bPeers []map[string]interface{}
-		for _, p := range dbPeers {
-			// Do not return caller to themselves
-			if p.PeerID == peer.PeerID {
-				continue
-			}
-
-			// Decode back to raw bytes for bencode
-			rawPeerID, err := hex.DecodeString(p.PeerID)
-			if err != nil {
-				continue
-			}
-
-			bPeers = append(bPeers, map[string]interface{}{
-				"peer id": string(rawPeerID),
-				"ip":      p.IP,
-				"port":    p.Port,
-			})
-		}
-		if bPeers == nil {
-			bPeers = []map[string]interface{}{}
-		}
-		resp["peers"] = bPeers
+		resp["peers"] = BuildPeerList(realIP, peer.PeerID, dbPeers)
 	}
 
 	c.Writer.Header().Set("Content-Type", "text/plain")
@@ -226,4 +206,59 @@ func Scrape(c *jin.Context) {
 	c.Writer.Header().Set("Content-Type", "text/plain")
 	c.Writer.WriteHeader(http.StatusOK)
 	bencode.NewEncoder(c.Writer).Encode(resp)
+}
+
+// BuildPeerList constructs the list of peers to be returned to the client,
+// handling LAN IP substitution if peers share the same public IP.
+func BuildPeerList(clientRealIP string, excludePeerID string, dbPeers []*trackerModel.Peer) []map[string]interface{} {
+	var bPeers []map[string]interface{}
+	for _, p := range dbPeers {
+		if p.PeerID == excludePeerID {
+			continue
+		}
+		rawPeerID, err := hex.DecodeString(p.PeerID)
+		if err != nil {
+			continue
+		}
+
+		ipToReturn := p.IP
+		// If both peers share the exact same public (real) IP, and the target peer has a valid LAN IP registered
+		if p.LanIP != "" && p.IP == clientRealIP {
+			ipToReturn = p.LanIP
+		}
+
+		bPeers = append(bPeers, map[string]interface{}{
+			"peer id": string(rawPeerID),
+			"ip":      ipToReturn,
+			"port":    p.Port,
+		})
+	}
+	if bPeers == nil {
+		bPeers = []map[string]interface{}{}
+	}
+	return bPeers
+}
+
+// BuildCompactPeerList constructs the binary compact representation of peers.
+func BuildCompactPeerList(clientRealIP string, excludePeerID string, dbPeers []*trackerModel.Peer) string {
+	var buf []byte
+	for _, p := range dbPeers {
+		if p.PeerID == excludePeerID {
+			continue
+		}
+
+		ipToReturn := p.IP
+		if p.LanIP != "" && p.IP == clientRealIP {
+			ipToReturn = p.LanIP
+		}
+
+		ipBytes := net.ParseIP(ipToReturn).To4()
+		if ipBytes == nil {
+			continue // Skip IPv6 in IPv4 compact response
+		}
+
+		buf = append(buf, ipBytes...)
+		buf = append(buf, byte(p.Port>>8), byte(p.Port&0xFF))
+	}
+	return string(buf)
 }

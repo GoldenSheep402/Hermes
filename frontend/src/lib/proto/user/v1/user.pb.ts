@@ -145,7 +145,7 @@ export class UserService {
     return fm.fetchReq<GetUserProfileRequest, GetUserProfileResponse>(`/gapi/user/v1/profile`, {...initReq, method: "POST", body: JSON.stringify(req, fm.replacer)})
   }
   static UpdateUser(req: UpdateUserRequest, initReq?: fm.InitReq): Promise<UpdateUserResponse> {
-    return fm.fetchReq<UpdateUserRequest, UpdateUserResponse>(`/gapi/user/v1/info`, {...initReq, method: "PUT", body: JSON.stringify(req, fm.replacer)})
+    return fm.fetchReq<UpdateUserRequest, UpdateUserResponse>(`/gapi/user/v1/update`, {...initReq, method: "POST", body: JSON.stringify(req, fm.replacer)})
   }
   static UpdatePassword(req: UpdatePasswordRequest, initReq?: fm.InitReq): Promise<UpdatePasswordResponse> {
     return fm.fetchReq<UpdatePasswordRequest, UpdatePasswordResponse>(`/gapi/user/v1/password`, {...initReq, method: "POST", body: JSON.stringify(req, fm.replacer)})

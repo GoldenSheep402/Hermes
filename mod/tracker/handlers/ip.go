@@ -28,3 +28,45 @@ func GetClientIP(r *http.Request) string {
 	}
 	return r.RemoteAddr
 }
+
+// IsLANIP checks if the given IP address is a private LAN IP (e.g. 10.0.0.0/8, 192.168.0.0/16, loopback)
+// or belongs to any of the allowed subnets specified in the configuration.
+func IsLANIP(ipStr string, allowedSubnets []string) bool {
+	ip := net.ParseIP(ipStr)
+	if ip == nil {
+		return false
+	}
+
+	// Check standard private / loopback / link-local unicast IPs
+	if ip.IsPrivate() || ip.IsLoopback() || ip.IsLinkLocalUnicast() {
+		return true
+	}
+
+	// Check custom allowed subnets
+	for _, cidr := range allowedSubnets {
+		_, ipNet, err := net.ParseCIDR(cidr)
+		if err == nil && ipNet.Contains(ip) {
+			return true
+		}
+	}
+
+	return false
+}
+
+// ExtractIPs retrieves the real public IP from the request and a valid LAN IP
+// if provided in the query string ("ip" or "ipv4").
+func ExtractIPs(req *http.Request, allowedSubnets []string) (string, string) {
+	realIP := GetClientIP(req)
+	lanIP := ""
+
+	queryIP := req.URL.Query().Get("ip")
+	if queryIP == "" {
+		queryIP = req.URL.Query().Get("ipv4")
+	}
+
+	if queryIP != "" && IsLANIP(queryIP, allowedSubnets) {
+		lanIP = queryIP
+	}
+
+	return realIP, lanIP
+}

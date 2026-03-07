@@ -10,6 +10,7 @@ message PeerInfo {
   bytes peerId = 1;
   string ip = 2;
   int32 port = 3;
+  string lanIp = 4; // [NEW] 记录用户的局域网 IP
 }
 
 message SnatchInfo {

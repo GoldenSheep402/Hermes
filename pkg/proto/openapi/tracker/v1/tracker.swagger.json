@@ -254,6 +254,10 @@
         "port": {
           "type": "integer",
           "format": "int32"
+        },
+        "lanIp": {
+          "type": "string",
+          "title": "[NEW] 记录用户的局域网 IP"
         }
       }
     },

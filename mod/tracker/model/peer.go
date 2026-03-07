@@ -14,6 +14,7 @@ type Peer struct {
 	UserID     string    `gorm:"type:char(26);index;not null" json:"user_id"`
 	PeerID     string    `gorm:"size:40;not null" json:"peer_id"`
 	IP         string    `gorm:"size:45;not null" json:"ip"`
+	LanIP      string    `gorm:"size:45" json:"lan_ip"`
 	Port       int       `gorm:"not null" json:"port"`
 	Uploaded   int64     `gorm:"not null;default:0" json:"uploaded"`
 	Downloaded int64     `gorm:"not null;default:0" json:"downloaded"`

@@ -5,14 +5,9 @@ import { MessagePlugin } from 'tdesign-vue-next'
 import type { Resource } from '@/lib/proto/resource/v1/resource.pb'
 import type { TorrentFile, TorrentInfo } from '@/lib/proto/torrent/v1/torrent.pb'
 import { ResourceService, TorrentService } from '@/services/grpc'
+import type { TorrentFileRow as FileRow } from '@/types/torrent'
 import { formatBytes, formatDateTime } from '@/utils/format'
 import { downloadTorrentFile } from '@/utils/torrent'
-
-interface FileRow {
-  id: string
-  path: string
-  size: number
-}
 
 const route = useRoute()
 const router = useRouter()

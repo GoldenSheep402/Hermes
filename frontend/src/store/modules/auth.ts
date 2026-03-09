@@ -2,26 +2,7 @@ import { defineStore } from 'pinia'
 import { AuthService, UserService } from '@/services/grpc'
 import type { PermissionKey } from '@/constants/permissions'
 import { resolvePermissionsByRoles } from '@/constants/permissions'
-
-export interface PtUserProfile {
-  id: string
-  username: string
-  email: string
-  className: string
-  reputation: number
-  uploadBytes: number
-  downloadBytes: number
-  bonusPoints: number
-  inboxUnread: number
-  inviteCount: number
-  avatar: string
-  roles: string[]
-}
-
-interface LoginPayload {
-  email: string
-  password: string
-}
+import type { AuthLoginPayload as LoginPayload, PtUserProfile } from '@/types/auth'
 
 function createDefaultProfile(): PtUserProfile {
   return {

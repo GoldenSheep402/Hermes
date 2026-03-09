@@ -1,53 +1,14 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import { MessagePlugin } from 'tdesign-vue-next'
 import type { Category, CategoryMetaTemplate, MetaTemplatePreset } from '@/lib/proto/category/v1/category.pb'
 import { CategoryService } from '@/services/grpc'
-
-interface CategoryRow {
-  id: string
-  name: string
-  slug: string
-  description: string
-  parentId: string
-  icon: string
-  sortOrder: number
-  isEnabled: boolean
-  depth: number
-  metaTemplates: CategoryMetaTemplateRow[]
-}
-
-interface CategoryMetaTemplateRow {
-  id: string
-  categoryId: string
-  key: string
-  label: string
-  type: string
-  required: boolean
-  options: string
-  sortOrder: number
-  defaultValue: string
-}
-
-interface CategoryPresetTemplate {
-  key: string
-  label: string
-  type: string
-  required?: boolean
-  options?: string
-  sortOrder?: number
-  defaultValue?: string
-}
-
-interface CategoryPreset {
-  value: string
-  label: string
-  name: string
-  slug: string
-  icon: string
-  description: string
-  templates: CategoryPresetTemplate[]
-}
+import type {
+  AdminCategoryMetaTemplateRow as CategoryMetaTemplateRow,
+  AdminCategoryRow as CategoryRow,
+  CategoryPreset,
+} from '@/types/category'
 
 const categoryPresetList: CategoryPreset[] = [
   {
@@ -178,6 +139,8 @@ const categoryPresetList: CategoryPreset[] = [
   },
 ]
 
+const router = useRouter()
+
 const categoryRows = ref<CategoryRow[]>([])
 const categoryLoading = ref(false)
 const categorySaving = ref(false)
@@ -186,6 +149,7 @@ const categoryEditorMode = ref<'create' | 'edit'>('create')
 const editingCategoryId = ref('')
 const selectedCategoryPreset = ref('')
 const selectedTemplateCategoryId = ref('')
+const categoryDraftMetaTemplates = ref<CategoryMetaTemplateRow[]>([])
 const metaTemplatePresets = ref<MetaTemplatePreset[]>([])
 const selectedMetaTemplatePreset = ref('')
 const metaTemplateLoading = ref(false)
@@ -276,24 +240,63 @@ const selectedMetaTemplatePresetItem = computed(
   () => metaTemplatePresets.value.find((item) => item.value === selectedMetaTemplatePreset.value) || null,
 )
 
-const selectedTemplateCategory = computed(
-  () => categoryRows.value.find((item) => item.id === selectedTemplateCategoryId.value) || null,
+const isCategoryCreateMode = computed(
+  () => categoryEditorVisible.value && categoryEditorMode.value === 'create',
 )
 
-const selectedCategoryMetaTemplates = computed(() => {
-  const list = selectedTemplateCategory.value?.metaTemplates || []
-  return [...list].sort((left, right) => {
+function createDraftMetaTemplateId(): string {
+  return `draft-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+}
+
+function sortMetaTemplateRows(items: CategoryMetaTemplateRow[]): CategoryMetaTemplateRow[] {
+  return [...items].sort((left, right) => {
     if (left.sortOrder === right.sortOrder) {
       return left.key.localeCompare(right.key)
     }
     return left.sortOrder - right.sortOrder
   })
+}
+
+function suggestNextMetaTemplateSortOrder(items: CategoryMetaTemplateRow[]): number {
+  if (items.length === 0) {
+    return 10
+  }
+  let maxSort = 0
+  for (const item of items) {
+    const value = Number(item.sortOrder || 0)
+    if (value > maxSort) {
+      maxSort = value
+    }
+  }
+  return maxSort + 10
+}
+
+function findDuplicateMetaTemplateKey(items: CategoryMetaTemplateRow[], key: string, ignoreID = ''): boolean {
+  const target = key.trim().toLowerCase()
+  if (!target) {
+    return false
+  }
+  return items.some((item) => item.id !== ignoreID && item.key.trim().toLowerCase() === target)
+}
+
+const selectedTemplateCategory = computed(
+  () => categoryRows.value.find((item) => item.id === selectedTemplateCategoryId.value) || null,
+)
+
+const selectedCategoryMetaTemplates = computed(() => {
+  return sortMetaTemplateRows(selectedTemplateCategory.value?.metaTemplates || [])
 })
+
+const draftCategoryMetaTemplates = computed(() => sortMetaTemplateRows(categoryDraftMetaTemplates.value))
+
+const activeCategoryMetaTemplates = computed(() =>
+  isCategoryCreateMode.value ? draftCategoryMetaTemplates.value : selectedCategoryMetaTemplates.value,
+)
 
 const filteredCategoryMetaTemplates = computed(() => {
   const preset = selectedMetaTemplatePresetItem.value
   if (!preset) {
-    return selectedCategoryMetaTemplates.value
+    return activeCategoryMetaTemplates.value
   }
 
   const templates = preset.templates || []
@@ -302,10 +305,13 @@ const filteredCategoryMetaTemplates = computed(() => {
       .map((item) => String(item.key || '').trim().toLowerCase())
       .filter(Boolean),
   )
-  return selectedCategoryMetaTemplates.value.filter((item) => keySet.has(item.key.trim().toLowerCase()))
+  return activeCategoryMetaTemplates.value.filter((item) => keySet.has(item.key.trim().toLowerCase()))
 })
 
 watch(selectedTemplateCategoryId, (categoryID) => {
+  if (isCategoryCreateMode.value) {
+    return
+  }
   if (!metaTemplateEditorVisible.value || metaTemplateEditorMode.value !== 'create') {
     return
   }
@@ -462,12 +468,6 @@ function normalizePresetTemplateType(type: string | undefined): string {
 }
 
 async function applyMetaTemplatePreset() {
-  const categoryId = selectedTemplateCategoryId.value.trim()
-  if (!categoryId) {
-    MessagePlugin.warning('请先选择一个分类')
-    return
-  }
-
   const preset = selectedMetaTemplatePresetItem.value
   if (!preset) {
     MessagePlugin.warning('请先选择一个模板预设')
@@ -477,7 +477,7 @@ async function applyMetaTemplatePreset() {
   const presetName = preset.label || preset.value || '未命名预设'
 
   const existingKeys = new Set(
-    selectedCategoryMetaTemplates.value
+    activeCategoryMetaTemplates.value
       .map((item) => item.key.trim().toLowerCase())
       .filter(Boolean),
   )
@@ -489,6 +489,40 @@ async function applyMetaTemplatePreset() {
 
   if (candidates.length === 0) {
     MessagePlugin.info('该预设字段已全部存在，无需添加')
+    return
+  }
+
+  if (isCategoryCreateMode.value) {
+    const startSortOrder = suggestNextMetaTemplateSortOrder(activeCategoryMetaTemplates.value)
+    const draftTemplates = candidates.map((item, index) => {
+      const key = String(item.key || '').trim().toLowerCase()
+      const label = String(item.label || key).trim()
+      return {
+        id: createDraftMetaTemplateId(),
+        categoryId: '',
+        key,
+        label,
+        type: normalizePresetTemplateType(item.type),
+        required: item.required === true,
+        options: String(item.options || '').trim(),
+        sortOrder: Number(item.sortOrder || 0) || (startSortOrder + index * 10),
+        defaultValue: String(item.defaultValue || '').trim(),
+      } satisfies CategoryMetaTemplateRow
+    })
+
+    categoryDraftMetaTemplates.value = sortMetaTemplateRows([
+      ...categoryDraftMetaTemplates.value,
+      ...draftTemplates,
+    ])
+
+    const skipped = presetTemplates.length - candidates.length
+    MessagePlugin.success(`已应用预设「${presetName}」：新增 ${candidates.length}，跳过 ${Math.max(0, skipped)}`)
+    return
+  }
+
+  const categoryId = selectedTemplateCategoryId.value.trim()
+  if (!categoryId) {
+    MessagePlugin.warning('请先选择一个分类')
     return
   }
 
@@ -531,13 +565,20 @@ function openCreateCategory() {
   categoryEditorMode.value = 'create'
   editingCategoryId.value = ''
   resetCategoryForm()
+  categoryDraftMetaTemplates.value = []
+  metaTemplateEditorVisible.value = false
+  editingMetaTemplateId.value = ''
   categoryForm.sortOrder = suggestNextCategorySortOrder()
   categoryEditorVisible.value = true
+  resetMetaTemplateForm()
 }
 
 function openEditCategory(row: CategoryRow) {
   categoryEditorMode.value = 'edit'
   editingCategoryId.value = row.id
+  categoryDraftMetaTemplates.value = []
+  metaTemplateEditorVisible.value = false
+  editingMetaTemplateId.value = ''
   selectedCategoryPreset.value = ''
   categoryForm.name = row.name
   categoryForm.slug = row.slug
@@ -549,30 +590,36 @@ function openEditCategory(row: CategoryRow) {
   categoryEditorVisible.value = true
 }
 
-function focusCategoryTemplates(row: CategoryRow) {
-  selectedTemplateCategoryId.value = row.id
-  metaTemplateEditorVisible.value = false
+async function openCategoryDetail(row: CategoryRow) {
+  await router.push({
+    name: 'AdminCategoryDetail',
+    params: { id: row.id },
+  })
 }
 
 function closeCategoryEditor() {
   categoryEditorVisible.value = false
   editingCategoryId.value = ''
+  categoryDraftMetaTemplates.value = []
+  metaTemplateEditorVisible.value = false
+  editingMetaTemplateId.value = ''
   resetCategoryForm()
+  resetMetaTemplateForm()
 }
 
 function resetMetaTemplateForm() {
-  metaTemplateForm.categoryId = selectedTemplateCategoryId.value
+  metaTemplateForm.categoryId = isCategoryCreateMode.value ? '' : selectedTemplateCategoryId.value
   metaTemplateForm.key = ''
   metaTemplateForm.label = ''
   metaTemplateForm.type = 'text'
   metaTemplateForm.required = false
   metaTemplateForm.options = ''
-  metaTemplateForm.sortOrder = 0
+  metaTemplateForm.sortOrder = suggestNextMetaTemplateSortOrder(activeCategoryMetaTemplates.value)
   metaTemplateForm.defaultValue = ''
 }
 
 function openCreateMetaTemplate() {
-  if (!selectedTemplateCategoryId.value) {
+  if (!isCategoryCreateMode.value && !selectedTemplateCategoryId.value) {
     MessagePlugin.warning('请先在分类列表点击“模板”选择管理对象')
     return
   }
@@ -584,12 +631,12 @@ function openCreateMetaTemplate() {
 }
 
 function openEditMetaTemplate(row: CategoryMetaTemplateRow) {
-  if (row.categoryId && row.categoryId !== selectedTemplateCategoryId.value) {
+  if (!isCategoryCreateMode.value && row.categoryId && row.categoryId !== selectedTemplateCategoryId.value) {
     selectedTemplateCategoryId.value = row.categoryId
   }
   metaTemplateEditorMode.value = 'edit'
   editingMetaTemplateId.value = row.id
-  metaTemplateForm.categoryId = row.categoryId || selectedTemplateCategoryId.value
+  metaTemplateForm.categoryId = isCategoryCreateMode.value ? '' : row.categoryId || selectedTemplateCategoryId.value
   metaTemplateForm.key = row.key
   metaTemplateForm.label = row.label
   metaTemplateForm.type = row.type || 'text'
@@ -607,12 +654,15 @@ function closeMetaTemplateEditor() {
 }
 
 async function saveMetaTemplate() {
+  const isDraftMode = isCategoryCreateMode.value
   const categoryId = (metaTemplateForm.categoryId || selectedTemplateCategoryId.value).trim()
   const key = metaTemplateForm.key.trim()
   const label = metaTemplateForm.label.trim()
   const fieldType = metaTemplateForm.type.trim().toLowerCase()
+  const ignoreID = metaTemplateEditorMode.value === 'edit' ? editingMetaTemplateId.value : ''
+  const sortOrder = Number(metaTemplateForm.sortOrder || 0)
 
-  if (!categoryId) {
+  if (!isDraftMode && !categoryId) {
     MessagePlugin.warning('请先在分类列表选择模板管理对象')
     return
   }
@@ -633,6 +683,43 @@ async function saveMetaTemplate() {
     return
   }
 
+  if (findDuplicateMetaTemplateKey(activeCategoryMetaTemplates.value, key, ignoreID)) {
+    MessagePlugin.warning('模板 Key 已存在，请更换后再保存')
+    return
+  }
+
+  if (isDraftMode) {
+    const draftTemplate: CategoryMetaTemplateRow = {
+      id: metaTemplateEditorMode.value === 'create' ? createDraftMetaTemplateId() : editingMetaTemplateId.value,
+      categoryId: '',
+      key,
+      label,
+      type: fieldType,
+      required: metaTemplateForm.required,
+      options: metaTemplateForm.options.trim(),
+      sortOrder,
+      defaultValue: metaTemplateForm.defaultValue.trim(),
+    }
+
+    if (metaTemplateEditorMode.value === 'create') {
+      categoryDraftMetaTemplates.value = sortMetaTemplateRows([...categoryDraftMetaTemplates.value, draftTemplate])
+      MessagePlugin.success('模板已加入创建草稿')
+    } else {
+      const index = categoryDraftMetaTemplates.value.findIndex((item) => item.id === editingMetaTemplateId.value)
+      if (index < 0) {
+        MessagePlugin.error('未找到要编辑的模板，请刷新后重试')
+        return
+      }
+      const next = [...categoryDraftMetaTemplates.value]
+      next[index] = draftTemplate
+      categoryDraftMetaTemplates.value = sortMetaTemplateRows(next)
+      MessagePlugin.success('模板草稿已更新')
+    }
+
+    closeMetaTemplateEditor()
+    return
+  }
+
   metaTemplateSaving.value = true
   try {
     if (metaTemplateEditorMode.value === 'create') {
@@ -644,7 +731,7 @@ async function saveMetaTemplate() {
           type: fieldType,
           required: metaTemplateForm.required,
           options: metaTemplateForm.options.trim(),
-          sortOrder: metaTemplateForm.sortOrder,
+          sortOrder,
           defaultValue: metaTemplateForm.defaultValue.trim(),
         },
       })
@@ -659,7 +746,7 @@ async function saveMetaTemplate() {
           type: fieldType,
           required: metaTemplateForm.required,
           options: metaTemplateForm.options.trim(),
-          sortOrder: metaTemplateForm.sortOrder,
+          sortOrder,
           defaultValue: metaTemplateForm.defaultValue.trim(),
         },
       })
@@ -680,6 +767,15 @@ async function saveMetaTemplate() {
 async function removeMetaTemplate(row: CategoryMetaTemplateRow) {
   const confirmed = window.confirm(`确认删除模板「${row.label} (${row.key})」吗？`)
   if (!confirmed) {
+    return
+  }
+
+  if (isCategoryCreateMode.value) {
+    categoryDraftMetaTemplates.value = categoryDraftMetaTemplates.value.filter((item) => item.id !== row.id)
+    if (editingMetaTemplateId.value === row.id) {
+      closeMetaTemplateEditor()
+    }
+    MessagePlugin.success('模板草稿已删除')
     return
   }
 
@@ -721,10 +817,45 @@ async function saveCategory() {
         icon: categoryForm.icon.trim(),
         sortOrder: categoryForm.sortOrder,
       })
-      if (created.id) {
-        selectedTemplateCategoryId.value = created.id
+      const createdCategoryID = String(created.id || '').trim()
+      if (createdCategoryID) {
+        selectedTemplateCategoryId.value = createdCategoryID
       }
-      MessagePlugin.success('类别创建成功')
+
+      const draftTemplates = sortMetaTemplateRows(categoryDraftMetaTemplates.value)
+      if (createdCategoryID && draftTemplates.length > 0) {
+        let successCount = 0
+        let failedCount = 0
+        for (const template of draftTemplates) {
+          try {
+            await CategoryService.CreateMetaTemplate({
+              template: {
+                categoryId: createdCategoryID,
+                key: template.key.trim(),
+                label: template.label.trim(),
+                type: normalizePresetTemplateType(template.type),
+                required: template.required === true,
+                options: template.options.trim(),
+                sortOrder: Number(template.sortOrder || 0),
+                defaultValue: template.defaultValue.trim(),
+              },
+            })
+            successCount += 1
+          } catch {
+            failedCount += 1
+          }
+        }
+
+        if (failedCount > 0) {
+          MessagePlugin.warning(`类别创建成功，模板新增 ${successCount}，失败 ${failedCount}`)
+        } else {
+          MessagePlugin.success(`类别创建成功，已新增 ${successCount} 个模板`)
+        }
+      } else if (draftTemplates.length > 0 && !createdCategoryID) {
+        MessagePlugin.warning('类别已创建，但未返回分类 ID，模板未能自动保存')
+      } else {
+        MessagePlugin.success('类别创建成功')
+      }
     } else {
       await CategoryService.UpdateCategory({
         category: {
@@ -803,7 +934,7 @@ onMounted(async () => {
             />
             <t-button variant="outline" @click="applySelectedCategoryPreset">填充表单</t-button>
           </div>
-          <p class="preset-hint">用于填充名称、Slug、图标和描述。创建后再到“元数据模板”里配置字段。</p>
+          <p class="preset-hint">用于填充名称、Slug、图标和描述。可在下方“元数据模板”继续增删改字段。</p>
         </label>
 
         <label>
@@ -858,7 +989,7 @@ onMounted(async () => {
       </div>
     </div>
 
-    <template v-else>
+    <template v-if="!categoryEditorVisible">
       <t-table
         row-key="id"
         size="small"
@@ -883,147 +1014,150 @@ onMounted(async () => {
 
         <template #actions="{ row }">
           <div class="flex items-center gap-2">
-            <t-link
-              hover="color"
-              :theme="row.id === selectedTemplateCategoryId ? 'success' : 'default'"
-              @click="focusCategoryTemplates(row)"
-            >
-              模板
-            </t-link>
+            <t-link hover="color" @click="openCategoryDetail(row)">查看</t-link>
             <t-link theme="primary" hover="color" @click="openEditCategory(row)">编辑</t-link>
             <t-link theme="danger" hover="color" @click="removeCategory(row)">删除</t-link>
           </div>
         </template>
       </t-table>
+    </template>
 
-      <div class="meta-template-panel">
-        <div class="meta-template-header">
-          <div class="meta-template-title">
-            <p class="text-sm font-600">元数据模板</p>
-            <p class="preset-hint">
-              当前分类：{{ selectedTemplateCategory?.name || '未选择' }}（在上方类别操作里点击“模板”切换）
-            </p>
-          </div>
-        </div>
-
-        <div class="meta-preset-row">
-          <t-button theme="primary" :disabled="!selectedTemplateCategoryId" @click="openCreateMetaTemplate">
-            新增模板
-          </t-button>
-          <t-select
-            v-model="selectedMetaTemplatePreset"
-            :options="metaTemplatePresetOptions"
-            clearable
-            class="w-64"
-            placeholder="筛选预设（电影/动漫/电视剧/纪录片/软件/电子书）"
-          />
-          <t-button
-            variant="outline"
-            :loading="metaTemplatePresetApplying"
-            :disabled="!selectedTemplateCategoryId || !selectedMetaTemplatePreset"
-            @click="applyMetaTemplatePreset"
-          >
-            应用预设
-          </t-button>
-        </div>
-
-        <p v-if="selectedMetaTemplatePresetItem" class="preset-hint">
-          当前筛选：{{ selectedMetaTemplatePresetItem.label || selectedMetaTemplatePresetItem.value }}，可一键导入该预设字段。
-        </p>
-        <div v-if="selectedMetaTemplatePresetItem" class="preset-template-preview">
-          <t-tag
-            v-for="item in (selectedMetaTemplatePresetItem.templates || [])"
-            :key="item.key"
-            size="small"
-            variant="light"
-          >
-            {{ item.label }} ({{ item.key }})
-            <span v-if="item.required"> *</span>
-          </t-tag>
-        </div>
-
-        <t-table
-          row-key="id"
-          size="small"
-          bordered
-          hover
-          :columns="categoryMetaTemplateColumns"
-          :data="filteredCategoryMetaTemplates"
-          :loading="categoryLoading || metaTemplateLoading"
-        >
-          <template #required="{ row }">
-            <t-tag size="small" :theme="row.required ? 'success' : 'default'" variant="light">
-              {{ row.required ? '是' : '否' }}
-            </t-tag>
-          </template>
-
-          <template #actions="{ row }">
-            <div class="flex items-center gap-2">
-              <t-link theme="primary" hover="color" @click="openEditMetaTemplate(row)">编辑</t-link>
-              <t-link theme="danger" hover="color" @click="removeMetaTemplate(row)">删除</t-link>
-            </div>
-          </template>
-        </t-table>
-
-        <div v-if="metaTemplateEditorVisible" class="category-editor">
-          <p class="mb-3 text-sm font-600">
-            {{ metaTemplateEditorMode === 'create' ? '新建模板' : '编辑模板' }}
+    <div v-if="categoryEditorVisible && categoryEditorMode === 'create'" class="meta-template-panel">
+      <div class="meta-template-header">
+        <div class="meta-template-title">
+          <p class="text-sm font-600">元数据模板</p>
+          <p v-if="isCategoryCreateMode" class="preset-hint">
+            当前为新建类别，可先配置模板字段，保存类别后自动创建。
           </p>
-          <p class="mb-3 text-xs text-[var(--muted-text)]">
-            所属分类：{{ selectedTemplateCategory?.name || '未选择' }}
+          <p v-else class="preset-hint">
+            当前分类：{{ selectedTemplateCategory?.name || '未选择' }}（在上方类别操作里点击“模板”切换）
           </p>
-
-          <div class="form-grid">
-            <label>
-              <span>字段 Key *</span>
-              <t-input v-model="metaTemplateForm.key" clearable placeholder="例如：author / isbn / season" />
-            </label>
-
-            <label>
-              <span>字段名称 *</span>
-              <t-input v-model="metaTemplateForm.label" clearable placeholder="例如：作者 / ISBN / 季度" />
-            </label>
-
-            <label>
-              <span>字段类型 *</span>
-              <t-select v-model="metaTemplateForm.type" :options="metaTemplateTypeOptions" />
-            </label>
-
-            <label>
-              <span>排序</span>
-              <t-input-number v-model="metaTemplateForm.sortOrder" :min="0" />
-            </label>
-
-            <label>
-              <span>必填</span>
-              <t-switch
-                :value="metaTemplateForm.required"
-                @change="(value: boolean) => (metaTemplateForm.required = value)"
-              />
-            </label>
-
-            <label>
-              <span>默认值</span>
-              <t-input v-model="metaTemplateForm.defaultValue" clearable />
-            </label>
-
-            <label class="lg:col-span-2">
-              <span>可选项（select 类型使用，逗号或换行分隔）</span>
-              <t-textarea
-                v-model="metaTemplateForm.options"
-                :autosize="{ minRows: 2, maxRows: 4 }"
-                placeholder="例如：1080p, 2160p 或一行一个选项"
-              />
-            </label>
-          </div>
-
-          <div class="mt-3 flex gap-2">
-            <t-button theme="primary" :loading="metaTemplateSaving" @click="saveMetaTemplate">保存模板</t-button>
-            <t-button variant="outline" @click="closeMetaTemplateEditor">取消</t-button>
-          </div>
         </div>
       </div>
-    </template>
+
+      <div class="meta-preset-row">
+        <t-select
+          v-model="selectedMetaTemplatePreset"
+          :options="metaTemplatePresetOptions"
+          clearable
+          class="w-64"
+          placeholder="筛选预设（电影/动漫/电视剧/纪录片/软件/电子书）"
+        />
+        <t-button
+          variant="outline"
+          :loading="metaTemplatePresetApplying"
+          :disabled="(!isCategoryCreateMode && !selectedTemplateCategoryId) || !selectedMetaTemplatePreset"
+          @click="applyMetaTemplatePreset"
+        >
+          应用预设
+        </t-button>
+        <t-button
+          class="ml-auto"
+          theme="primary"
+          :disabled="!isCategoryCreateMode && !selectedTemplateCategoryId"
+          @click="openCreateMetaTemplate"
+        >
+          新增元数据字段
+        </t-button>
+      </div>
+
+      <p v-if="selectedMetaTemplatePresetItem" class="preset-hint">
+        当前筛选：{{ selectedMetaTemplatePresetItem.label || selectedMetaTemplatePresetItem.value }}，
+        {{ isCategoryCreateMode ? '可一键导入到新建类别草稿并继续编辑。' : '可一键导入该预设字段。' }}
+      </p>
+      <div v-if="selectedMetaTemplatePresetItem" class="preset-template-preview">
+        <t-tag
+          v-for="item in (selectedMetaTemplatePresetItem.templates || [])"
+          :key="item.key"
+          size="small"
+          variant="light"
+        >
+          {{ item.label }} ({{ item.key }})
+          <span v-if="item.required"> *</span>
+        </t-tag>
+      </div>
+
+      <t-table
+        row-key="id"
+        size="small"
+        bordered
+        hover
+        :columns="categoryMetaTemplateColumns"
+        :data="filteredCategoryMetaTemplates"
+        :loading="!isCategoryCreateMode && (categoryLoading || metaTemplateLoading)"
+      >
+        <template #required="{ row }">
+          <t-tag size="small" :theme="row.required ? 'success' : 'default'" variant="light">
+            {{ row.required ? '是' : '否' }}
+          </t-tag>
+        </template>
+
+        <template #actions="{ row }">
+          <div class="flex items-center gap-2">
+            <t-link theme="primary" hover="color" @click="openEditMetaTemplate(row)">编辑</t-link>
+            <t-link theme="danger" hover="color" @click="removeMetaTemplate(row)">删除</t-link>
+          </div>
+        </template>
+      </t-table>
+
+      <div v-if="metaTemplateEditorVisible" class="category-editor">
+        <p class="mb-3 text-sm font-600">
+          {{ metaTemplateEditorMode === 'create' ? '新建模板' : '编辑模板' }}
+        </p>
+        <p class="mb-3 text-xs text-[var(--muted-text)]">
+          所属分类：{{ isCategoryCreateMode ? '新建类别（保存类别后生效）' : (selectedTemplateCategory?.name || '未选择') }}
+        </p>
+
+        <div class="form-grid">
+          <label>
+            <span>字段 Key *</span>
+            <t-input v-model="metaTemplateForm.key" clearable placeholder="例如：author / isbn / season" />
+          </label>
+
+          <label>
+            <span>字段名称 *</span>
+            <t-input v-model="metaTemplateForm.label" clearable placeholder="例如：作者 / ISBN / 季度" />
+          </label>
+
+          <label>
+            <span>字段类型 *</span>
+            <t-select v-model="metaTemplateForm.type" :options="metaTemplateTypeOptions" />
+          </label>
+
+          <label>
+            <span>排序</span>
+            <t-input-number v-model="metaTemplateForm.sortOrder" :min="0" />
+          </label>
+
+          <label>
+            <span>必填</span>
+            <t-switch
+              :value="metaTemplateForm.required"
+              @change="(value: boolean) => (metaTemplateForm.required = value)"
+            />
+          </label>
+
+          <label>
+            <span>默认值</span>
+            <t-input v-model="metaTemplateForm.defaultValue" clearable />
+          </label>
+
+          <label class="lg:col-span-2">
+            <span>可选项（select 类型使用，逗号或换行分隔）</span>
+            <t-textarea
+              v-model="metaTemplateForm.options"
+              :autosize="{ minRows: 2, maxRows: 4 }"
+              placeholder="例如：1080p, 2160p 或一行一个选项"
+            />
+          </label>
+        </div>
+
+        <div class="mt-3 flex gap-2">
+          <t-button theme="primary" :loading="metaTemplateSaving" @click="saveMetaTemplate">保存模板</t-button>
+          <t-button variant="outline" @click="closeMetaTemplateEditor">取消</t-button>
+        </div>
+      </div>
+    </div>
   </t-card>
 </template>
 

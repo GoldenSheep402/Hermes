@@ -6,55 +6,14 @@ import type { Category } from '@/lib/proto/category/v1/category.pb'
 import type { Resource, ResourceMeta } from '@/lib/proto/resource/v1/resource.pb'
 import type { TorrentInfo } from '@/lib/proto/torrent/v1/torrent.pb'
 import { CategoryService, ResourceService, TorrentService, UserService } from '@/services/grpc'
+import type {
+  PromotionKey,
+  TorrentCategoryOption as CategoryOption,
+  TorrentFilterState as FilterState,
+  TorrentRecord,
+} from '@/types/torrent'
 import { formatBytes, formatDateTime } from '@/utils/format'
 import { downloadTorrentFile } from '@/utils/torrent'
-
-type PromotionKey = 'normal' | 'free' | '2xfree' | '50down'
-
-interface CategoryOption {
-  id: string
-  name: string
-  icon: string
-}
-
-interface TorrentRecord {
-  id: string
-  resourceId: string
-  torrentId: string
-  categoryId: string
-  categoryLabel: string
-  categoryIcon: string
-  title: string
-  subtitle: string
-  tags: string[]
-  comments: number
-  files: number
-  addedAt: string
-  size: number
-  seeders: number
-  leechers: number
-  completed: number
-  uploader: string
-  anonymous: boolean
-  imdbId: string
-  imdbRating: number
-  poster: string
-  source: string
-  resolution: string
-  promotion: PromotionKey
-  status: 'alive' | 'dead'
-  downloaded: boolean
-}
-
-interface FilterState {
-  keyword: string
-  categories: string[]
-  source: string
-  resolution: string
-  promotion: '' | PromotionKey
-  status: 'all' | 'alive' | 'dead'
-  undownloadedOnly: boolean
-}
 
 const defaultCategories: CategoryOption[] = [
   { id: 'movie', name: '电影', icon: '🎬' },

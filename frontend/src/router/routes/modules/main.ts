@@ -156,6 +156,24 @@ const mainRoute: RouteRecordRaw = {
           },
         },
         {
+          path: 'category/:id',
+          name: 'AdminCategoryDetail',
+          component: () => import('@/pages/admin/AdminCategoryDetail.vue'),
+          meta: {
+            requiresAuth: true,
+            requiredPermissions: [PermissionKeys.AdminPanelAccess, PermissionKeys.CategoryManage],
+          },
+        },
+        {
+          path: 'meta-template',
+          name: 'AdminMetaTemplateManage',
+          component: () => import('@/pages/admin/AdminMetaTemplateManage.vue'),
+          meta: {
+            requiresAuth: true,
+            requiredPermissions: [PermissionKeys.AdminPanelAccess, PermissionKeys.CategoryManage],
+          },
+        },
+        {
           path: 'user',
           name: 'AdminUserManage',
           component: () => import('@/pages/admin/AdminUserManage.vue'),

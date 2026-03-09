@@ -12,6 +12,9 @@ const visibleSections = computed(() =>
 )
 
 function isSectionActive(routeName: string): boolean {
+  if (routeName === 'AdminCategoryManage') {
+    return route.path === '/admin/category' || route.path.startsWith('/admin/category/')
+  }
   return route.name === routeName
 }
 </script>

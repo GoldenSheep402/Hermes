@@ -5,27 +5,11 @@ import { MessagePlugin } from 'tdesign-vue-next'
 import type { Category, CategoryMetaTemplate } from '@/lib/proto/category/v1/category.pb'
 import type { ResourceMeta } from '@/lib/proto/resource/v1/resource.pb'
 import { CategoryService, ResourceService } from '@/services/grpc'
-
-interface CategoryOption {
-  id: string
-  label: string
-  templates: CategoryMetaTemplate[]
-}
-
-interface UploadFormState {
-  title: string
-  subtitle: string
-  description: string
-  categoryId: string
-  tags: string
-  screenshots: string
-}
-
-interface CustomMetaEntry {
-  id: string
-  key: string
-  value: string
-}
+import type {
+  UploadCategoryOption as CategoryOption,
+  UploadCustomMetaEntry as CustomMetaEntry,
+  UploadFormState,
+} from '@/types/category'
 
 const router = useRouter()
 const fileInputRef = ref<HTMLInputElement | null>(null)

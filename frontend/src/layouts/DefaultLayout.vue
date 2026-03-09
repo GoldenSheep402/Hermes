@@ -2,16 +2,10 @@
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { MessagePlugin } from 'tdesign-vue-next'
-import type { PermissionKey } from '@/constants/permissions'
 import { PermissionKeys } from '@/constants/permissions'
 import { useAppStore, useAuthStore } from '@/store'
+import type { NavItem } from '@/types/layout'
 import { formatBytes, formatNumber, formatRatio } from '@/utils/format'
-
-interface NavItem {
-  path: string
-  label: string
-  requiredPermission?: PermissionKey
-}
 
 const route = useRoute()
 const router = useRouter()

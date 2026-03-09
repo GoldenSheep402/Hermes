@@ -2,7 +2,7 @@ import type { PermissionKey } from '@/constants/permissions'
 import { PermissionKeys } from '@/constants/permissions'
 
 export interface AdminSectionItem {
-  key: 'site' | 'invite' | 'tracker' | 'torrent' | 'category' | 'user'
+  key: 'site' | 'invite' | 'tracker' | 'torrent' | 'category' | 'metaTemplate' | 'user'
   label: string
   description: string
   routeName: string
@@ -43,6 +43,13 @@ export const ADMIN_SECTIONS: AdminSectionItem[] = [
     label: '种子类别管理',
     description: '维护类别层级和元数据模板',
     routeName: 'AdminCategoryManage',
+    requiredPermission: PermissionKeys.CategoryManage,
+  },
+  {
+    key: 'metaTemplate',
+    label: '元数据模板',
+    description: '维护各类别的元数据字段',
+    routeName: 'AdminMetaTemplateManage',
     requiredPermission: PermissionKeys.CategoryManage,
   },
   {

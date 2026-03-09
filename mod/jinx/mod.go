@@ -4,19 +4,21 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/GoldenSheep402/Hermes/conf"
-	"github.com/GoldenSheep402/Hermes/core/kernel"
-	"github.com/GoldenSheep402/Hermes/mod/jinx/healthcheck"
-	"github.com/GoldenSheep402/Hermes/pkg/cors"
+	"net"
+	"net/http"
+	"sync"
+	"time"
+
 	"github.com/juanjiTech/jin"
 	sentryjin "github.com/juanjiTech/sentry-jin"
 	"github.com/opentracing/opentracing-go"
 	"github.com/soheilhy/cmux"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
-	"net"
-	"net/http"
-	"sync"
-	"time"
+
+	"github.com/GoldenSheep402/Hermes/conf"
+	"github.com/GoldenSheep402/Hermes/core/kernel"
+	"github.com/GoldenSheep402/Hermes/mod/jinx/healthcheck"
+	"github.com/GoldenSheep402/Hermes/pkg/cors"
 )
 
 var _ kernel.Module = (*Mod)(nil)
@@ -48,12 +50,12 @@ func (m *Mod) Init(hub *kernel.Hub) error {
 	}
 	healthcheck.Register(m.j)
 
-	hub.Map(m.j)
+	hub.Map(&m.j)
 	return nil
 }
 
 func (m *Mod) Load(hub *kernel.Hub) error {
-	var jinE jin.Engine
+	var jinE *jin.Engine
 	if hub.Load(&jinE) != nil {
 		return errors.New("can't load jin.Engine from kernel")
 	}

@@ -3,16 +3,17 @@ package tracker
 import (
 	"errors"
 
+	"github.com/juanjiTech/jin"
+	"github.com/redis/go-redis/v9"
+	"google.golang.org/grpc"
+	"gorm.io/gorm"
+
 	"github.com/GoldenSheep402/Hermes/core/kernel"
 	"github.com/GoldenSheep402/Hermes/mod/grpcGateway/gateway"
 	"github.com/GoldenSheep402/Hermes/mod/tracker/dao"
 	"github.com/GoldenSheep402/Hermes/mod/tracker/handlers"
 	"github.com/GoldenSheep402/Hermes/mod/tracker/service"
 	trackerV1 "github.com/GoldenSheep402/Hermes/pkg/proto/tracker/v1"
-	"github.com/juanjiTech/jin"
-	"github.com/redis/go-redis/v9"
-	"google.golang.org/grpc"
-	"gorm.io/gorm"
 )
 
 var _ kernel.Module = (*Mod)(nil)

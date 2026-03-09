@@ -2,11 +2,12 @@ package jinPprof
 
 import (
 	"encoding/base64"
+	"net/http"
+	"net/http/pprof"
+
 	"github.com/GoldenSheep402/Hermes/core/kernel"
 	"github.com/juanjiTech/jin"
 	"github.com/pkg/errors"
-	"net/http"
-	"net/http/pprof"
 )
 
 var _ kernel.Module = (*Mod)(nil)
@@ -20,7 +21,7 @@ func (m *Mod) Name() string {
 }
 
 func (m *Mod) Load(hub *kernel.Hub) error {
-	var jinE jin.Engine
+	var jinE *jin.Engine
 	err := hub.Load(&jinE)
 	if err != nil {
 		return errors.New("can't load jin.Engine from kernel")

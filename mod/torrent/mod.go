@@ -2,6 +2,7 @@ package torrent
 
 import (
 	"errors"
+
 	"github.com/GoldenSheep402/Hermes/core/kernel"
 	"github.com/GoldenSheep402/Hermes/mod/grpcGateway/gateway"
 	"github.com/GoldenSheep402/Hermes/mod/torrent/dao"
@@ -49,12 +50,12 @@ func (m *Mod) Load(h *kernel.Hub) error {
 		Log: h.Log.Named("torrent.service"),
 	})
 
-	var jinE jin.Engine
+	var jinE *jin.Engine
 	err := h.Load(&jinE)
 	if err != nil {
 		return errors.New("can't load jin.Engine from kernel")
 	}
-	handlers.Registry(&jinE)
+	handlers.Registry(jinE)
 
 	err = gw.Register(torrentV1.RegisterTorrentServiceHandler)
 	if err != nil {

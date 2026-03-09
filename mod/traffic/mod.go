@@ -5,6 +5,7 @@ import (
 
 	"github.com/GoldenSheep402/Hermes/core/kernel"
 	"github.com/GoldenSheep402/Hermes/mod/grpcGateway/gateway"
+	"github.com/GoldenSheep402/Hermes/mod/traffic/dao"
 	"github.com/GoldenSheep402/Hermes/mod/traffic/service"
 	trafficV1 "github.com/GoldenSheep402/Hermes/pkg/proto/traffic/v1"
 	"github.com/redis/go-redis/v9"
@@ -32,7 +33,9 @@ func (m *Mod) Load(h *kernel.Hub) error {
 		return errors.New("can't load gorm from kernel")
 	}
 
-	// TODO: dao.Init(db, rdb)
+	if err := dao.Init(db, rdb); err != nil {
+		return err
+	}
 
 	var gw gateway.Gateway
 	if h.Load(&gw) != nil {

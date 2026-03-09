@@ -31,6 +31,9 @@ func torrentPeersKey(torrentID string) string {
 }
 
 func (p *peer) Upsert(ctx context.Context, peerData *model.Peer) error {
+	if p.rds == nil {
+		return nil
+	}
 	key := peerKey(peerData.TorrentID, peerData.PeerID)
 	data, err := json.Marshal(peerData)
 	if err != nil {
@@ -53,6 +56,9 @@ func (p *peer) Upsert(ctx context.Context, peerData *model.Peer) error {
 }
 
 func (p *peer) GetPeersForTorrent(ctx context.Context, torrentID string, limit int) ([]*model.Peer, error) {
+	if p.rds == nil {
+		return []*model.Peer{}, nil
+	}
 	// First cleanup old peers (e.g., inactive for > 40 minutes)
 	cutoff := float64(time.Now().Add(-40 * time.Minute).Unix())
 	p.rds.ZRemRangeByScore(ctx, torrentPeersKey(torrentID), "-inf", fmt.Sprintf("%f", cutoff))
@@ -100,7 +106,33 @@ func (p *peer) GetPeersForTorrent(ctx context.Context, torrentID string, limit i
 	return peers, nil
 }
 
+func (p *peer) Get(ctx context.Context, torrentID, peerID string) (*model.Peer, error) {
+	if torrentID == "" || peerID == "" {
+		return nil, nil
+	}
+	if p.rds == nil {
+		return nil, nil
+	}
+
+	val, err := p.rds.Get(ctx, peerKey(torrentID, peerID)).Result()
+	if err != nil {
+		if err == redis.Nil {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	var peerData model.Peer
+	if err := json.Unmarshal([]byte(val), &peerData); err != nil {
+		return nil, err
+	}
+	return &peerData, nil
+}
+
 func (p *peer) DeletePeer(ctx context.Context, torrentID, peerID string) error {
+	if p.rds == nil {
+		return nil
+	}
 	pipe := p.rds.Pipeline()
 	pipe.Del(ctx, peerKey(torrentID, peerID))
 	pipe.ZRem(ctx, torrentPeersKey(torrentID), peerID)

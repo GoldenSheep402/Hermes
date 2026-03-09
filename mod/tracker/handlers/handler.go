@@ -36,6 +36,7 @@ func BencodeError(c *jin.Context, msg string) {
 }
 
 func Announce(c *jin.Context) {
+	ctx := c.Request.Context()
 	passkey := c.Params.ByName("passkey")
 	if passkey == "" {
 		BencodeError(c, "Missing passkey")
@@ -43,7 +44,7 @@ func Announce(c *jin.Context) {
 	}
 
 	// 1. Authenticate user by passkey
-	user, err := userDao.User.GetByPasskey(c.Request.Context(), passkey)
+	user, err := userDao.User.GetByPasskey(ctx, passkey)
 	if err != nil || user == nil {
 		BencodeError(c, "Invalid passkey")
 		return
@@ -65,7 +66,7 @@ func Announce(c *jin.Context) {
 	}
 
 	// 3. Find Torrent by InfoHash
-	torrent, err := torrentDao.Torrent.GetByHash(c.Request.Context(), infoHashHex)
+	torrent, err := torrentDao.Torrent.GetByHash(ctx, infoHashHex)
 	if err != nil {
 		BencodeError(c, "Torrent not registered")
 		return
@@ -76,6 +77,15 @@ func Announce(c *jin.Context) {
 	uploaded, _ := strconv.ParseInt(q.Get("uploaded"), 10, 64)
 	downloaded, _ := strconv.ParseInt(q.Get("downloaded"), 10, 64)
 	left, _ := strconv.ParseInt(q.Get("left"), 10, 64)
+	if uploaded < 0 {
+		uploaded = 0
+	}
+	if downloaded < 0 {
+		downloaded = 0
+	}
+	if left < 0 {
+		left = 0
+	}
 	compact, _ := strconv.Atoi(q.Get("compact"))
 	numWant, err := strconv.Atoi(q.Get("numwant"))
 	if err != nil {
@@ -95,11 +105,14 @@ func Announce(c *jin.Context) {
 	// 4. Update Peer info in DB (or Redis eventually)
 	isSeeder := left == 0
 
+	peerIDHex := hex.EncodeToString([]byte(peerIDRaw))
+	lastPeer, _ := trackerDao.Peer.Get(ctx, torrent.ID, peerIDHex)
+
 	peer := &trackerModel.Peer{
 		Model:      stdao.Model{ID: ulid.Make().String()},
 		TorrentID:  torrent.ID,
 		UserID:     user.ID,
-		PeerID:     hex.EncodeToString([]byte(peerIDRaw)),
+		PeerID:     peerIDHex,
 		IP:         realIP,
 		LanIP:      lanIP,
 		Port:       port,
@@ -110,13 +123,20 @@ func Announce(c *jin.Context) {
 		IsSeeder:   isSeeder,
 		LastAction: time.Now(),
 	}
+	uploadDelta := computeCounterDelta(lastPeer, uploaded, event, func(p *trackerModel.Peer) int64 {
+		return p.Uploaded
+	})
+	downloadDelta := computeCounterDelta(lastPeer, downloaded, event, func(p *trackerModel.Peer) int64 {
+		return p.Downloaded
+	})
+	isActive := event != "stopped"
 
 	if event == "stopped" {
 		// Remove peer
-		trackerDao.Peer.DeletePeer(c.Request.Context(), torrent.ID, peer.PeerID)
+		_ = trackerDao.Peer.DeletePeer(ctx, torrent.ID, peer.PeerID)
 	} else {
 		// Upsert peer
-		trackerDao.Peer.Upsert(c.Request.Context(), peer)
+		_ = trackerDao.Peer.Upsert(ctx, peer)
 
 		// Create snatch record if event == completed
 		if event == "completed" {
@@ -131,16 +151,17 @@ func Announce(c *jin.Context) {
 				FinishedAt: &now,
 				LastAction: now,
 			}
-			trackerDao.Snatch.UpdateOrCreate(c.Request.Context(), snatch)
+			_ = trackerDao.Snatch.UpdateOrCreate(ctx, snatch)
 		}
 	}
+	_ = trackerDao.Traffic.RecordDelta(ctx, user.ID, torrent.ID, uploadDelta, downloadDelta, isActive, isSeeder, peer.LastAction)
 
 	// 5. Build list of peers to return
 	limit := numWant
 	if limit <= 0 {
 		limit = 50
 	}
-	dbPeers, _ := trackerDao.Peer.GetPeersForTorrent(c.Request.Context(), torrent.ID, limit)
+	dbPeers, _ := trackerDao.Peer.GetPeersForTorrent(ctx, torrent.ID, limit)
 
 	// Build bencode response
 	resp := map[string]interface{}{
@@ -206,6 +227,34 @@ func Scrape(c *jin.Context) {
 	c.Writer.Header().Set("Content-Type", "text/plain")
 	c.Writer.WriteHeader(http.StatusOK)
 	bencode.NewEncoder(c.Writer).Encode(resp)
+}
+
+func computeCounterDelta(lastPeer *trackerModel.Peer, current int64, event string, selector func(*trackerModel.Peer) int64) int64 {
+	if current < 0 {
+		return 0
+	}
+	if lastPeer == nil {
+		// When peer snapshot is missing (e.g. redis restart/expiry), blindly trusting
+		// the cumulative counter may double count old traffic. Accept full value only
+		// on explicit session boundaries.
+		if event == "started" || event == "completed" {
+			return current
+		}
+		return 0
+	}
+
+	previous := selector(lastPeer)
+	if previous < 0 {
+		previous = 0
+	}
+	if current >= previous {
+		return current - previous
+	}
+	// Clients may reset counters on a fresh session; treat "started" as a new base.
+	if event == "started" {
+		return current
+	}
+	return 0
 }
 
 // BuildPeerList constructs the list of peers to be returned to the client,

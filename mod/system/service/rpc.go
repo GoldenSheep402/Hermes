@@ -96,21 +96,19 @@ func (s S) SetSettings(ctx context.Context, req *systemV1.SetSettingsRequest) (*
 		if setting.Key == "" {
 			continue
 		}
-		// Upsert logic
-		existing, err := dao.Setting.GetByKey(ctx, setting.Key)
-		if err == nil && existing != nil {
-			existing.Value = setting.Value
-			existing.Type = setting.Type
-			existing.Desc = setting.Desc
-			_ = dao.Setting.Update(ctx, existing)
-		} else {
-			_ = dao.Setting.Create(ctx, &model.Setting{
-				Model: stdao.Model{ID: ulid.Make().String()},
-				Key:   setting.Key,
-				Value: setting.Value,
-				Type:  setting.Type,
-				Desc:  setting.Desc,
-			})
+		itemType := setting.Type
+		if itemType == "" {
+			itemType = "string"
+		}
+		if err := dao.Setting.UpdateOrCreate(ctx, &model.Setting{
+			Model: stdao.Model{ID: ulid.Make().String()},
+			Key:   setting.Key,
+			Value: setting.Value,
+			Type:  itemType,
+			Desc:  setting.Desc,
+		}); err != nil {
+			s.Log.Errorw("failed to upsert setting", "key", setting.Key, "err", err)
+			return nil, status.Error(codes.Internal, "Failed to save settings")
 		}
 	}
 

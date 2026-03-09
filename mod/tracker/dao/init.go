@@ -6,8 +6,9 @@ import (
 )
 
 var (
-	Peer   = &peer{}
-	Snatch = &snatch{}
+	Peer    = &peer{}
+	Snatch  = &snatch{}
+	Traffic = &traffic{}
 )
 
 func Init(db *gorm.DB, rds *redis.Client) error {
@@ -15,6 +16,9 @@ func Init(db *gorm.DB, rds *redis.Client) error {
 		return err
 	}
 	if err := Snatch.Init(db); err != nil {
+		return err
+	}
+	if err := Traffic.Init(db, rds); err != nil {
 		return err
 	}
 	return nil

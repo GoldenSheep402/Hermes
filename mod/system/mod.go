@@ -1,12 +1,14 @@
 package system
 
 import (
+	"context"
 	"errors"
 
 	"github.com/GoldenSheep402/Hermes/core/kernel"
 	"github.com/GoldenSheep402/Hermes/mod/grpcGateway/gateway"
 	"github.com/GoldenSheep402/Hermes/mod/system/dao"
 	"github.com/GoldenSheep402/Hermes/mod/system/service"
+	systemSetting "github.com/GoldenSheep402/Hermes/mod/system/setting"
 	systemV1 "github.com/GoldenSheep402/Hermes/pkg/proto/system/v1"
 	"github.com/redis/go-redis/v9"
 	"google.golang.org/grpc"
@@ -33,6 +35,9 @@ func (m *Mod) Load(h *kernel.Hub) error {
 		return errors.New("can't load gorm from kernel")
 	}
 	if err := dao.Init(db, rdb); err != nil {
+		return err
+	}
+	if err := systemSetting.Init(context.Background()); err != nil {
 		return err
 	}
 

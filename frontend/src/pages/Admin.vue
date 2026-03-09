@@ -59,6 +59,8 @@ const inviteSetting = reactive({
 
 const trackerSetting = reactive({
   announceInterval: 1800,
+  flushInterval: 15,
+  flushBatchSize: 500,
   globalFreeleech: false,
   freeleechCountdown: 72,
   bonusFormula: 'seed_time * 1.15 + torrent_size_factor',
@@ -88,6 +90,8 @@ const settingKeys = {
   inviteOnly: 'invite.only',
   globalMessage: 'invite.global_message',
   announceInterval: 'tracker.announce_interval',
+  flushInterval: 'tracker.flush_interval',
+  flushBatchSize: 'tracker.flush_batch_size',
   globalFreeleech: 'tracker.global_freeleech',
   freeleechCountdown: 'tracker.freeleech_countdown_hours',
   bonusFormula: 'tracker.bonus_formula',
@@ -195,6 +199,19 @@ function boolToValue(input: boolean): string {
   return input ? 'true' : 'false'
 }
 
+function clampNumber(input: number, min: number, max: number, fallback: number): number {
+  if (!Number.isFinite(input)) {
+    return fallback
+  }
+  if (input < min) {
+    return min
+  }
+  if (input > max) {
+    return max
+  }
+  return input
+}
+
 function buildSectionSettings(section: AdminSection): Setting[] {
   if (section === 'site') {
     return [
@@ -226,6 +243,18 @@ function buildSectionSettings(section: AdminSection): Setting[] {
         desc: 'announce 最小间隔（秒）',
       },
       {
+        key: settingKeys.flushInterval,
+        value: String(clampNumber(Number(trackerSetting.flushInterval), 1, 600, 15)),
+        type: 'int',
+        desc: 'tracker 流量 flush 间隔（秒）',
+      },
+      {
+        key: settingKeys.flushBatchSize,
+        value: String(clampNumber(Number(trackerSetting.flushBatchSize), 50, 5000, 500)),
+        type: 'int',
+        desc: 'tracker 流量 flush 批大小',
+      },
+      {
         key: settingKeys.globalFreeleech,
         value: boolToValue(trackerSetting.globalFreeleech),
         type: 'bool',
@@ -254,6 +283,20 @@ function buildSectionSettings(section: AdminSection): Setting[] {
   return []
 }
 
+function pickChangedSettings(items: Setting[]): Setting[] {
+  const current = settingsMap.value
+  return items.filter((item) => {
+    const key = item.key || ''
+    if (!key) {
+      return false
+    }
+    if (!Object.prototype.hasOwnProperty.call(current, key)) {
+      return true
+    }
+    return (item.value || '') !== current[key]
+  })
+}
+
 function syncSettingsToState(map: Record<string, string>) {
   siteSetting.siteName = map[settingKeys.siteName] || siteSetting.siteName
   siteSetting.maintenanceMode = parseBoolean(map[settingKeys.maintenanceMode], siteSetting.maintenanceMode)
@@ -264,6 +307,8 @@ function syncSettingsToState(map: Record<string, string>) {
   inviteSetting.globalMessage = map[settingKeys.globalMessage] || inviteSetting.globalMessage
 
   trackerSetting.announceInterval = parseNumber(map[settingKeys.announceInterval], trackerSetting.announceInterval)
+  trackerSetting.flushInterval = parseNumber(map[settingKeys.flushInterval], trackerSetting.flushInterval)
+  trackerSetting.flushBatchSize = parseNumber(map[settingKeys.flushBatchSize], trackerSetting.flushBatchSize)
   trackerSetting.globalFreeleech = parseBoolean(map[settingKeys.globalFreeleech], trackerSetting.globalFreeleech)
   trackerSetting.freeleechCountdown = parseNumber(map[settingKeys.freeleechCountdown], trackerSetting.freeleechCountdown)
   trackerSetting.bonusFormula = map[settingKeys.bonusFormula] || trackerSetting.bonusFormula
@@ -292,9 +337,14 @@ async function loadSystemSettings() {
 }
 
 async function saveActiveSection() {
-  const payload = buildSectionSettings(activeSection.value)
-  if (payload.length === 0) {
+  const candidatePayload = buildSectionSettings(activeSection.value)
+  if (candidatePayload.length === 0) {
     MessagePlugin.info('当前分区暂无可保存配置')
+    return
+  }
+  const payload = pickChangedSettings(candidatePayload)
+  if (payload.length === 0) {
+    MessagePlugin.info('配置未变化，无需保存')
     return
   }
 
@@ -549,6 +599,14 @@ onMounted(async () => {
           <label>
             <span>Announce 最小间隔（秒）</span>
             <t-input-number v-model="trackerSetting.announceInterval" :min="60" :step="60" />
+          </label>
+          <label>
+            <span>流量 Flush 间隔（秒）</span>
+            <t-input-number v-model="trackerSetting.flushInterval" :min="1" :max="600" :step="1" />
+          </label>
+          <label>
+            <span>流量 Flush 批大小</span>
+            <t-input-number v-model="trackerSetting.flushBatchSize" :min="50" :max="5000" :step="50" />
           </label>
           <label>
             <span>全站 Freeleech</span>

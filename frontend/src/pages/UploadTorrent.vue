@@ -1,14 +1,15 @@
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { MessagePlugin } from 'tdesign-vue-next'
-import type { Category } from '@/lib/proto/category/v1/category.pb'
+import type { Category, CategoryMetaTemplate } from '@/lib/proto/category/v1/category.pb'
 import type { ResourceMeta } from '@/lib/proto/resource/v1/resource.pb'
 import { CategoryService, ResourceService } from '@/services/grpc'
 
 interface CategoryOption {
   id: string
   label: string
+  templates: CategoryMetaTemplate[]
 }
 
 interface UploadFormState {
@@ -16,13 +17,14 @@ interface UploadFormState {
   subtitle: string
   description: string
   categoryId: string
-  imdbId: string
-  imdbRating: string
-  source: string
-  resolution: string
-  poster: string
   tags: string
   screenshots: string
+}
+
+interface CustomMetaEntry {
+  id: string
+  key: string
+  value: string
 }
 
 const router = useRouter()
@@ -32,19 +34,31 @@ const categories = ref<CategoryOption[]>([])
 const loadingCategories = ref(false)
 const submitting = ref(false)
 const selectedFile = ref<File | null>(null)
+const templateValues = reactive<Record<string, string>>({})
+const customMetadata = ref<CustomMetaEntry[]>([])
 
 const form = reactive<UploadFormState>({
   title: '',
   subtitle: '',
   description: '',
   categoryId: '',
-  imdbId: '',
-  imdbRating: '',
-  source: '',
-  resolution: '',
-  poster: '',
   tags: '',
   screenshots: '',
+})
+
+const selectedCategory = computed(() => categories.value.find((item) => item.id === form.categoryId) || null)
+const selectedCategoryTemplates = computed(() => {
+  const templates = selectedCategory.value?.templates || []
+  return templates
+    .filter((item) => Boolean(item.key && item.key.trim()))
+    .sort((left, right) => {
+      const leftOrder = Number(left.sortOrder || 0)
+      const rightOrder = Number(right.sortOrder || 0)
+      if (leftOrder === rightOrder) {
+        return String(left.key || '').localeCompare(String(right.key || ''))
+      }
+      return leftOrder - rightOrder
+    })
 })
 
 const canSubmit = computed(
@@ -68,40 +82,120 @@ function triggerFilePicker() {
   fileInputRef.value?.click()
 }
 
-function flattenCategories(nodes: Category[] | undefined): Category[] {
-  const queue = [...(nodes || [])]
-  const output: Category[] = []
-
-  while (queue.length > 0) {
-    const current = queue.shift()
-    if (!current) {
+function flattenCategories(nodes: Category[] | undefined, depth = 0): CategoryOption[] {
+  const output: CategoryOption[] = []
+  for (const node of nodes || []) {
+    const id = String(node.id || '').trim()
+    if (!id || node.isEnabled === false) {
       continue
     }
-    output.push(current)
-    if (current.children && current.children.length > 0) {
-      queue.push(...current.children)
+
+    const name = String(node.name || node.slug || node.id || '未命名分类').trim()
+    const label = `${'  '.repeat(depth)}${name}`
+    output.push({
+      id,
+      label,
+      templates: (node.metaTemplates || []).slice(),
+    })
+
+    if (node.children && node.children.length > 0) {
+      output.push(...flattenCategories(node.children, depth + 1))
+    }
+  }
+  return output
+}
+
+function createCustomMetaEntry(): CustomMetaEntry {
+  return {
+    id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    key: '',
+    value: '',
+  }
+}
+
+function resetTemplateValues() {
+  const current = { ...templateValues }
+  for (const key of Object.keys(templateValues)) {
+    delete templateValues[key]
+  }
+
+  for (const tpl of selectedCategoryTemplates.value) {
+    const key = String(tpl.key || '').trim()
+    if (!key) {
+      continue
+    }
+    const previous = String(current[key] || '').trim()
+    templateValues[key] = previous || String(tpl.defaultValue || '')
+  }
+}
+
+function normalizeTemplateType(tpl: CategoryMetaTemplate): string {
+  return String(tpl.type || '').trim().toLowerCase()
+}
+
+function parseTemplateOptions(tpl: CategoryMetaTemplate): string[] {
+  const raw = String(tpl.options || '').trim()
+  if (!raw) {
+    return []
+  }
+
+  if (raw.startsWith('[') && raw.endsWith(']')) {
+    try {
+      const arr = JSON.parse(raw)
+      if (Array.isArray(arr)) {
+        return arr
+          .map((item) => String(item || '').trim())
+          .filter(Boolean)
+      }
+    } catch {
+      // ignore invalid JSON and fallback to split parser
     }
   }
 
-  return output
+  const parts = raw
+    .split(/[\n,，]/)
+    .map((item) => item.trim())
+    .filter(Boolean)
+
+  return Array.from(new Set(parts))
+}
+
+function isTemplateSelect(tpl: CategoryMetaTemplate): boolean {
+  const t = normalizeTemplateType(tpl)
+  return ['select', 'enum', 'dropdown'].includes(t) && parseTemplateOptions(tpl).length > 0
+}
+
+function isTemplateTextarea(tpl: CategoryMetaTemplate): boolean {
+  const t = normalizeTemplateType(tpl)
+  return ['textarea', 'longtext', 'markdown'].includes(t)
+}
+
+function templatePlaceholder(tpl: CategoryMetaTemplate): string {
+  const defaultValue = String(tpl.defaultValue || '').trim()
+  if (defaultValue) {
+    return `默认值：${defaultValue}`
+  }
+  return `请输入 ${tpl.label || tpl.key || '元数据'}`
+}
+
+function addCustomMetadata() {
+  customMetadata.value.push(createCustomMetaEntry())
+}
+
+function removeCustomMetadata(id: string) {
+  customMetadata.value = customMetadata.value.filter((item) => item.id !== id)
 }
 
 async function loadCategories() {
   loadingCategories.value = true
   try {
     const response = await CategoryService.ListCategories({})
-    const flattened = flattenCategories(response.categories)
-    categories.value = flattened
-      .filter((item) => item.isEnabled !== false)
-      .map((item) => ({
-        id: item.id || '',
-        label: item.name || item.slug || item.id || '未命名分类',
-      }))
-      .filter((item) => item.id)
+    categories.value = flattenCategories(response.categories)
 
     if (categories.value.length > 0) {
       form.categoryId = categories.value[0].id
     }
+    resetTemplateValues()
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : '分类加载失败'
     MessagePlugin.error(message)
@@ -139,22 +233,49 @@ function onFileChange(event: Event) {
   selectedFile.value = file
 }
 
-function buildMetadata(): ResourceMeta[] {
-  const metadata: ResourceMeta[] = []
-  const append = (key: string, value: string) => {
-    const text = value.trim()
-    if (text) {
-      metadata.push({ key, value: text })
+function validateTemplateRequired(): boolean {
+  for (const tpl of selectedCategoryTemplates.value) {
+    if (!tpl.required) {
+      continue
+    }
+    const key = String(tpl.key || '').trim()
+    if (!key) {
+      continue
+    }
+    const value = String(templateValues[key] || '').trim()
+    if (!value) {
+      MessagePlugin.warning(`请填写必填元数据：${tpl.label || key}`)
+      return false
     }
   }
+  return true
+}
 
-  append('imdb', form.imdbId)
-  append('imdb_rating', form.imdbRating)
-  append('source', form.source)
-  append('resolution', form.resolution)
-  append('poster', form.poster)
+function buildMetadata(): ResourceMeta[] {
+  const metadataMap = new Map<string, string>()
 
-  return metadata
+  for (const tpl of selectedCategoryTemplates.value) {
+    const key = String(tpl.key || '').trim()
+    if (!key) {
+      continue
+    }
+    const value = String(templateValues[key] || '').trim()
+    if (!value) {
+      continue
+    }
+    metadataMap.set(key, value)
+  }
+
+  for (const item of customMetadata.value) {
+    const key = item.key.trim()
+    const value = item.value.trim()
+    if (!key || !value) {
+      continue
+    }
+    metadataMap.set(key, value)
+  }
+
+  return Array.from(metadataMap.entries()).map(([key, value]) => ({ key, value }))
 }
 
 function buildTagNames(): string[] {
@@ -188,6 +309,9 @@ async function submitUpload() {
     MessagePlugin.warning('请选择分类')
     return
   }
+  if (!validateTemplateRequired()) {
+    return
+  }
 
   submitting.value = true
   try {
@@ -214,6 +338,13 @@ async function submitUpload() {
     submitting.value = false
   }
 }
+
+watch(
+  () => form.categoryId,
+  () => {
+    resetTemplateValues()
+  },
+)
 
 onMounted(async () => {
   await loadCategories()
@@ -269,33 +400,66 @@ onMounted(async () => {
           <t-textarea
             v-model="form.description"
             :autosize="{ minRows: 4, maxRows: 8 }"
-            placeholder="填写影片/资源介绍、压制信息、发布说明等"
+            placeholder="填写资源介绍、制作说明、使用说明等"
           />
         </label>
 
-        <label>
-          <span>IMDB ID</span>
-          <t-input v-model="form.imdbId" clearable placeholder="例如：tt15239678" />
-        </label>
+        <label
+          v-for="tpl in selectedCategoryTemplates"
+          :key="tpl.id || tpl.key"
+          :class="isTemplateTextarea(tpl) ? 'lg:col-span-2' : ''"
+        >
+          <span>
+            {{ tpl.label || tpl.key }}
+            <span v-if="tpl.required" class="required-mark">*</span>
+          </span>
 
-        <label>
-          <span>IMDB 评分</span>
-          <t-input v-model="form.imdbRating" clearable placeholder="例如：8.5" />
-        </label>
+          <t-select
+            v-if="isTemplateSelect(tpl)"
+            v-model="templateValues[tpl.key || '']"
+            clearable
+            :placeholder="templatePlaceholder(tpl)"
+          >
+            <t-option
+              v-for="option in parseTemplateOptions(tpl)"
+              :key="option"
+              :label="option"
+              :value="option"
+            />
+          </t-select>
 
-        <label>
-          <span>来源 Source</span>
-          <t-input v-model="form.source" clearable placeholder="例如：Blu-ray / WEB-DL / Remux" />
-        </label>
+          <t-textarea
+            v-else-if="isTemplateTextarea(tpl)"
+            v-model="templateValues[tpl.key || '']"
+            :autosize="{ minRows: 2, maxRows: 6 }"
+            :placeholder="templatePlaceholder(tpl)"
+          />
 
-        <label>
-          <span>分辨率</span>
-          <t-input v-model="form.resolution" clearable placeholder="例如：4K / 1080p" />
+          <t-input
+            v-else
+            v-model="templateValues[tpl.key || '']"
+            clearable
+            :placeholder="templatePlaceholder(tpl)"
+          />
         </label>
 
         <label class="lg:col-span-2">
-          <span>海报 URL</span>
-          <t-input v-model="form.poster" clearable placeholder="封面图地址" />
+          <span>自定义元数据（可选）</span>
+          <div class="custom-meta-list">
+            <div v-if="customMetadata.length === 0" class="custom-meta-empty">
+              当前未添加自定义元数据
+            </div>
+
+            <div v-for="item in customMetadata" :key="item.id" class="custom-meta-row">
+              <t-input v-model="item.key" clearable placeholder="键，例如：author / isbn / game_version" />
+              <t-input v-model="item.value" clearable placeholder="值" />
+              <t-button variant="text" theme="danger" @click="removeCustomMetadata(item.id)">
+                删除
+              </t-button>
+            </div>
+
+            <t-button size="small" variant="outline" @click="addCustomMetadata">添加元数据</t-button>
+          </div>
         </label>
 
         <label class="lg:col-span-2">
@@ -329,8 +493,8 @@ onMounted(async () => {
       <ul class="guide-list">
         <li>文件必须是 `.torrent` 格式。</li>
         <li>主标题和分类为必填项。</li>
-        <li>标签、截图、元数据会写入 `CreateResource` 请求。</li>
-        <li>发布成功后会跳转回种子列表页。</li>
+        <li>分类模板元数据会自动显示，必填项需填写。</li>
+        <li>你也可以额外添加任意键值元数据（用于非影视资源）。</li>
       </ul>
     </t-card>
   </section>
@@ -365,6 +529,11 @@ onMounted(async () => {
   width: auto;
 }
 
+.required-mark {
+  color: #ef4444;
+  margin-left: 2px;
+}
+
 .file-picker {
   border: 1px dashed var(--app-border);
   border-radius: 8px;
@@ -391,6 +560,33 @@ onMounted(async () => {
   overflow: hidden;
   text-overflow: ellipsis;
   flex: 1;
+}
+
+.custom-meta-list {
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+  border: 1px dashed var(--app-border);
+  border-radius: 8px;
+  background: var(--soft-bg);
+}
+
+.custom-meta-empty {
+  font-size: 12px;
+  color: var(--muted-text);
+}
+
+.custom-meta-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 8px;
+  align-items: center;
+}
+
+@media (max-width: 1023px) {
+  .custom-meta-row {
+    grid-template-columns: 1fr;
+  }
 }
 
 .guide-list {

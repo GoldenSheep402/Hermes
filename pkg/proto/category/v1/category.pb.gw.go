@@ -251,6 +251,33 @@ func local_request_CategoryService_DeleteMetaTemplate_0(ctx context.Context, mar
 	return msg, metadata, err
 }
 
+func request_CategoryService_ListMetaTemplatePresets_0(ctx context.Context, marshaler runtime.Marshaler, client CategoryServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq ListMetaTemplatePresetsRequest
+		metadata runtime.ServerMetadata
+	)
+	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if req.Body != nil {
+		_, _ = io.Copy(io.Discard, req.Body)
+	}
+	msg, err := client.ListMetaTemplatePresets(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+}
+
+func local_request_CategoryService_ListMetaTemplatePresets_0(ctx context.Context, marshaler runtime.Marshaler, server CategoryServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq ListMetaTemplatePresetsRequest
+		metadata runtime.ServerMetadata
+	)
+	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	msg, err := server.ListMetaTemplatePresets(ctx, &protoReq)
+	return msg, metadata, err
+}
+
 // RegisterCategoryServiceHandlerServer registers the http handlers for service CategoryService to "mux".
 // UnaryRPC     :call CategoryServiceServer directly.
 // StreamingRPC :currently unsupported pending https://github.com/grpc/grpc-go/issues/906.
@@ -416,6 +443,26 @@ func RegisterCategoryServiceHandlerServer(ctx context.Context, mux *runtime.Serv
 			return
 		}
 		forward_CategoryService_DeleteMetaTemplate_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
+	mux.Handle(http.MethodPost, pattern_CategoryService_ListMetaTemplatePresets_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/category.v1.CategoryService/ListMetaTemplatePresets", runtime.WithHTTPPathPattern("/gapi/category/v1/meta/presets"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_CategoryService_ListMetaTemplatePresets_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_CategoryService_ListMetaTemplatePresets_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
 
 	return nil
@@ -593,27 +640,46 @@ func RegisterCategoryServiceHandlerClient(ctx context.Context, mux *runtime.Serv
 		}
 		forward_CategoryService_DeleteMetaTemplate_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
+	mux.Handle(http.MethodPost, pattern_CategoryService_ListMetaTemplatePresets_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/category.v1.CategoryService/ListMetaTemplatePresets", runtime.WithHTTPPathPattern("/gapi/category/v1/meta/presets"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_CategoryService_ListMetaTemplatePresets_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_CategoryService_ListMetaTemplatePresets_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
 	return nil
 }
 
 var (
-	pattern_CategoryService_CreateCategory_0     = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"gapi", "category", "v1", "create"}, ""))
-	pattern_CategoryService_GetCategory_0        = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"gapi", "category", "v1", "info"}, ""))
-	pattern_CategoryService_ListCategories_0     = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"gapi", "category", "v1", "list"}, ""))
-	pattern_CategoryService_UpdateCategory_0     = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"gapi", "category", "v1", "update"}, ""))
-	pattern_CategoryService_DeleteCategory_0     = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"gapi", "category", "v1", "delete"}, ""))
-	pattern_CategoryService_CreateMetaTemplate_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4}, []string{"gapi", "category", "v1", "meta", "create"}, ""))
-	pattern_CategoryService_UpdateMetaTemplate_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4}, []string{"gapi", "category", "v1", "meta", "update"}, ""))
-	pattern_CategoryService_DeleteMetaTemplate_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4}, []string{"gapi", "category", "v1", "meta", "delete"}, ""))
+	pattern_CategoryService_CreateCategory_0          = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"gapi", "category", "v1", "create"}, ""))
+	pattern_CategoryService_GetCategory_0             = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"gapi", "category", "v1", "info"}, ""))
+	pattern_CategoryService_ListCategories_0          = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"gapi", "category", "v1", "list"}, ""))
+	pattern_CategoryService_UpdateCategory_0          = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"gapi", "category", "v1", "update"}, ""))
+	pattern_CategoryService_DeleteCategory_0          = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"gapi", "category", "v1", "delete"}, ""))
+	pattern_CategoryService_CreateMetaTemplate_0      = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4}, []string{"gapi", "category", "v1", "meta", "create"}, ""))
+	pattern_CategoryService_UpdateMetaTemplate_0      = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4}, []string{"gapi", "category", "v1", "meta", "update"}, ""))
+	pattern_CategoryService_DeleteMetaTemplate_0      = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4}, []string{"gapi", "category", "v1", "meta", "delete"}, ""))
+	pattern_CategoryService_ListMetaTemplatePresets_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4}, []string{"gapi", "category", "v1", "meta", "presets"}, ""))
 )
 
 var (
-	forward_CategoryService_CreateCategory_0     = runtime.ForwardResponseMessage
-	forward_CategoryService_GetCategory_0        = runtime.ForwardResponseMessage
-	forward_CategoryService_ListCategories_0     = runtime.ForwardResponseMessage
-	forward_CategoryService_UpdateCategory_0     = runtime.ForwardResponseMessage
-	forward_CategoryService_DeleteCategory_0     = runtime.ForwardResponseMessage
-	forward_CategoryService_CreateMetaTemplate_0 = runtime.ForwardResponseMessage
-	forward_CategoryService_UpdateMetaTemplate_0 = runtime.ForwardResponseMessage
-	forward_CategoryService_DeleteMetaTemplate_0 = runtime.ForwardResponseMessage
+	forward_CategoryService_CreateCategory_0          = runtime.ForwardResponseMessage
+	forward_CategoryService_GetCategory_0             = runtime.ForwardResponseMessage
+	forward_CategoryService_ListCategories_0          = runtime.ForwardResponseMessage
+	forward_CategoryService_UpdateCategory_0          = runtime.ForwardResponseMessage
+	forward_CategoryService_DeleteCategory_0          = runtime.ForwardResponseMessage
+	forward_CategoryService_CreateMetaTemplate_0      = runtime.ForwardResponseMessage
+	forward_CategoryService_UpdateMetaTemplate_0      = runtime.ForwardResponseMessage
+	forward_CategoryService_DeleteMetaTemplate_0      = runtime.ForwardResponseMessage
+	forward_CategoryService_ListMetaTemplatePresets_0 = runtime.ForwardResponseMessage
 )

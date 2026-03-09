@@ -30,6 +30,13 @@ export type CategoryMetaTemplate = {
   defaultValue?: string
 }
 
+export type MetaTemplatePreset = {
+  value?: string
+  label?: string
+  description?: string
+  templates?: CategoryMetaTemplate[]
+}
+
 export type CreateCategoryRequest = {
   name?: string
   slug?: string
@@ -94,6 +101,13 @@ export type DeleteMetaTemplateRequest = {
 export type DeleteMetaTemplateResponse = {
 }
 
+export type ListMetaTemplatePresetsRequest = {
+}
+
+export type ListMetaTemplatePresetsResponse = {
+  presets?: MetaTemplatePreset[]
+}
+
 export class CategoryService {
   static CreateCategory(req: CreateCategoryRequest, initReq?: fm.InitReq): Promise<CreateCategoryResponse> {
     return fm.fetchReq<CreateCategoryRequest, CreateCategoryResponse>(`/gapi/category/v1/create`, {...initReq, method: "POST", body: JSON.stringify(req, fm.replacer)})
@@ -118,5 +132,8 @@ export class CategoryService {
   }
   static DeleteMetaTemplate(req: DeleteMetaTemplateRequest, initReq?: fm.InitReq): Promise<DeleteMetaTemplateResponse> {
     return fm.fetchReq<DeleteMetaTemplateRequest, DeleteMetaTemplateResponse>(`/gapi/category/v1/meta/delete`, {...initReq, method: "POST", body: JSON.stringify(req, fm.replacer)})
+  }
+  static ListMetaTemplatePresets(req: ListMetaTemplatePresetsRequest, initReq?: fm.InitReq): Promise<ListMetaTemplatePresetsResponse> {
+    return fm.fetchReq<ListMetaTemplatePresetsRequest, ListMetaTemplatePresetsResponse>(`/gapi/category/v1/meta/presets`, {...initReq, method: "POST", body: JSON.stringify(req, fm.replacer)})
   }
 }

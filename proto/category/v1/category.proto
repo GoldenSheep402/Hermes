@@ -31,6 +31,13 @@ message CategoryMetaTemplate {
   string defaultValue = 9;
 }
 
+message MetaTemplatePreset {
+  string value = 1;
+  string label = 2;
+  string description = 3;
+  repeated CategoryMetaTemplate templates = 4;
+}
+
 // ─── Service ────────────────────────────────────────────────────────────────
 
 service CategoryService {
@@ -92,6 +99,14 @@ service CategoryService {
       body : "*"
     };
   }
+
+  rpc ListMetaTemplatePresets(ListMetaTemplatePresetsRequest)
+      returns (ListMetaTemplatePresetsResponse) {
+    option (google.api.http) = {
+      post : "/gapi/category/v1/meta/presets"
+      body : "*"
+    };
+  }
 }
 
 // ─── Requests / Responses ───────────────────────────────────────────────────
@@ -126,3 +141,8 @@ message UpdateMetaTemplateResponse {}
 
 message DeleteMetaTemplateRequest { string id = 1; }
 message DeleteMetaTemplateResponse {}
+
+message ListMetaTemplatePresetsRequest {}
+message ListMetaTemplatePresetsResponse {
+  repeated MetaTemplatePreset presets = 1;
+}

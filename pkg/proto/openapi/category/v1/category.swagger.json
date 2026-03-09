@@ -208,6 +208,38 @@
         ]
       }
     },
+    "/gapi/category/v1/meta/presets": {
+      "post": {
+        "operationId": "CategoryService_ListMetaTemplatePresets",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ListMetaTemplatePresetsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1ListMetaTemplatePresetsRequest"
+            }
+          }
+        ],
+        "tags": [
+          "CategoryService"
+        ]
+      }
+    },
     "/gapi/category/v1/meta/update": {
       "post": {
         "operationId": "CategoryService_UpdateMetaTemplate",
@@ -476,6 +508,42 @@
           "items": {
             "type": "object",
             "$ref": "#/definitions/v1Category"
+          }
+        }
+      }
+    },
+    "v1ListMetaTemplatePresetsRequest": {
+      "type": "object"
+    },
+    "v1ListMetaTemplatePresetsResponse": {
+      "type": "object",
+      "properties": {
+        "presets": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1MetaTemplatePreset"
+          }
+        }
+      }
+    },
+    "v1MetaTemplatePreset": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "templates": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1CategoryMetaTemplate"
           }
         }
       }

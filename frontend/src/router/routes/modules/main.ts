@@ -95,12 +95,76 @@ const mainRoute: RouteRecordRaw = {
     },
     {
       path: 'admin',
-      name: 'Admin',
-      component: () => import('@/pages/Admin.vue'),
+      component: () => import('@/pages/admin/AdminLayout.vue'),
       meta: {
         requiresAuth: true,
         requiredPermissions: [PermissionKeys.AdminPanelAccess],
       },
+      children: [
+        {
+          path: '',
+          name: 'AdminOverview',
+          component: () => import('@/pages/admin/AdminOverview.vue'),
+          meta: {
+            requiresAuth: true,
+            requiredPermissions: [PermissionKeys.AdminPanelAccess],
+          },
+        },
+        {
+          path: 'site',
+          name: 'AdminSiteSettings',
+          component: () => import('@/pages/admin/AdminSiteSettings.vue'),
+          meta: {
+            requiresAuth: true,
+            requiredPermissions: [PermissionKeys.AdminPanelAccess, PermissionKeys.SiteSettingsManage],
+          },
+        },
+        {
+          path: 'invite',
+          name: 'AdminInviteSettings',
+          component: () => import('@/pages/admin/AdminInviteSettings.vue'),
+          meta: {
+            requiresAuth: true,
+            requiredPermissions: [PermissionKeys.AdminPanelAccess, PermissionKeys.InviteManage],
+          },
+        },
+        {
+          path: 'tracker',
+          name: 'AdminTrackerSettings',
+          component: () => import('@/pages/admin/AdminTrackerSettings.vue'),
+          meta: {
+            requiresAuth: true,
+            requiredPermissions: [PermissionKeys.AdminPanelAccess, PermissionKeys.TrackerManage],
+          },
+        },
+        {
+          path: 'torrent',
+          name: 'AdminTorrentModeration',
+          component: () => import('@/pages/admin/AdminTorrentModeration.vue'),
+          meta: {
+            requiresAuth: true,
+            requiredPermissions: [PermissionKeys.AdminPanelAccess, PermissionKeys.TorrentModerate],
+          },
+        },
+        {
+          path: 'category',
+          name: 'AdminCategoryManage',
+          component: () => import('@/pages/admin/AdminCategoryManage.vue'),
+          meta: {
+            requiresAuth: true,
+            requiredPermissions: [PermissionKeys.AdminPanelAccess, PermissionKeys.CategoryManage],
+          },
+        },
+        {
+          path: 'user',
+          name: 'AdminUserManage',
+          component: () => import('@/pages/admin/AdminUserManage.vue'),
+          meta: {
+            requiresAuth: true,
+            requiredPermissions: [PermissionKeys.AdminPanelAccess, PermissionKeys.UserManage],
+          },
+        },
+      ],
     },
   ],
 }

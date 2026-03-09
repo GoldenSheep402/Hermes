@@ -2,6 +2,8 @@ package service
 
 import (
 	"context"
+	"sort"
+	"strings"
 
 	"github.com/oklog/ulid/v2"
 	"go.uber.org/zap"
@@ -96,6 +98,54 @@ func convertModelToProto(c *model.Category) *categoryV1.Category {
 	}
 }
 
+func toProtoMetaTemplate(t *model.CategoryMetaTemplate) *categoryV1.CategoryMetaTemplate {
+	if t == nil {
+		return nil
+	}
+	return &categoryV1.CategoryMetaTemplate{
+		Id:           t.ID,
+		CategoryId:   t.CategoryID,
+		Key:          t.Key,
+		Label:        t.Label,
+		Type:         t.Type,
+		Required:     t.Required,
+		Options:      t.Options,
+		SortOrder:    int32(t.SortOrder),
+		DefaultValue: t.DefaultValue,
+	}
+}
+
+func loadMetaTemplateMap(ctx context.Context) (map[string][]*categoryV1.CategoryMetaTemplate, error) {
+	items, err := dao.CategoryMetaTemplate.List(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	templateMap := make(map[string][]*categoryV1.CategoryMetaTemplate)
+	for _, item := range items {
+		if item == nil {
+			continue
+		}
+		categoryID := strings.TrimSpace(item.CategoryID)
+		if categoryID == "" {
+			continue
+		}
+		templateMap[categoryID] = append(templateMap[categoryID], toProtoMetaTemplate(item))
+	}
+
+	for categoryID, templates := range templateMap {
+		sort.Slice(templates, func(i, j int) bool {
+			if templates[i].SortOrder == templates[j].SortOrder {
+				return templates[i].Key < templates[j].Key
+			}
+			return templates[i].SortOrder < templates[j].SortOrder
+		})
+		templateMap[categoryID] = templates
+	}
+
+	return templateMap, nil
+}
+
 func (s *S) CreateCategory(ctx context.Context, req *categoryV1.CreateCategoryRequest) (*categoryV1.CreateCategoryResponse, error) {
 	if err := requireCategoryManage(ctx, ""); err != nil {
 		return nil, err
@@ -144,8 +194,16 @@ func (s *S) GetCategory(ctx context.Context, req *categoryV1.GetCategoryRequest)
 		return nil, status.Error(codes.NotFound, "Category not found")
 	}
 
+	templateMap, err := loadMetaTemplateMap(ctx)
+	if err != nil {
+		s.Log.Errorw("failed to load category meta templates", "category_id", req.Id, "err", err)
+		return nil, status.Error(codes.Internal, "Failed to load category")
+	}
+	categoryPB := convertModelToProto(cat)
+	categoryPB.MetaTemplates = templateMap[cat.ID]
+
 	return &categoryV1.GetCategoryResponse{
-		Category: convertModelToProto(cat),
+		Category: categoryPB,
 	}, nil
 }
 
@@ -160,9 +218,17 @@ func (s *S) ListCategories(ctx context.Context, req *categoryV1.ListCategoriesRe
 		return nil, status.Error(codes.Internal, "Failed to list categories")
 	}
 
+	templateMap, err := loadMetaTemplateMap(ctx)
+	if err != nil {
+		s.Log.Errorw("failed to list category meta templates", "err", err)
+		return nil, status.Error(codes.Internal, "Failed to list categories")
+	}
+
 	var protoCats []*categoryV1.Category
 	for _, c := range cats {
-		protoCats = append(protoCats, convertModelToProto(c))
+		item := convertModelToProto(c)
+		item.MetaTemplates = templateMap[c.ID]
+		protoCats = append(protoCats, item)
 	}
 
 	return &categoryV1.ListCategoriesResponse{Categories: protoCats}, nil
@@ -296,4 +362,14 @@ func (s *S) DeleteMetaTemplate(ctx context.Context, req *categoryV1.DeleteMetaTe
 		return nil, status.Error(codes.Internal, "Failed to delete meta template")
 	}
 	return &categoryV1.DeleteMetaTemplateResponse{}, nil
+}
+
+func (s *S) ListMetaTemplatePresets(ctx context.Context, req *categoryV1.ListMetaTemplatePresetsRequest) (*categoryV1.ListMetaTemplatePresetsResponse, error) {
+	if err := requireCategoryManage(ctx, ""); err != nil {
+		return nil, err
+	}
+
+	return &categoryV1.ListMetaTemplatePresetsResponse{
+		Presets: listMetaTemplatePresetProtos(),
+	}, nil
 }

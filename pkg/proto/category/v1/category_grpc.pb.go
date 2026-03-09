@@ -19,14 +19,15 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	CategoryService_CreateCategory_FullMethodName     = "/category.v1.CategoryService/CreateCategory"
-	CategoryService_GetCategory_FullMethodName        = "/category.v1.CategoryService/GetCategory"
-	CategoryService_ListCategories_FullMethodName     = "/category.v1.CategoryService/ListCategories"
-	CategoryService_UpdateCategory_FullMethodName     = "/category.v1.CategoryService/UpdateCategory"
-	CategoryService_DeleteCategory_FullMethodName     = "/category.v1.CategoryService/DeleteCategory"
-	CategoryService_CreateMetaTemplate_FullMethodName = "/category.v1.CategoryService/CreateMetaTemplate"
-	CategoryService_UpdateMetaTemplate_FullMethodName = "/category.v1.CategoryService/UpdateMetaTemplate"
-	CategoryService_DeleteMetaTemplate_FullMethodName = "/category.v1.CategoryService/DeleteMetaTemplate"
+	CategoryService_CreateCategory_FullMethodName          = "/category.v1.CategoryService/CreateCategory"
+	CategoryService_GetCategory_FullMethodName             = "/category.v1.CategoryService/GetCategory"
+	CategoryService_ListCategories_FullMethodName          = "/category.v1.CategoryService/ListCategories"
+	CategoryService_UpdateCategory_FullMethodName          = "/category.v1.CategoryService/UpdateCategory"
+	CategoryService_DeleteCategory_FullMethodName          = "/category.v1.CategoryService/DeleteCategory"
+	CategoryService_CreateMetaTemplate_FullMethodName      = "/category.v1.CategoryService/CreateMetaTemplate"
+	CategoryService_UpdateMetaTemplate_FullMethodName      = "/category.v1.CategoryService/UpdateMetaTemplate"
+	CategoryService_DeleteMetaTemplate_FullMethodName      = "/category.v1.CategoryService/DeleteMetaTemplate"
+	CategoryService_ListMetaTemplatePresets_FullMethodName = "/category.v1.CategoryService/ListMetaTemplatePresets"
 )
 
 // CategoryServiceClient is the client API for CategoryService service.
@@ -41,6 +42,7 @@ type CategoryServiceClient interface {
 	CreateMetaTemplate(ctx context.Context, in *CreateMetaTemplateRequest, opts ...grpc.CallOption) (*CreateMetaTemplateResponse, error)
 	UpdateMetaTemplate(ctx context.Context, in *UpdateMetaTemplateRequest, opts ...grpc.CallOption) (*UpdateMetaTemplateResponse, error)
 	DeleteMetaTemplate(ctx context.Context, in *DeleteMetaTemplateRequest, opts ...grpc.CallOption) (*DeleteMetaTemplateResponse, error)
+	ListMetaTemplatePresets(ctx context.Context, in *ListMetaTemplatePresetsRequest, opts ...grpc.CallOption) (*ListMetaTemplatePresetsResponse, error)
 }
 
 type categoryServiceClient struct {
@@ -131,6 +133,16 @@ func (c *categoryServiceClient) DeleteMetaTemplate(ctx context.Context, in *Dele
 	return out, nil
 }
 
+func (c *categoryServiceClient) ListMetaTemplatePresets(ctx context.Context, in *ListMetaTemplatePresetsRequest, opts ...grpc.CallOption) (*ListMetaTemplatePresetsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListMetaTemplatePresetsResponse)
+	err := c.cc.Invoke(ctx, CategoryService_ListMetaTemplatePresets_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // CategoryServiceServer is the server API for CategoryService service.
 // All implementations must embed UnimplementedCategoryServiceServer
 // for forward compatibility.
@@ -143,6 +155,7 @@ type CategoryServiceServer interface {
 	CreateMetaTemplate(context.Context, *CreateMetaTemplateRequest) (*CreateMetaTemplateResponse, error)
 	UpdateMetaTemplate(context.Context, *UpdateMetaTemplateRequest) (*UpdateMetaTemplateResponse, error)
 	DeleteMetaTemplate(context.Context, *DeleteMetaTemplateRequest) (*DeleteMetaTemplateResponse, error)
+	ListMetaTemplatePresets(context.Context, *ListMetaTemplatePresetsRequest) (*ListMetaTemplatePresetsResponse, error)
 	mustEmbedUnimplementedCategoryServiceServer()
 }
 
@@ -176,6 +189,9 @@ func (UnimplementedCategoryServiceServer) UpdateMetaTemplate(context.Context, *U
 }
 func (UnimplementedCategoryServiceServer) DeleteMetaTemplate(context.Context, *DeleteMetaTemplateRequest) (*DeleteMetaTemplateResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method DeleteMetaTemplate not implemented")
+}
+func (UnimplementedCategoryServiceServer) ListMetaTemplatePresets(context.Context, *ListMetaTemplatePresetsRequest) (*ListMetaTemplatePresetsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListMetaTemplatePresets not implemented")
 }
 func (UnimplementedCategoryServiceServer) mustEmbedUnimplementedCategoryServiceServer() {}
 func (UnimplementedCategoryServiceServer) testEmbeddedByValue()                         {}
@@ -342,6 +358,24 @@ func _CategoryService_DeleteMetaTemplate_Handler(srv interface{}, ctx context.Co
 	return interceptor(ctx, in, info, handler)
 }
 
+func _CategoryService_ListMetaTemplatePresets_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListMetaTemplatePresetsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CategoryServiceServer).ListMetaTemplatePresets(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: CategoryService_ListMetaTemplatePresets_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CategoryServiceServer).ListMetaTemplatePresets(ctx, req.(*ListMetaTemplatePresetsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // CategoryService_ServiceDesc is the grpc.ServiceDesc for CategoryService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -380,6 +414,10 @@ var CategoryService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteMetaTemplate",
 			Handler:    _CategoryService_DeleteMetaTemplate_Handler,
+		},
+		{
+			MethodName: "ListMetaTemplatePresets",
+			Handler:    _CategoryService_ListMetaTemplatePresets_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

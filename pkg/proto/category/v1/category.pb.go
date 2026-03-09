@@ -246,6 +246,74 @@ func (x *CategoryMetaTemplate) GetDefaultValue() string {
 	return ""
 }
 
+type MetaTemplatePreset struct {
+	state         protoimpl.MessageState  `protogen:"open.v1"`
+	Value         string                  `protobuf:"bytes,1,opt,name=value,proto3" json:"value,omitempty"`
+	Label         string                  `protobuf:"bytes,2,opt,name=label,proto3" json:"label,omitempty"`
+	Description   string                  `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
+	Templates     []*CategoryMetaTemplate `protobuf:"bytes,4,rep,name=templates,proto3" json:"templates,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *MetaTemplatePreset) Reset() {
+	*x = MetaTemplatePreset{}
+	mi := &file_category_v1_category_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *MetaTemplatePreset) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MetaTemplatePreset) ProtoMessage() {}
+
+func (x *MetaTemplatePreset) ProtoReflect() protoreflect.Message {
+	mi := &file_category_v1_category_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use MetaTemplatePreset.ProtoReflect.Descriptor instead.
+func (*MetaTemplatePreset) Descriptor() ([]byte, []int) {
+	return file_category_v1_category_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *MetaTemplatePreset) GetValue() string {
+	if x != nil {
+		return x.Value
+	}
+	return ""
+}
+
+func (x *MetaTemplatePreset) GetLabel() string {
+	if x != nil {
+		return x.Label
+	}
+	return ""
+}
+
+func (x *MetaTemplatePreset) GetDescription() string {
+	if x != nil {
+		return x.Description
+	}
+	return ""
+}
+
+func (x *MetaTemplatePreset) GetTemplates() []*CategoryMetaTemplate {
+	if x != nil {
+		return x.Templates
+	}
+	return nil
+}
+
 type CreateCategoryRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
@@ -260,7 +328,7 @@ type CreateCategoryRequest struct {
 
 func (x *CreateCategoryRequest) Reset() {
 	*x = CreateCategoryRequest{}
-	mi := &file_category_v1_category_proto_msgTypes[2]
+	mi := &file_category_v1_category_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -272,7 +340,7 @@ func (x *CreateCategoryRequest) String() string {
 func (*CreateCategoryRequest) ProtoMessage() {}
 
 func (x *CreateCategoryRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_category_v1_category_proto_msgTypes[2]
+	mi := &file_category_v1_category_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -285,7 +353,7 @@ func (x *CreateCategoryRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateCategoryRequest.ProtoReflect.Descriptor instead.
 func (*CreateCategoryRequest) Descriptor() ([]byte, []int) {
-	return file_category_v1_category_proto_rawDescGZIP(), []int{2}
+	return file_category_v1_category_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *CreateCategoryRequest) GetName() string {
@@ -339,7 +407,7 @@ type CreateCategoryResponse struct {
 
 func (x *CreateCategoryResponse) Reset() {
 	*x = CreateCategoryResponse{}
-	mi := &file_category_v1_category_proto_msgTypes[3]
+	mi := &file_category_v1_category_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -351,7 +419,7 @@ func (x *CreateCategoryResponse) String() string {
 func (*CreateCategoryResponse) ProtoMessage() {}
 
 func (x *CreateCategoryResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_category_v1_category_proto_msgTypes[3]
+	mi := &file_category_v1_category_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -364,7 +432,7 @@ func (x *CreateCategoryResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateCategoryResponse.ProtoReflect.Descriptor instead.
 func (*CreateCategoryResponse) Descriptor() ([]byte, []int) {
-	return file_category_v1_category_proto_rawDescGZIP(), []int{3}
+	return file_category_v1_category_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *CreateCategoryResponse) GetId() string {
@@ -383,7 +451,7 @@ type GetCategoryRequest struct {
 
 func (x *GetCategoryRequest) Reset() {
 	*x = GetCategoryRequest{}
-	mi := &file_category_v1_category_proto_msgTypes[4]
+	mi := &file_category_v1_category_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -395,7 +463,7 @@ func (x *GetCategoryRequest) String() string {
 func (*GetCategoryRequest) ProtoMessage() {}
 
 func (x *GetCategoryRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_category_v1_category_proto_msgTypes[4]
+	mi := &file_category_v1_category_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -408,7 +476,7 @@ func (x *GetCategoryRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetCategoryRequest.ProtoReflect.Descriptor instead.
 func (*GetCategoryRequest) Descriptor() ([]byte, []int) {
-	return file_category_v1_category_proto_rawDescGZIP(), []int{4}
+	return file_category_v1_category_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *GetCategoryRequest) GetId() string {
@@ -427,7 +495,7 @@ type GetCategoryResponse struct {
 
 func (x *GetCategoryResponse) Reset() {
 	*x = GetCategoryResponse{}
-	mi := &file_category_v1_category_proto_msgTypes[5]
+	mi := &file_category_v1_category_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -439,7 +507,7 @@ func (x *GetCategoryResponse) String() string {
 func (*GetCategoryResponse) ProtoMessage() {}
 
 func (x *GetCategoryResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_category_v1_category_proto_msgTypes[5]
+	mi := &file_category_v1_category_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -452,7 +520,7 @@ func (x *GetCategoryResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetCategoryResponse.ProtoReflect.Descriptor instead.
 func (*GetCategoryResponse) Descriptor() ([]byte, []int) {
-	return file_category_v1_category_proto_rawDescGZIP(), []int{5}
+	return file_category_v1_category_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *GetCategoryResponse) GetCategory() *Category {
@@ -470,7 +538,7 @@ type ListCategoriesRequest struct {
 
 func (x *ListCategoriesRequest) Reset() {
 	*x = ListCategoriesRequest{}
-	mi := &file_category_v1_category_proto_msgTypes[6]
+	mi := &file_category_v1_category_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -482,7 +550,7 @@ func (x *ListCategoriesRequest) String() string {
 func (*ListCategoriesRequest) ProtoMessage() {}
 
 func (x *ListCategoriesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_category_v1_category_proto_msgTypes[6]
+	mi := &file_category_v1_category_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -495,7 +563,7 @@ func (x *ListCategoriesRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListCategoriesRequest.ProtoReflect.Descriptor instead.
 func (*ListCategoriesRequest) Descriptor() ([]byte, []int) {
-	return file_category_v1_category_proto_rawDescGZIP(), []int{6}
+	return file_category_v1_category_proto_rawDescGZIP(), []int{7}
 }
 
 type ListCategoriesResponse struct {
@@ -507,7 +575,7 @@ type ListCategoriesResponse struct {
 
 func (x *ListCategoriesResponse) Reset() {
 	*x = ListCategoriesResponse{}
-	mi := &file_category_v1_category_proto_msgTypes[7]
+	mi := &file_category_v1_category_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -519,7 +587,7 @@ func (x *ListCategoriesResponse) String() string {
 func (*ListCategoriesResponse) ProtoMessage() {}
 
 func (x *ListCategoriesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_category_v1_category_proto_msgTypes[7]
+	mi := &file_category_v1_category_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -532,7 +600,7 @@ func (x *ListCategoriesResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListCategoriesResponse.ProtoReflect.Descriptor instead.
 func (*ListCategoriesResponse) Descriptor() ([]byte, []int) {
-	return file_category_v1_category_proto_rawDescGZIP(), []int{7}
+	return file_category_v1_category_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *ListCategoriesResponse) GetCategories() []*Category {
@@ -551,7 +619,7 @@ type UpdateCategoryRequest struct {
 
 func (x *UpdateCategoryRequest) Reset() {
 	*x = UpdateCategoryRequest{}
-	mi := &file_category_v1_category_proto_msgTypes[8]
+	mi := &file_category_v1_category_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -563,7 +631,7 @@ func (x *UpdateCategoryRequest) String() string {
 func (*UpdateCategoryRequest) ProtoMessage() {}
 
 func (x *UpdateCategoryRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_category_v1_category_proto_msgTypes[8]
+	mi := &file_category_v1_category_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -576,7 +644,7 @@ func (x *UpdateCategoryRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateCategoryRequest.ProtoReflect.Descriptor instead.
 func (*UpdateCategoryRequest) Descriptor() ([]byte, []int) {
-	return file_category_v1_category_proto_rawDescGZIP(), []int{8}
+	return file_category_v1_category_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *UpdateCategoryRequest) GetCategory() *Category {
@@ -594,7 +662,7 @@ type UpdateCategoryResponse struct {
 
 func (x *UpdateCategoryResponse) Reset() {
 	*x = UpdateCategoryResponse{}
-	mi := &file_category_v1_category_proto_msgTypes[9]
+	mi := &file_category_v1_category_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -606,7 +674,7 @@ func (x *UpdateCategoryResponse) String() string {
 func (*UpdateCategoryResponse) ProtoMessage() {}
 
 func (x *UpdateCategoryResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_category_v1_category_proto_msgTypes[9]
+	mi := &file_category_v1_category_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -619,7 +687,7 @@ func (x *UpdateCategoryResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateCategoryResponse.ProtoReflect.Descriptor instead.
 func (*UpdateCategoryResponse) Descriptor() ([]byte, []int) {
-	return file_category_v1_category_proto_rawDescGZIP(), []int{9}
+	return file_category_v1_category_proto_rawDescGZIP(), []int{10}
 }
 
 type DeleteCategoryRequest struct {
@@ -631,7 +699,7 @@ type DeleteCategoryRequest struct {
 
 func (x *DeleteCategoryRequest) Reset() {
 	*x = DeleteCategoryRequest{}
-	mi := &file_category_v1_category_proto_msgTypes[10]
+	mi := &file_category_v1_category_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -643,7 +711,7 @@ func (x *DeleteCategoryRequest) String() string {
 func (*DeleteCategoryRequest) ProtoMessage() {}
 
 func (x *DeleteCategoryRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_category_v1_category_proto_msgTypes[10]
+	mi := &file_category_v1_category_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -656,7 +724,7 @@ func (x *DeleteCategoryRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteCategoryRequest.ProtoReflect.Descriptor instead.
 func (*DeleteCategoryRequest) Descriptor() ([]byte, []int) {
-	return file_category_v1_category_proto_rawDescGZIP(), []int{10}
+	return file_category_v1_category_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *DeleteCategoryRequest) GetId() string {
@@ -674,7 +742,7 @@ type DeleteCategoryResponse struct {
 
 func (x *DeleteCategoryResponse) Reset() {
 	*x = DeleteCategoryResponse{}
-	mi := &file_category_v1_category_proto_msgTypes[11]
+	mi := &file_category_v1_category_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -686,7 +754,7 @@ func (x *DeleteCategoryResponse) String() string {
 func (*DeleteCategoryResponse) ProtoMessage() {}
 
 func (x *DeleteCategoryResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_category_v1_category_proto_msgTypes[11]
+	mi := &file_category_v1_category_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -699,7 +767,7 @@ func (x *DeleteCategoryResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteCategoryResponse.ProtoReflect.Descriptor instead.
 func (*DeleteCategoryResponse) Descriptor() ([]byte, []int) {
-	return file_category_v1_category_proto_rawDescGZIP(), []int{11}
+	return file_category_v1_category_proto_rawDescGZIP(), []int{12}
 }
 
 type CreateMetaTemplateRequest struct {
@@ -711,7 +779,7 @@ type CreateMetaTemplateRequest struct {
 
 func (x *CreateMetaTemplateRequest) Reset() {
 	*x = CreateMetaTemplateRequest{}
-	mi := &file_category_v1_category_proto_msgTypes[12]
+	mi := &file_category_v1_category_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -723,7 +791,7 @@ func (x *CreateMetaTemplateRequest) String() string {
 func (*CreateMetaTemplateRequest) ProtoMessage() {}
 
 func (x *CreateMetaTemplateRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_category_v1_category_proto_msgTypes[12]
+	mi := &file_category_v1_category_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -736,7 +804,7 @@ func (x *CreateMetaTemplateRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateMetaTemplateRequest.ProtoReflect.Descriptor instead.
 func (*CreateMetaTemplateRequest) Descriptor() ([]byte, []int) {
-	return file_category_v1_category_proto_rawDescGZIP(), []int{12}
+	return file_category_v1_category_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *CreateMetaTemplateRequest) GetTemplate() *CategoryMetaTemplate {
@@ -755,7 +823,7 @@ type CreateMetaTemplateResponse struct {
 
 func (x *CreateMetaTemplateResponse) Reset() {
 	*x = CreateMetaTemplateResponse{}
-	mi := &file_category_v1_category_proto_msgTypes[13]
+	mi := &file_category_v1_category_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -767,7 +835,7 @@ func (x *CreateMetaTemplateResponse) String() string {
 func (*CreateMetaTemplateResponse) ProtoMessage() {}
 
 func (x *CreateMetaTemplateResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_category_v1_category_proto_msgTypes[13]
+	mi := &file_category_v1_category_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -780,7 +848,7 @@ func (x *CreateMetaTemplateResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateMetaTemplateResponse.ProtoReflect.Descriptor instead.
 func (*CreateMetaTemplateResponse) Descriptor() ([]byte, []int) {
-	return file_category_v1_category_proto_rawDescGZIP(), []int{13}
+	return file_category_v1_category_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *CreateMetaTemplateResponse) GetId() string {
@@ -799,7 +867,7 @@ type UpdateMetaTemplateRequest struct {
 
 func (x *UpdateMetaTemplateRequest) Reset() {
 	*x = UpdateMetaTemplateRequest{}
-	mi := &file_category_v1_category_proto_msgTypes[14]
+	mi := &file_category_v1_category_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -811,7 +879,7 @@ func (x *UpdateMetaTemplateRequest) String() string {
 func (*UpdateMetaTemplateRequest) ProtoMessage() {}
 
 func (x *UpdateMetaTemplateRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_category_v1_category_proto_msgTypes[14]
+	mi := &file_category_v1_category_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -824,7 +892,7 @@ func (x *UpdateMetaTemplateRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateMetaTemplateRequest.ProtoReflect.Descriptor instead.
 func (*UpdateMetaTemplateRequest) Descriptor() ([]byte, []int) {
-	return file_category_v1_category_proto_rawDescGZIP(), []int{14}
+	return file_category_v1_category_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *UpdateMetaTemplateRequest) GetTemplate() *CategoryMetaTemplate {
@@ -842,7 +910,7 @@ type UpdateMetaTemplateResponse struct {
 
 func (x *UpdateMetaTemplateResponse) Reset() {
 	*x = UpdateMetaTemplateResponse{}
-	mi := &file_category_v1_category_proto_msgTypes[15]
+	mi := &file_category_v1_category_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -854,7 +922,7 @@ func (x *UpdateMetaTemplateResponse) String() string {
 func (*UpdateMetaTemplateResponse) ProtoMessage() {}
 
 func (x *UpdateMetaTemplateResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_category_v1_category_proto_msgTypes[15]
+	mi := &file_category_v1_category_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -867,7 +935,7 @@ func (x *UpdateMetaTemplateResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateMetaTemplateResponse.ProtoReflect.Descriptor instead.
 func (*UpdateMetaTemplateResponse) Descriptor() ([]byte, []int) {
-	return file_category_v1_category_proto_rawDescGZIP(), []int{15}
+	return file_category_v1_category_proto_rawDescGZIP(), []int{16}
 }
 
 type DeleteMetaTemplateRequest struct {
@@ -879,7 +947,7 @@ type DeleteMetaTemplateRequest struct {
 
 func (x *DeleteMetaTemplateRequest) Reset() {
 	*x = DeleteMetaTemplateRequest{}
-	mi := &file_category_v1_category_proto_msgTypes[16]
+	mi := &file_category_v1_category_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -891,7 +959,7 @@ func (x *DeleteMetaTemplateRequest) String() string {
 func (*DeleteMetaTemplateRequest) ProtoMessage() {}
 
 func (x *DeleteMetaTemplateRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_category_v1_category_proto_msgTypes[16]
+	mi := &file_category_v1_category_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -904,7 +972,7 @@ func (x *DeleteMetaTemplateRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteMetaTemplateRequest.ProtoReflect.Descriptor instead.
 func (*DeleteMetaTemplateRequest) Descriptor() ([]byte, []int) {
-	return file_category_v1_category_proto_rawDescGZIP(), []int{16}
+	return file_category_v1_category_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *DeleteMetaTemplateRequest) GetId() string {
@@ -922,7 +990,7 @@ type DeleteMetaTemplateResponse struct {
 
 func (x *DeleteMetaTemplateResponse) Reset() {
 	*x = DeleteMetaTemplateResponse{}
-	mi := &file_category_v1_category_proto_msgTypes[17]
+	mi := &file_category_v1_category_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -934,7 +1002,7 @@ func (x *DeleteMetaTemplateResponse) String() string {
 func (*DeleteMetaTemplateResponse) ProtoMessage() {}
 
 func (x *DeleteMetaTemplateResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_category_v1_category_proto_msgTypes[17]
+	mi := &file_category_v1_category_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -947,7 +1015,87 @@ func (x *DeleteMetaTemplateResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteMetaTemplateResponse.ProtoReflect.Descriptor instead.
 func (*DeleteMetaTemplateResponse) Descriptor() ([]byte, []int) {
-	return file_category_v1_category_proto_rawDescGZIP(), []int{17}
+	return file_category_v1_category_proto_rawDescGZIP(), []int{18}
+}
+
+type ListMetaTemplatePresetsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListMetaTemplatePresetsRequest) Reset() {
+	*x = ListMetaTemplatePresetsRequest{}
+	mi := &file_category_v1_category_proto_msgTypes[19]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListMetaTemplatePresetsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListMetaTemplatePresetsRequest) ProtoMessage() {}
+
+func (x *ListMetaTemplatePresetsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_category_v1_category_proto_msgTypes[19]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListMetaTemplatePresetsRequest.ProtoReflect.Descriptor instead.
+func (*ListMetaTemplatePresetsRequest) Descriptor() ([]byte, []int) {
+	return file_category_v1_category_proto_rawDescGZIP(), []int{19}
+}
+
+type ListMetaTemplatePresetsResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Presets       []*MetaTemplatePreset  `protobuf:"bytes,1,rep,name=presets,proto3" json:"presets,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListMetaTemplatePresetsResponse) Reset() {
+	*x = ListMetaTemplatePresetsResponse{}
+	mi := &file_category_v1_category_proto_msgTypes[20]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListMetaTemplatePresetsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListMetaTemplatePresetsResponse) ProtoMessage() {}
+
+func (x *ListMetaTemplatePresetsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_category_v1_category_proto_msgTypes[20]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListMetaTemplatePresetsResponse.ProtoReflect.Descriptor instead.
+func (*ListMetaTemplatePresetsResponse) Descriptor() ([]byte, []int) {
+	return file_category_v1_category_proto_rawDescGZIP(), []int{20}
+}
+
+func (x *ListMetaTemplatePresetsResponse) GetPresets() []*MetaTemplatePreset {
+	if x != nil {
+		return x.Presets
+	}
+	return nil
 }
 
 var File_category_v1_category_proto protoreflect.FileDescriptor
@@ -978,7 +1126,12 @@ const file_category_v1_category_proto_rawDesc = "" +
 	"\brequired\x18\x06 \x01(\bR\brequired\x12\x18\n" +
 	"\aoptions\x18\a \x01(\tR\aoptions\x12\x1c\n" +
 	"\tsortOrder\x18\b \x01(\x05R\tsortOrder\x12\"\n" +
-	"\fdefaultValue\x18\t \x01(\tR\fdefaultValue\"\xaf\x01\n" +
+	"\fdefaultValue\x18\t \x01(\tR\fdefaultValue\"\xa3\x01\n" +
+	"\x12MetaTemplatePreset\x12\x14\n" +
+	"\x05value\x18\x01 \x01(\tR\x05value\x12\x14\n" +
+	"\x05label\x18\x02 \x01(\tR\x05label\x12 \n" +
+	"\vdescription\x18\x03 \x01(\tR\vdescription\x12?\n" +
+	"\ttemplates\x18\x04 \x03(\v2!.category.v1.CategoryMetaTemplateR\ttemplates\"\xaf\x01\n" +
 	"\x15CreateCategoryRequest\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x12\n" +
 	"\x04slug\x18\x02 \x01(\tR\x04slug\x12 \n" +
@@ -1012,7 +1165,10 @@ const file_category_v1_category_proto_rawDesc = "" +
 	"\x1aUpdateMetaTemplateResponse\"+\n" +
 	"\x19DeleteMetaTemplateRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\"\x1c\n" +
-	"\x1aDeleteMetaTemplateResponse2\xba\b\n" +
+	"\x1aDeleteMetaTemplateResponse\" \n" +
+	"\x1eListMetaTemplatePresetsRequest\"\\\n" +
+	"\x1fListMetaTemplatePresetsResponse\x129\n" +
+	"\apresets\x18\x01 \x03(\v2\x1f.category.v1.MetaTemplatePresetR\apresets2\xdc\t\n" +
 	"\x0fCategoryService\x12~\n" +
 	"\x0eCreateCategory\x12\".category.v1.CreateCategoryRequest\x1a#.category.v1.CreateCategoryResponse\"#\x82\xd3\xe4\x93\x02\x1d:\x01*\"\x18/gapi/category/v1/create\x12s\n" +
 	"\vGetCategory\x12\x1f.category.v1.GetCategoryRequest\x1a .category.v1.GetCategoryResponse\"!\x82\xd3\xe4\x93\x02\x1b:\x01*\"\x16/gapi/category/v1/info\x12|\n" +
@@ -1021,7 +1177,8 @@ const file_category_v1_category_proto_rawDesc = "" +
 	"\x0eDeleteCategory\x12\".category.v1.DeleteCategoryRequest\x1a#.category.v1.DeleteCategoryResponse\"#\x82\xd3\xe4\x93\x02\x1d:\x01*\"\x18/gapi/category/v1/delete\x12\x8f\x01\n" +
 	"\x12CreateMetaTemplate\x12&.category.v1.CreateMetaTemplateRequest\x1a'.category.v1.CreateMetaTemplateResponse\"(\x82\xd3\xe4\x93\x02\":\x01*\"\x1d/gapi/category/v1/meta/create\x12\x8f\x01\n" +
 	"\x12UpdateMetaTemplate\x12&.category.v1.UpdateMetaTemplateRequest\x1a'.category.v1.UpdateMetaTemplateResponse\"(\x82\xd3\xe4\x93\x02\":\x01*\"\x1d/gapi/category/v1/meta/update\x12\x8f\x01\n" +
-	"\x12DeleteMetaTemplate\x12&.category.v1.DeleteMetaTemplateRequest\x1a'.category.v1.DeleteMetaTemplateResponse\"(\x82\xd3\xe4\x93\x02\":\x01*\"\x1d/gapi/category/v1/meta/deleteBCZAgithub.com/GoldenSheep402/Hermes/pkg/proto/category/v1;categoryV1b\x06proto3"
+	"\x12DeleteMetaTemplate\x12&.category.v1.DeleteMetaTemplateRequest\x1a'.category.v1.DeleteMetaTemplateResponse\"(\x82\xd3\xe4\x93\x02\":\x01*\"\x1d/gapi/category/v1/meta/delete\x12\x9f\x01\n" +
+	"\x17ListMetaTemplatePresets\x12+.category.v1.ListMetaTemplatePresetsRequest\x1a,.category.v1.ListMetaTemplatePresetsResponse\")\x82\xd3\xe4\x93\x02#:\x01*\"\x1e/gapi/category/v1/meta/presetsBCZAgithub.com/GoldenSheep402/Hermes/pkg/proto/category/v1;categoryV1b\x06proto3"
 
 var (
 	file_category_v1_category_proto_rawDescOnce sync.Once
@@ -1035,56 +1192,63 @@ func file_category_v1_category_proto_rawDescGZIP() []byte {
 	return file_category_v1_category_proto_rawDescData
 }
 
-var file_category_v1_category_proto_msgTypes = make([]protoimpl.MessageInfo, 18)
+var file_category_v1_category_proto_msgTypes = make([]protoimpl.MessageInfo, 21)
 var file_category_v1_category_proto_goTypes = []any{
-	(*Category)(nil),                   // 0: category.v1.Category
-	(*CategoryMetaTemplate)(nil),       // 1: category.v1.CategoryMetaTemplate
-	(*CreateCategoryRequest)(nil),      // 2: category.v1.CreateCategoryRequest
-	(*CreateCategoryResponse)(nil),     // 3: category.v1.CreateCategoryResponse
-	(*GetCategoryRequest)(nil),         // 4: category.v1.GetCategoryRequest
-	(*GetCategoryResponse)(nil),        // 5: category.v1.GetCategoryResponse
-	(*ListCategoriesRequest)(nil),      // 6: category.v1.ListCategoriesRequest
-	(*ListCategoriesResponse)(nil),     // 7: category.v1.ListCategoriesResponse
-	(*UpdateCategoryRequest)(nil),      // 8: category.v1.UpdateCategoryRequest
-	(*UpdateCategoryResponse)(nil),     // 9: category.v1.UpdateCategoryResponse
-	(*DeleteCategoryRequest)(nil),      // 10: category.v1.DeleteCategoryRequest
-	(*DeleteCategoryResponse)(nil),     // 11: category.v1.DeleteCategoryResponse
-	(*CreateMetaTemplateRequest)(nil),  // 12: category.v1.CreateMetaTemplateRequest
-	(*CreateMetaTemplateResponse)(nil), // 13: category.v1.CreateMetaTemplateResponse
-	(*UpdateMetaTemplateRequest)(nil),  // 14: category.v1.UpdateMetaTemplateRequest
-	(*UpdateMetaTemplateResponse)(nil), // 15: category.v1.UpdateMetaTemplateResponse
-	(*DeleteMetaTemplateRequest)(nil),  // 16: category.v1.DeleteMetaTemplateRequest
-	(*DeleteMetaTemplateResponse)(nil), // 17: category.v1.DeleteMetaTemplateResponse
+	(*Category)(nil),                        // 0: category.v1.Category
+	(*CategoryMetaTemplate)(nil),            // 1: category.v1.CategoryMetaTemplate
+	(*MetaTemplatePreset)(nil),              // 2: category.v1.MetaTemplatePreset
+	(*CreateCategoryRequest)(nil),           // 3: category.v1.CreateCategoryRequest
+	(*CreateCategoryResponse)(nil),          // 4: category.v1.CreateCategoryResponse
+	(*GetCategoryRequest)(nil),              // 5: category.v1.GetCategoryRequest
+	(*GetCategoryResponse)(nil),             // 6: category.v1.GetCategoryResponse
+	(*ListCategoriesRequest)(nil),           // 7: category.v1.ListCategoriesRequest
+	(*ListCategoriesResponse)(nil),          // 8: category.v1.ListCategoriesResponse
+	(*UpdateCategoryRequest)(nil),           // 9: category.v1.UpdateCategoryRequest
+	(*UpdateCategoryResponse)(nil),          // 10: category.v1.UpdateCategoryResponse
+	(*DeleteCategoryRequest)(nil),           // 11: category.v1.DeleteCategoryRequest
+	(*DeleteCategoryResponse)(nil),          // 12: category.v1.DeleteCategoryResponse
+	(*CreateMetaTemplateRequest)(nil),       // 13: category.v1.CreateMetaTemplateRequest
+	(*CreateMetaTemplateResponse)(nil),      // 14: category.v1.CreateMetaTemplateResponse
+	(*UpdateMetaTemplateRequest)(nil),       // 15: category.v1.UpdateMetaTemplateRequest
+	(*UpdateMetaTemplateResponse)(nil),      // 16: category.v1.UpdateMetaTemplateResponse
+	(*DeleteMetaTemplateRequest)(nil),       // 17: category.v1.DeleteMetaTemplateRequest
+	(*DeleteMetaTemplateResponse)(nil),      // 18: category.v1.DeleteMetaTemplateResponse
+	(*ListMetaTemplatePresetsRequest)(nil),  // 19: category.v1.ListMetaTemplatePresetsRequest
+	(*ListMetaTemplatePresetsResponse)(nil), // 20: category.v1.ListMetaTemplatePresetsResponse
 }
 var file_category_v1_category_proto_depIdxs = []int32{
 	1,  // 0: category.v1.Category.metaTemplates:type_name -> category.v1.CategoryMetaTemplate
 	0,  // 1: category.v1.Category.children:type_name -> category.v1.Category
-	0,  // 2: category.v1.GetCategoryResponse.category:type_name -> category.v1.Category
-	0,  // 3: category.v1.ListCategoriesResponse.categories:type_name -> category.v1.Category
-	0,  // 4: category.v1.UpdateCategoryRequest.category:type_name -> category.v1.Category
-	1,  // 5: category.v1.CreateMetaTemplateRequest.template:type_name -> category.v1.CategoryMetaTemplate
-	1,  // 6: category.v1.UpdateMetaTemplateRequest.template:type_name -> category.v1.CategoryMetaTemplate
-	2,  // 7: category.v1.CategoryService.CreateCategory:input_type -> category.v1.CreateCategoryRequest
-	4,  // 8: category.v1.CategoryService.GetCategory:input_type -> category.v1.GetCategoryRequest
-	6,  // 9: category.v1.CategoryService.ListCategories:input_type -> category.v1.ListCategoriesRequest
-	8,  // 10: category.v1.CategoryService.UpdateCategory:input_type -> category.v1.UpdateCategoryRequest
-	10, // 11: category.v1.CategoryService.DeleteCategory:input_type -> category.v1.DeleteCategoryRequest
-	12, // 12: category.v1.CategoryService.CreateMetaTemplate:input_type -> category.v1.CreateMetaTemplateRequest
-	14, // 13: category.v1.CategoryService.UpdateMetaTemplate:input_type -> category.v1.UpdateMetaTemplateRequest
-	16, // 14: category.v1.CategoryService.DeleteMetaTemplate:input_type -> category.v1.DeleteMetaTemplateRequest
-	3,  // 15: category.v1.CategoryService.CreateCategory:output_type -> category.v1.CreateCategoryResponse
-	5,  // 16: category.v1.CategoryService.GetCategory:output_type -> category.v1.GetCategoryResponse
-	7,  // 17: category.v1.CategoryService.ListCategories:output_type -> category.v1.ListCategoriesResponse
-	9,  // 18: category.v1.CategoryService.UpdateCategory:output_type -> category.v1.UpdateCategoryResponse
-	11, // 19: category.v1.CategoryService.DeleteCategory:output_type -> category.v1.DeleteCategoryResponse
-	13, // 20: category.v1.CategoryService.CreateMetaTemplate:output_type -> category.v1.CreateMetaTemplateResponse
-	15, // 21: category.v1.CategoryService.UpdateMetaTemplate:output_type -> category.v1.UpdateMetaTemplateResponse
-	17, // 22: category.v1.CategoryService.DeleteMetaTemplate:output_type -> category.v1.DeleteMetaTemplateResponse
-	15, // [15:23] is the sub-list for method output_type
-	7,  // [7:15] is the sub-list for method input_type
-	7,  // [7:7] is the sub-list for extension type_name
-	7,  // [7:7] is the sub-list for extension extendee
-	0,  // [0:7] is the sub-list for field type_name
+	1,  // 2: category.v1.MetaTemplatePreset.templates:type_name -> category.v1.CategoryMetaTemplate
+	0,  // 3: category.v1.GetCategoryResponse.category:type_name -> category.v1.Category
+	0,  // 4: category.v1.ListCategoriesResponse.categories:type_name -> category.v1.Category
+	0,  // 5: category.v1.UpdateCategoryRequest.category:type_name -> category.v1.Category
+	1,  // 6: category.v1.CreateMetaTemplateRequest.template:type_name -> category.v1.CategoryMetaTemplate
+	1,  // 7: category.v1.UpdateMetaTemplateRequest.template:type_name -> category.v1.CategoryMetaTemplate
+	2,  // 8: category.v1.ListMetaTemplatePresetsResponse.presets:type_name -> category.v1.MetaTemplatePreset
+	3,  // 9: category.v1.CategoryService.CreateCategory:input_type -> category.v1.CreateCategoryRequest
+	5,  // 10: category.v1.CategoryService.GetCategory:input_type -> category.v1.GetCategoryRequest
+	7,  // 11: category.v1.CategoryService.ListCategories:input_type -> category.v1.ListCategoriesRequest
+	9,  // 12: category.v1.CategoryService.UpdateCategory:input_type -> category.v1.UpdateCategoryRequest
+	11, // 13: category.v1.CategoryService.DeleteCategory:input_type -> category.v1.DeleteCategoryRequest
+	13, // 14: category.v1.CategoryService.CreateMetaTemplate:input_type -> category.v1.CreateMetaTemplateRequest
+	15, // 15: category.v1.CategoryService.UpdateMetaTemplate:input_type -> category.v1.UpdateMetaTemplateRequest
+	17, // 16: category.v1.CategoryService.DeleteMetaTemplate:input_type -> category.v1.DeleteMetaTemplateRequest
+	19, // 17: category.v1.CategoryService.ListMetaTemplatePresets:input_type -> category.v1.ListMetaTemplatePresetsRequest
+	4,  // 18: category.v1.CategoryService.CreateCategory:output_type -> category.v1.CreateCategoryResponse
+	6,  // 19: category.v1.CategoryService.GetCategory:output_type -> category.v1.GetCategoryResponse
+	8,  // 20: category.v1.CategoryService.ListCategories:output_type -> category.v1.ListCategoriesResponse
+	10, // 21: category.v1.CategoryService.UpdateCategory:output_type -> category.v1.UpdateCategoryResponse
+	12, // 22: category.v1.CategoryService.DeleteCategory:output_type -> category.v1.DeleteCategoryResponse
+	14, // 23: category.v1.CategoryService.CreateMetaTemplate:output_type -> category.v1.CreateMetaTemplateResponse
+	16, // 24: category.v1.CategoryService.UpdateMetaTemplate:output_type -> category.v1.UpdateMetaTemplateResponse
+	18, // 25: category.v1.CategoryService.DeleteMetaTemplate:output_type -> category.v1.DeleteMetaTemplateResponse
+	20, // 26: category.v1.CategoryService.ListMetaTemplatePresets:output_type -> category.v1.ListMetaTemplatePresetsResponse
+	18, // [18:27] is the sub-list for method output_type
+	9,  // [9:18] is the sub-list for method input_type
+	9,  // [9:9] is the sub-list for extension type_name
+	9,  // [9:9] is the sub-list for extension extendee
+	0,  // [0:9] is the sub-list for field type_name
 }
 
 func init() { file_category_v1_category_proto_init() }
@@ -1098,7 +1262,7 @@ func file_category_v1_category_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_category_v1_category_proto_rawDesc), len(file_category_v1_category_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   18,
+			NumMessages:   21,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

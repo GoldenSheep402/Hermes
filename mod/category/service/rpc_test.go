@@ -52,4 +52,9 @@ func TestCategoryService_MetaTemplates_NoContext(t *testing.T) {
 	assert.Error(t, err3)
 	assert.Nil(t, r3)
 	assert.Contains(t, err3.Error(), "unauthenticated")
+
+	r4, err4 := s.ListMetaTemplatePresets(context.Background(), &categoryV1.ListMetaTemplatePresetsRequest{})
+	assert.Error(t, err4)
+	assert.Nil(t, r4)
+	assert.Contains(t, err4.Error(), "unauthenticated")
 }

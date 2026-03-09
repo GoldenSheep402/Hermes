@@ -32,6 +32,7 @@ const navItems: NavItem[] = [
 const visibleNavItems = computed(() =>
   navItems.filter((item) => !item.requiredPermission || authStore.hasPermission(item.requiredPermission)),
 )
+const isAdminRoute = computed(() => route.path === '/admin' || route.path.startsWith('/admin/'))
 const userInitial = computed(() => authStore.profile.username.slice(0, 1).toUpperCase() || 'U')
 const ratioDanger = computed(() => authStore.ratio < 1)
 
@@ -51,7 +52,10 @@ async function handleLogout() {
 </script>
 
 <template>
-  <div class="min-h-screen bg-[var(--app-bg)] text-[var(--app-text)]">
+  <div
+    class="flex flex-col bg-[var(--app-bg)] text-[var(--app-text)]"
+    :class="isAdminRoute ? 'h-screen overflow-hidden' : 'min-h-screen'"
+  >
     <header class="sticky top-0 z-40 border-b border-[var(--app-border)] bg-[var(--panel-bg)]/95 backdrop-blur">
       <section class="mx-auto max-w-[1480px] px-3 py-3">
         <div class="grid gap-3 lg:grid-cols-[240px_1fr_280px] lg:items-center">
@@ -115,8 +119,16 @@ async function handleLogout() {
       </nav>
     </header>
 
-    <main class="mx-auto max-w-[1480px] px-3 py-4">
-      <router-view />
+    <main
+      class="mx-auto flex min-h-0 w-full max-w-[1480px] flex-1 px-3 py-4"
+      :class="isAdminRoute ? 'h-0 overflow-hidden' : ''"
+    >
+      <div
+        class="route-page-host flex min-h-0 w-full flex-1"
+        :class="isAdminRoute ? 'h-full min-h-0 overflow-hidden' : ''"
+      >
+        <router-view />
+      </div>
     </main>
   </div>
 </template>

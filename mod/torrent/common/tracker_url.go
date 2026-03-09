@@ -2,12 +2,11 @@ package common
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"net/url"
 	"strings"
 
-	systemDao "github.com/GoldenSheep402/Hermes/mod/system/dao"
+	systemSetting "github.com/GoldenSheep402/Hermes/mod/system/setting"
 )
 
 var (
@@ -93,54 +92,11 @@ func BuildAnnounceURLsFromEndpoints(endpoints []string, passkey string) ([]strin
 }
 
 func ResolveTrackerEndpointsFromSettings(ctx context.Context) []string {
-	setting, err := systemDao.Setting.GetByKey(ctx, systemDao.SettingKeyTrackerList)
-	if err != nil || setting == nil {
-		return nil
-	}
-	return parseTrackerList(setting.Value)
+	return systemSetting.TrackerListValue(ctx)
 }
 
 func parseTrackerList(raw string) []string {
-	content := strings.TrimSpace(raw)
-	if content == "" {
-		return nil
-	}
-
-	var jsonList []string
-	if strings.HasPrefix(content, "[") && strings.HasSuffix(content, "]") {
-		if err := json.Unmarshal([]byte(content), &jsonList); err == nil {
-			return normalizeTrackerList(jsonList)
-		}
-	}
-
-	if strings.Contains(content, "\n") || strings.Contains(content, "\r") {
-		lines := strings.Split(strings.ReplaceAll(content, "\r\n", "\n"), "\n")
-		return normalizeTrackerList(lines)
-	}
-
-	parts := strings.Split(content, ",")
-	return normalizeTrackerList(parts)
-}
-
-func normalizeTrackerList(items []string) []string {
-	result := make([]string, 0, len(items))
-	seen := map[string]struct{}{}
-
-	for _, item := range items {
-		text := strings.TrimSpace(item)
-		if text == "" {
-			continue
-		}
-		if strings.HasPrefix(text, "#") {
-			continue
-		}
-		if _, ok := seen[text]; ok {
-			continue
-		}
-		seen[text] = struct{}{}
-		result = append(result, text)
-	}
-	return result
+	return systemSetting.ParseTrackerList(raw)
 }
 
 func normalizeAnnouncePath(path string) string {

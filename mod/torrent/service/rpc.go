@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 
+	"github.com/GoldenSheep402/Hermes/mod/casbinX/rbac"
 	"github.com/GoldenSheep402/Hermes/mod/torrent/common"
 	"github.com/GoldenSheep402/Hermes/mod/torrent/dao"
 	"github.com/GoldenSheep402/Hermes/mod/torrent/model"
@@ -43,14 +44,6 @@ func (s *S) UploadTorrent(ctx context.Context, req *torrentV1.UploadTorrentReque
 		return nil, status.Error(codes.InvalidArgument, "Empty torrent data")
 	}
 
-	// 1. Parse original torrent first.
-	// InfoHash is derived from the info dict and should not depend on announce URLs.
-	parsed, err := torrent.Parse(req.TorrentData)
-	if err != nil {
-		s.Log.Errorw("failed to parse torrent", "error", err)
-		return nil, status.Error(codes.InvalidArgument, "Invalid torrent file")
-	}
-
 	uploader, err := userDao.User.GetByID(ctx, uploaderID)
 	if err != nil || uploader == nil || uploader.Passkey == "" {
 		return nil, status.Error(codes.Unauthenticated, "invalid user passkey")
@@ -61,16 +54,21 @@ func (s *S) UploadTorrent(ctx context.Context, req *torrentV1.UploadTorrentReque
 		return nil, status.Error(codes.FailedPrecondition, "tracker endpoint not available")
 	}
 
-	// Rewrite tracker URLs only for persisted raw bytes.
-	normalizedData, err := torrent.RewriteDownloadTorrentWithTrackers(req.TorrentData, announceURLs)
+	// Rewrite for upload persistence: bind announce URLs and enforce private tracker mode.
+	normalizedData, err := torrent.RewriteUploadTorrentWithTrackers(req.TorrentData, announceURLs)
 	if err != nil {
 		s.Log.Errorw("failed to rewrite torrent at upload", "error", err)
-		return nil, status.Error(codes.Internal, "Failed to normalize torrent file")
+		return nil, status.Error(codes.InvalidArgument, "Invalid torrent file")
+	}
+	parsed, err := torrent.Parse(normalizedData)
+	if err != nil {
+		s.Log.Errorw("failed to parse normalized torrent", "error", err)
+		return nil, status.Error(codes.InvalidArgument, "Invalid torrent file")
 	}
 
 	// uploaderID is already authenticated via requireAuth
 
-	// 2. Map to Model (from original parse result)
+	// 2. Map to Model (from normalized private torrent)
 	torrentModel := &model.Torrent{
 		Model:        stdao.Model{ID: ulid.Make().String()},
 		InfoHash:     parsed.InfoHash,
@@ -219,7 +217,8 @@ func (s *S) ListTorrentFiles(ctx context.Context, req *torrentV1.ListTorrentFile
 }
 
 func (s *S) DeleteTorrent(ctx context.Context, req *torrentV1.DeleteTorrentRequest) (*torrentV1.DeleteTorrentResponse, error) {
-	if _, err := requireAuth(ctx); err != nil {
+	userID, err := requireAuth(ctx)
+	if err != nil {
 		return nil, err
 	}
 
@@ -227,6 +226,21 @@ func (s *S) DeleteTorrent(ctx context.Context, req *torrentV1.DeleteTorrentReque
 		return nil, status.Error(codes.InvalidArgument, "Torrent ID cannot be empty")
 	}
 
-	// Soft delete requires dao.Torrent implementation. For now we just return Unimplemented.
-	return nil, status.Error(codes.Unimplemented, "implement me")
+	entity, err := dao.Torrent.GetBase(ctx, req.Id)
+	if err != nil {
+		return nil, status.Error(codes.NotFound, "Torrent not found")
+	}
+
+	if entity.UploaderID != userID {
+		isAdmin, checkErr := rbac.CasbinManager.CheckUserIsGlobalAdmin(userID)
+		if checkErr != nil || !isAdmin {
+			return nil, status.Error(codes.PermissionDenied, "Not authorized to delete this torrent")
+		}
+	}
+
+	if err := dao.Torrent.DeleteByID(ctx, req.Id); err != nil {
+		return nil, err
+	}
+
+	return &torrentV1.DeleteTorrentResponse{}, nil
 }

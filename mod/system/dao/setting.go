@@ -14,12 +14,6 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-const (
-	SettingKeyTrackerList           = "tracker.list"
-	SettingKeyTrackerFlushInterval  = "tracker.flush_interval"
-	SettingKeyTrackerFlushBatchSize = "tracker.flush_batch_size"
-)
-
 type setting struct {
 	stdao.Std[*model.Setting]
 	rds *redis.Client

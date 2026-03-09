@@ -4,6 +4,7 @@ import (
 	resourceV1 "github.com/GoldenSheep402/Hermes/pkg/proto/resource/v1"
 
 	"context"
+	"strings"
 
 	"time"
 
@@ -54,6 +55,87 @@ func requireAuth(ctx context.Context) (string, error) {
 	return userID, nil
 }
 
+func normalizeProtoMetadata(items []*resourceV1.ResourceMeta) []model.ResourceMeta {
+	result := make([]model.ResourceMeta, 0, len(items))
+	for _, item := range items {
+		if item == nil {
+			continue
+		}
+		key := strings.TrimSpace(item.Key)
+		value := strings.TrimSpace(item.Value)
+		if key == "" || value == "" {
+			continue
+		}
+		result = append(result, model.ResourceMeta{
+			Model: stdao.Model{ID: item.Id},
+			Key:   key,
+			Value: value,
+		})
+	}
+	return result
+}
+
+func toProtoMetadata(items []model.ResourceMeta) []*resourceV1.ResourceMeta {
+	result := make([]*resourceV1.ResourceMeta, 0, len(items))
+	for _, item := range items {
+		result = append(result, &resourceV1.ResourceMeta{
+			Id:    item.ID,
+			Key:   item.Key,
+			Value: item.Value,
+		})
+	}
+	return result
+}
+
+func toProtoTags(items []model.Tag) []*resourceV1.Tag {
+	result := make([]*resourceV1.Tag, 0, len(items))
+	for _, item := range items {
+		result = append(result, &resourceV1.Tag{
+			Id:   item.ID,
+			Name: item.Name,
+		})
+	}
+	return result
+}
+
+func toProtoScreenshots(items []model.ResourceScreenshot) []*resourceV1.ResourceScreenshot {
+	result := make([]*resourceV1.ResourceScreenshot, 0, len(items))
+	for _, item := range items {
+		result = append(result, &resourceV1.ResourceScreenshot{
+			Id:        item.ID,
+			Url:       item.URL,
+			SortOrder: int32(item.SortOrder),
+		})
+	}
+	return result
+}
+
+func saveResourceDetails(ctx context.Context, resourceID string, metadata []*resourceV1.ResourceMeta, tagNames []string, screenshotURLs []string) error {
+	if err := dao.ResourceMeta.ReplaceByResourceID(ctx, resourceID, normalizeProtoMetadata(metadata)); err != nil {
+		return err
+	}
+
+	tags, err := dao.Tag.EnsureByNames(ctx, tagNames)
+	if err != nil {
+		return err
+	}
+	tagIDs := make([]string, 0, len(tags))
+	for _, item := range tags {
+		if item.ID != "" {
+			tagIDs = append(tagIDs, item.ID)
+		}
+	}
+	if err := dao.ResourceTag.ReplaceByResourceID(ctx, resourceID, tagIDs); err != nil {
+		return err
+	}
+
+	if err := dao.ResourceScreenshot.ReplaceByResourceID(ctx, resourceID, screenshotURLs); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (s *S) CreateResource(ctx context.Context, req *resourceV1.CreateResourceRequest) (*resourceV1.CreateResourceResponse, error) {
 	uploaderID, ok := ctx.Value(ctxKey.UID).(string)
 	if !ok || uploaderID == "" {
@@ -62,13 +144,6 @@ func (s *S) CreateResource(ctx context.Context, req *resourceV1.CreateResourceRe
 
 	if req.Title == "" || req.CategoryId == "" || len(req.TorrentData) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Title, CategoryID, and TorrentData are required")
-	}
-
-	// 1. Parse original torrent first.
-	// InfoHash is derived from the info dict and should not depend on announce URLs.
-	parsed, err := torrent.Parse(req.TorrentData)
-	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, "Invalid torrent data")
 	}
 
 	uploader, err := userDao.User.GetByID(ctx, uploaderID)
@@ -81,10 +156,14 @@ func (s *S) CreateResource(ctx context.Context, req *resourceV1.CreateResourceRe
 		return nil, status.Error(codes.FailedPrecondition, "tracker endpoint not available")
 	}
 
-	// Rewrite tracker URLs only for persisted raw bytes.
-	normalizedData, err := torrent.RewriteDownloadTorrentWithTrackers(req.TorrentData, announceURLs)
+	// Rewrite for upload persistence: bind announce URLs and enforce private tracker mode.
+	normalizedData, err := torrent.RewriteUploadTorrentWithTrackers(req.TorrentData, announceURLs)
 	if err != nil {
-		return nil, status.Error(codes.Internal, "Failed to normalize torrent data")
+		return nil, status.Error(codes.InvalidArgument, "Invalid torrent data")
+	}
+	parsed, err := torrent.Parse(normalizedData)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "Invalid torrent data")
 	}
 
 	// 2. Process Torrent
@@ -132,8 +211,22 @@ func (s *S) CreateResource(ctx context.Context, req *resourceV1.CreateResourceRe
 		IsFree:      false,
 	}
 
-	if err := dao.Resource.Create(ctx, res); err != nil {
+	tx := dao.Resource.Begin()
+	txCtx := dao.Resource.SetTxToCtx(ctx, tx)
+
+	if err := dao.Resource.Create(txCtx, res); err != nil {
+		_ = tx.Rollback().Error
 		s.Log.Errorw("failed to create resource", "err", err)
+		return nil, status.Error(codes.Internal, "Failed to create resource")
+	}
+	if err := saveResourceDetails(txCtx, res.ID, req.Metadata, req.TagNames, req.ScreenshotUrls); err != nil {
+		_ = tx.Rollback().Error
+		s.Log.Errorw("failed to persist resource details", "resource_id", res.ID, "err", err)
+		return nil, status.Error(codes.Internal, "Failed to save resource details")
+	}
+	if err := tx.Commit().Error; err != nil {
+		_ = tx.Rollback().Error
+		s.Log.Errorw("failed to commit resource transaction", "resource_id", res.ID, "err", err)
 		return nil, status.Error(codes.Internal, "Failed to create resource")
 	}
 
@@ -171,6 +264,22 @@ func (s *S) GetResource(ctx context.Context, req *resourceV1.GetResourceRequest)
 		}
 	}
 
+	metadata, err := dao.ResourceMeta.ListByResourceID(ctx, res.ID)
+	if err != nil {
+		s.Log.Errorw("failed to load resource metadata", "resource_id", res.ID, "err", err)
+		return nil, status.Error(codes.Internal, "Failed to load resource details")
+	}
+	tagMap, err := dao.ResourceTag.ListTagMapByResourceIDs(ctx, []string{res.ID})
+	if err != nil {
+		s.Log.Errorw("failed to load resource tags", "resource_id", res.ID, "err", err)
+		return nil, status.Error(codes.Internal, "Failed to load resource details")
+	}
+	screenshots, err := dao.ResourceScreenshot.ListByResourceID(ctx, res.ID)
+	if err != nil {
+		s.Log.Errorw("failed to load resource screenshots", "resource_id", res.ID, "err", err)
+		return nil, status.Error(codes.Internal, "Failed to load resource details")
+	}
+
 	return &resourceV1.GetResourceResponse{
 		Resource: &resourceV1.Resource{
 			Id:           res.ID,
@@ -192,6 +301,9 @@ func (s *S) GetResource(ctx context.Context, req *resourceV1.GetResourceRequest)
 			CreatedAt:    res.CreatedAt.Format(time.RFC3339),
 			UpdatedAt:    res.UpdatedAt.Format(time.RFC3339),
 			UploaderName: uploaderName,
+			Metadata:     toProtoMetadata(metadata),
+			Tags:         toProtoTags(tagMap[res.ID]),
+			Screenshots:  toProtoScreenshots(screenshots),
 		},
 	}, nil
 }
@@ -237,6 +349,29 @@ func (s *S) ListResources(ctx context.Context, req *resourceV1.ListResourcesRequ
 		}
 	}
 
+	resourceIDs := make([]string, 0, len(list))
+	for _, item := range list {
+		if item.ID != "" {
+			resourceIDs = append(resourceIDs, item.ID)
+		}
+	}
+
+	metadataMap, err := dao.ResourceMeta.ListByResourceIDs(ctx, resourceIDs)
+	if err != nil {
+		s.Log.Errorw("failed to load resource metadata batch", "err", err)
+		return nil, status.Error(codes.Internal, "Failed to load resource details")
+	}
+	tagMap, err := dao.ResourceTag.ListTagMapByResourceIDs(ctx, resourceIDs)
+	if err != nil {
+		s.Log.Errorw("failed to load resource tags batch", "err", err)
+		return nil, status.Error(codes.Internal, "Failed to load resource details")
+	}
+	screenshotMap, err := dao.ResourceScreenshot.ListByResourceIDs(ctx, resourceIDs)
+	if err != nil {
+		s.Log.Errorw("failed to load resource screenshots batch", "err", err)
+		return nil, status.Error(codes.Internal, "Failed to load resource details")
+	}
+
 	var pList []*resourceV1.Resource
 	for _, res := range list {
 		var freeUntil, doubleUntil string
@@ -265,6 +400,9 @@ func (s *S) ListResources(ctx context.Context, req *resourceV1.ListResourcesRequ
 			CreatedAt:    res.CreatedAt.Format(time.RFC3339),
 			UpdatedAt:    res.UpdatedAt.Format(time.RFC3339),
 			UploaderName: uploaderNameMap[res.UploaderID],
+			Metadata:     toProtoMetadata(metadataMap[res.ID]),
+			Tags:         toProtoTags(tagMap[res.ID]),
+			Screenshots:  toProtoScreenshots(screenshotMap[res.ID]),
 		})
 	}
 
@@ -275,6 +413,10 @@ func (s *S) ListResources(ctx context.Context, req *resourceV1.ListResourcesRequ
 }
 
 func (s *S) UpdateResource(ctx context.Context, req *resourceV1.UpdateResourceRequest) (*resourceV1.UpdateResourceResponse, error) {
+	if req.Id == "" {
+		return nil, status.Error(codes.InvalidArgument, "Resource ID required")
+	}
+
 	// Access control: creator or admin
 	userID, err := requireAuth(ctx)
 	if err != nil {
@@ -288,10 +430,6 @@ func (s *S) UpdateResource(ctx context.Context, req *resourceV1.UpdateResourceRe
 		if errAdmin := requireAdmin(ctx); errAdmin != nil {
 			return nil, status.Error(codes.PermissionDenied, "Not authorized to update this resource")
 		}
-	}
-
-	if req.Id == "" {
-		return nil, status.Error(codes.InvalidArgument, "Resource ID required")
 	}
 
 	updates := map[string]interface{}{}
@@ -308,8 +446,56 @@ func (s *S) UpdateResource(ctx context.Context, req *resourceV1.UpdateResourceRe
 		updates["category_id"] = req.CategoryId
 	}
 
-	if err := dao.Resource.UpdateFields(ctx, req.Id, updates); err != nil {
-		s.Log.Errorw("failed to update resource", "err", err)
+	tx := dao.Resource.Begin()
+	txCtx := dao.Resource.SetTxToCtx(ctx, tx)
+
+	if len(updates) > 0 {
+		if err := dao.Resource.UpdateFields(txCtx, req.Id, updates); err != nil {
+			_ = tx.Rollback().Error
+			s.Log.Errorw("failed to update resource", "resource_id", req.Id, "err", err)
+			return nil, status.Error(codes.Internal, "Failed to update resource")
+		}
+	}
+
+	if req.Metadata != nil {
+		if err := dao.ResourceMeta.ReplaceByResourceID(txCtx, req.Id, normalizeProtoMetadata(req.Metadata)); err != nil {
+			_ = tx.Rollback().Error
+			s.Log.Errorw("failed to replace resource metadata", "resource_id", req.Id, "err", err)
+			return nil, status.Error(codes.Internal, "Failed to update resource metadata")
+		}
+	}
+
+	if req.TagNames != nil {
+		tags, err := dao.Tag.EnsureByNames(txCtx, req.TagNames)
+		if err != nil {
+			_ = tx.Rollback().Error
+			s.Log.Errorw("failed to ensure tags", "resource_id", req.Id, "err", err)
+			return nil, status.Error(codes.Internal, "Failed to update resource tags")
+		}
+		tagIDs := make([]string, 0, len(tags))
+		for _, item := range tags {
+			if item.ID != "" {
+				tagIDs = append(tagIDs, item.ID)
+			}
+		}
+		if err := dao.ResourceTag.ReplaceByResourceID(txCtx, req.Id, tagIDs); err != nil {
+			_ = tx.Rollback().Error
+			s.Log.Errorw("failed to replace resource tags", "resource_id", req.Id, "err", err)
+			return nil, status.Error(codes.Internal, "Failed to update resource tags")
+		}
+	}
+
+	if req.ScreenshotUrls != nil {
+		if err := dao.ResourceScreenshot.ReplaceByResourceID(txCtx, req.Id, req.ScreenshotUrls); err != nil {
+			_ = tx.Rollback().Error
+			s.Log.Errorw("failed to replace resource screenshots", "resource_id", req.Id, "err", err)
+			return nil, status.Error(codes.Internal, "Failed to update resource screenshots")
+		}
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		_ = tx.Rollback().Error
+		s.Log.Errorw("failed to commit resource update", "resource_id", req.Id, "err", err)
 		return nil, status.Error(codes.Internal, "Failed to update resource")
 	}
 

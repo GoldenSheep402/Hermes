@@ -3,6 +3,8 @@ package comment
 import (
 	"errors"
 
+	"github.com/GoldenSheep402/Hermes/mod/comment/dao"
+
 	"github.com/GoldenSheep402/Hermes/core/kernel"
 	"github.com/GoldenSheep402/Hermes/mod/comment/service"
 	"github.com/GoldenSheep402/Hermes/mod/grpcGateway/gateway"
@@ -32,7 +34,9 @@ func (m *Mod) Load(h *kernel.Hub) error {
 		return errors.New("can't load gorm from kernel")
 	}
 
-	// TODO: dao.Init(db, rdb)
+	if err := dao.Init(db, rdb); err != nil {
+		return err
+	}
 
 	var gw gateway.Gateway
 	if h.Load(&gw) != nil {

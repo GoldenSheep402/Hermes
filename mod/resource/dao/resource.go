@@ -26,6 +26,17 @@ func (d *resource) IncrementViewCount(ctx context.Context, id string) error {
 	return d.GetTxFromCtx(ctx).WithContext(ctx).Model(&model.Resource{}).Where("id = ?", id).UpdateColumn("view_count", gorm.Expr("view_count + ?", 1)).Error
 }
 
+func (d *resource) AdjustCommentCount(ctx context.Context, id string, delta int) error {
+	if delta == 0 {
+		return nil
+	}
+	return d.GetTxFromCtx(ctx).WithContext(ctx).
+		Model(&model.Resource{}).
+		Where("id = ?", id).
+		UpdateColumn("comment_count", gorm.Expr("CASE WHEN comment_count + ? < 0 THEN 0 ELSE comment_count + ? END", delta, delta)).
+		Error
+}
+
 // ListByFilters returns a paginated list of resources based on parameters.
 func (d *resource) ListByFilters(ctx context.Context, categoryID, keyword string, status int32, page, pageSize int32) ([]model.Resource, int64, error) {
 	db := d.GetTxFromCtx(ctx).WithContext(ctx)

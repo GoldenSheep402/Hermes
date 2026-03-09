@@ -15,6 +15,7 @@ import (
 
 	authDao "github.com/GoldenSheep402/Hermes/mod/auth/dao"
 	"github.com/GoldenSheep402/Hermes/mod/auth/model/codeValues"
+	systemSetting "github.com/GoldenSheep402/Hermes/mod/system/setting"
 	"github.com/GoldenSheep402/Hermes/mod/user/dao"
 	"github.com/GoldenSheep402/Hermes/mod/user/model"
 	"github.com/GoldenSheep402/Hermes/pkg/auth"
@@ -33,9 +34,13 @@ type S struct {
 
 // RegisterSendEmail sends an email verification code.
 func (s *S) RegisterSendEmail(ctx context.Context, req *authV1.RegisterSendEmailRequest) (*authV1.RegisterSendEmailResponse, error) {
-	// TODO: Read SMTP settings from system KV store
-	// For now, use placeholder values until system DAO is updated
-	smtpEnable := false
+	if !systemSetting.InviteEmailVerifyRequiredValue(ctx) {
+		// Email verification is disabled; no-op by design.
+		return &authV1.RegisterSendEmailResponse{}, nil
+	}
+
+	// SMTP enable switch is read from system settings.
+	smtpEnable := systemSetting.AuthSMTPEnableValue(ctx)
 	if !smtpEnable {
 		return nil, status.Error(codes.PermissionDenied, "SMTP is not enabled")
 	}
@@ -112,7 +117,11 @@ func (s *S) RegisterSendEmail(ctx context.Context, req *authV1.RegisterSendEmail
 func (s *S) RegisterWithEmail(ctx context.Context, req *authV1.RegisterWithEmailRequest) (*authV1.RegisterWithEmailResponse, error) {
 	// TODO: Check register enable/smtp enable from system KV store
 
-	if req.EmailToken != "" {
+	if systemSetting.InviteEmailVerifyRequiredValue(ctx) {
+		if req.EmailToken == "" {
+			return nil, status.Error(codes.InvalidArgument, "Email token is required")
+		}
+
 		_status, err := authDao.Code.CheckCodeWithAttempts(ctx, req.Email, req.EmailToken)
 		if err != nil {
 			return nil, status.Error(codes.Internal, "Internal error")

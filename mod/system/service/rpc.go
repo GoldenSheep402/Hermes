@@ -4,11 +4,16 @@ import (
 	"context"
 
 	"github.com/GoldenSheep402/Hermes/mod/casbinX/rbac"
-	"github.com/GoldenSheep402/Hermes/mod/system/dao"
-	"github.com/GoldenSheep402/Hermes/mod/system/model"
+	resourceDao "github.com/GoldenSheep402/Hermes/mod/resource/dao"
+	resourceModel "github.com/GoldenSheep402/Hermes/mod/resource/model"
+	systemSetting "github.com/GoldenSheep402/Hermes/mod/system/setting"
+	torrentDao "github.com/GoldenSheep402/Hermes/mod/torrent/dao"
+	torrentModel "github.com/GoldenSheep402/Hermes/mod/torrent/model"
+	trafficDao "github.com/GoldenSheep402/Hermes/mod/traffic/dao"
+	trafficModel "github.com/GoldenSheep402/Hermes/mod/traffic/model"
+	userDao "github.com/GoldenSheep402/Hermes/mod/user/dao"
+	userModel "github.com/GoldenSheep402/Hermes/mod/user/model"
 	"github.com/GoldenSheep402/Hermes/pkg/ctxKey"
-	"github.com/GoldenSheep402/Hermes/pkg/stdao"
-	"github.com/oklog/ulid/v2"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -49,7 +54,7 @@ func (s S) GetSettings(ctx context.Context, req *systemV1.GetSettingsRequest) (*
 	if _, err := requireAuth(ctx); err != nil {
 		return nil, err
 	}
-	list, err := dao.Setting.List(ctx)
+	list, err := systemSetting.List(ctx)
 	if err != nil {
 		return nil, status.Error(codes.Internal, "Failed to list settings")
 	}
@@ -73,7 +78,7 @@ func (s S) GetSetting(ctx context.Context, req *systemV1.GetSettingRequest) (*sy
 	if req.Key == "" {
 		return nil, status.Error(codes.InvalidArgument, "Key is required")
 	}
-	val, err := dao.Setting.GetByKey(ctx, req.Key)
+	val, err := systemSetting.Get(ctx, req.Key)
 	if err != nil {
 		return nil, status.Error(codes.NotFound, "Setting not found")
 	}
@@ -100,13 +105,7 @@ func (s S) SetSettings(ctx context.Context, req *systemV1.SetSettingsRequest) (*
 		if itemType == "" {
 			itemType = "string"
 		}
-		if err := dao.Setting.UpdateOrCreate(ctx, &model.Setting{
-			Model: stdao.Model{ID: ulid.Make().String()},
-			Key:   setting.Key,
-			Value: setting.Value,
-			Type:  itemType,
-			Desc:  setting.Desc,
-		}); err != nil {
+		if err := systemSetting.Upsert(ctx, setting.Key, setting.Value, itemType, setting.Desc); err != nil {
 			s.Log.Errorw("failed to upsert setting", "key", setting.Key, "err", err)
 			return nil, status.Error(codes.Internal, "Failed to save settings")
 		}
@@ -123,7 +122,7 @@ func (s S) DeleteSetting(ctx context.Context, req *systemV1.DeleteSettingRequest
 		return nil, status.Error(codes.InvalidArgument, "Key is required")
 	}
 
-	if err := dao.Setting.DeleteByKey(ctx, req.Key); err != nil {
+	if err := systemSetting.Delete(ctx, req.Key); err != nil {
 		return nil, status.Error(codes.Internal, "Failed to delete setting")
 	}
 
@@ -131,18 +130,59 @@ func (s S) DeleteSetting(ctx context.Context, req *systemV1.DeleteSettingRequest
 }
 
 func (s S) GetSiteStats(ctx context.Context, req *systemV1.GetSiteStatsRequest) (*systemV1.GetSiteStatsResponse, error) {
-	// Usually public or requireAuth
 	if _, err := requireAuth(ctx); err != nil {
 		return nil, err
 	}
-	// TODO: Replace with actual DB aggregations from respective DAOs once inter-module tracking is stabilized.
-	// For now, returning minimal struct to clear the interface.
+
+	if userDao.User.DB() == nil || torrentDao.Torrent.DB() == nil || resourceDao.Resource.DB() == nil || trafficDao.UserTraffic.DB() == nil {
+		return nil, status.Error(codes.FailedPrecondition, "service dependencies are not initialized")
+	}
+
+	var totalUsers int64
+	if err := userDao.User.DB().WithContext(ctx).Model(&userModel.User{}).Count(&totalUsers).Error; err != nil {
+		s.Log.Errorw("failed to count users", "err", err)
+		return nil, status.Error(codes.Internal, "Failed to aggregate site stats")
+	}
+
+	var totalTorrents int64
+	if err := torrentDao.Torrent.DB().WithContext(ctx).Model(&torrentModel.Torrent{}).Count(&totalTorrents).Error; err != nil {
+		s.Log.Errorw("failed to count torrents", "err", err)
+		return nil, status.Error(codes.Internal, "Failed to aggregate site stats")
+	}
+
+	var totalResources int64
+	if err := resourceDao.Resource.DB().WithContext(ctx).Model(&resourceModel.Resource{}).Count(&totalResources).Error; err != nil {
+		s.Log.Errorw("failed to count resources", "err", err)
+		return nil, status.Error(codes.Internal, "Failed to aggregate site stats")
+	}
+
+	var totalTraffic int64
+	if err := trafficDao.UserTraffic.DB().WithContext(ctx).
+		Model(&trafficModel.UserTraffic{}).
+		Select("COALESCE(SUM(real_upload + real_download), 0)").
+		Scan(&totalTraffic).Error; err != nil {
+		s.Log.Errorw("failed to aggregate total traffic", "err", err)
+		return nil, status.Error(codes.Internal, "Failed to aggregate site stats")
+	}
+
+	var peerAgg struct {
+		TotalSeeders  int64 `gorm:"column:total_seeders"`
+		TotalLeechers int64 `gorm:"column:total_leechers"`
+	}
+	if err := torrentDao.Torrent.DB().WithContext(ctx).
+		Model(&torrentModel.Torrent{}).
+		Select("COALESCE(SUM(seed_count), 0) AS total_seeders, COALESCE(SUM(leech_count), 0) AS total_leechers").
+		Scan(&peerAgg).Error; err != nil {
+		s.Log.Errorw("failed to aggregate peer stats", "err", err)
+		return nil, status.Error(codes.Internal, "Failed to aggregate site stats")
+	}
+
 	return &systemV1.GetSiteStatsResponse{
-		TotalUsers:     0,
-		TotalTorrents:  0,
-		TotalResources: 0,
-		TotalTraffic:   0,
-		TotalSeeders:   0,
-		TotalLeechers:  0,
+		TotalUsers:     totalUsers,
+		TotalTorrents:  totalTorrents,
+		TotalResources: totalResources,
+		TotalTraffic:   totalTraffic,
+		TotalSeeders:   peerAgg.TotalSeeders,
+		TotalLeechers:  peerAgg.TotalLeechers,
 	}, nil
 }

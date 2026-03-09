@@ -8,6 +8,7 @@ import (
 	"github.com/GoldenSheep402/Hermes/mod/casbinX/rbac"
 	"github.com/GoldenSheep402/Hermes/mod/comment/dao"
 	"github.com/GoldenSheep402/Hermes/mod/comment/model"
+	resourceDao "github.com/GoldenSheep402/Hermes/mod/resource/dao"
 	"github.com/GoldenSheep402/Hermes/pkg/ctxKey"
 	"github.com/GoldenSheep402/Hermes/pkg/stdao"
 	"github.com/oklog/ulid/v2"
@@ -67,12 +68,24 @@ func (s S) CreateComment(ctx context.Context, req *commentV1.CreateCommentReques
 		ParentID:   parentID,
 	}
 
-	if err := dao.Comment.Create(ctx, c); err != nil {
+	tx := dao.Comment.Begin()
+	txCtx := dao.Comment.SetTxToCtx(ctx, tx)
+
+	if err := dao.Comment.Create(txCtx, c); err != nil {
+		_ = tx.Rollback().Error
 		s.Log.Errorw("failed to create comment", "err", err)
 		return nil, status.Error(codes.Internal, "Failed to create comment")
 	}
-
-	// Optionally we should bump Resource comment_count here but will skip for brevity or handle via Event Bus in production
+	if err := resourceDao.Resource.AdjustCommentCount(txCtx, req.ResourceId, 1); err != nil {
+		_ = tx.Rollback().Error
+		s.Log.Errorw("failed to increment resource comment count", "resource_id", req.ResourceId, "err", err)
+		return nil, status.Error(codes.Internal, "Failed to create comment")
+	}
+	if err := tx.Commit().Error; err != nil {
+		_ = tx.Rollback().Error
+		s.Log.Errorw("failed to commit create comment", "resource_id", req.ResourceId, "err", err)
+		return nil, status.Error(codes.Internal, "Failed to create comment")
+	}
 
 	return &commentV1.CreateCommentResponse{Id: c.ID}, nil
 }
@@ -149,19 +162,35 @@ func (s S) DeleteComment(ctx context.Context, req *commentV1.DeleteCommentReques
 		return nil, status.Error(codes.InvalidArgument, "Comment ID required")
 	}
 
+	tx := dao.Comment.Begin()
+	txCtx := dao.Comment.SetTxToCtx(ctx, tx)
+
 	// Authorization: only author or admin can delete
-	c, err := dao.Comment.GetByID(ctx, req.Id)
+	c, err := dao.Comment.GetByID(txCtx, req.Id)
 	if err != nil {
+		_ = tx.Rollback().Error
 		return nil, status.Error(codes.NotFound, "Comment not found")
 	}
 	if c.AuthorID != userID {
 		if errAdmin := requireAdmin(ctx); errAdmin != nil {
+			_ = tx.Rollback().Error
 			return nil, status.Error(codes.PermissionDenied, "Not authorized to delete this comment")
 		}
 	}
 
-	if err := dao.Comment.Delete(ctx, &model.Comment{Model: stdao.Model{ID: req.Id}}).Error; err != nil {
+	if err := dao.Comment.Delete(txCtx, &model.Comment{Model: stdao.Model{ID: req.Id}}).Error; err != nil {
+		_ = tx.Rollback().Error
 		s.Log.Errorw("failed to delete comment", "err", err)
+		return nil, status.Error(codes.Internal, "Failed to delete comment")
+	}
+	if err := resourceDao.Resource.AdjustCommentCount(txCtx, c.ResourceID, -1); err != nil {
+		_ = tx.Rollback().Error
+		s.Log.Errorw("failed to decrement resource comment count", "resource_id", c.ResourceID, "err", err)
+		return nil, status.Error(codes.Internal, "Failed to delete comment")
+	}
+	if err := tx.Commit().Error; err != nil {
+		_ = tx.Rollback().Error
+		s.Log.Errorw("failed to commit delete comment", "comment_id", req.Id, "err", err)
 		return nil, status.Error(codes.Internal, "Failed to delete comment")
 	}
 

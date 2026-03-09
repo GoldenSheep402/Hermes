@@ -54,16 +54,18 @@ const siteSetting = reactive({
 const inviteSetting = reactive({
   openRegistration: false,
   inviteOnly: true,
+  emailVerificationRequired: false,
+  smtpEnable: false,
   globalMessage: '本周末开启 2x Free 活动。',
 })
 
 const trackerSetting = reactive({
   announceInterval: 1800,
-  flushInterval: 15,
-  flushBatchSize: 500,
+  flushInterval: 60,
+  flushBatchSize: 200,
   globalFreeleech: false,
-  freeleechCountdown: 72,
-  bonusFormula: 'seed_time * 1.15 + torrent_size_factor',
+  freeleechCountdown: 0,
+  bonusFormula: 'sqrt(uploaded)',
   trackerList: '',
 })
 
@@ -88,6 +90,8 @@ const settingKeys = {
   marquee: 'site.marquee',
   openRegistration: 'invite.open_registration',
   inviteOnly: 'invite.only',
+  emailVerificationRequired: 'invite.email_verification_required',
+  smtpEnable: 'auth.smtp_enable',
   globalMessage: 'invite.global_message',
   announceInterval: 'tracker.announce_interval',
   flushInterval: 'tracker.flush_interval',
@@ -169,6 +173,14 @@ function updateInviteOnly(value: boolean) {
   inviteSetting.inviteOnly = value
 }
 
+function updateEmailVerificationRequired(value: boolean) {
+  inviteSetting.emailVerificationRequired = value
+}
+
+function updateSmtpEnable(value: boolean) {
+  inviteSetting.smtpEnable = value
+}
+
 function updateGlobalFreeleech(value: boolean) {
   trackerSetting.globalFreeleech = value
 }
@@ -230,6 +242,18 @@ function buildSectionSettings(section: AdminSection): Setting[] {
         desc: '开启自由注册',
       },
       { key: settingKeys.inviteOnly, value: boolToValue(inviteSetting.inviteOnly), type: 'bool', desc: '仅邀请码注册' },
+      {
+        key: settingKeys.emailVerificationRequired,
+        value: boolToValue(inviteSetting.emailVerificationRequired),
+        type: 'bool',
+        desc: '注册是否需要邮箱验证码',
+      },
+      {
+        key: settingKeys.smtpEnable,
+        value: boolToValue(inviteSetting.smtpEnable),
+        type: 'bool',
+        desc: 'SMTP 发信开关',
+      },
       { key: settingKeys.globalMessage, value: inviteSetting.globalMessage.trim(), type: 'string', desc: '全局系统消息' },
     ]
   }
@@ -244,13 +268,13 @@ function buildSectionSettings(section: AdminSection): Setting[] {
       },
       {
         key: settingKeys.flushInterval,
-        value: String(clampNumber(Number(trackerSetting.flushInterval), 1, 600, 15)),
+        value: String(clampNumber(Number(trackerSetting.flushInterval), 1, 600, 60)),
         type: 'int',
         desc: 'tracker 流量 flush 间隔（秒）',
       },
       {
         key: settingKeys.flushBatchSize,
-        value: String(clampNumber(Number(trackerSetting.flushBatchSize), 50, 5000, 500)),
+        value: String(clampNumber(Number(trackerSetting.flushBatchSize), 50, 5000, 200)),
         type: 'int',
         desc: 'tracker 流量 flush 批大小',
       },
@@ -262,7 +286,7 @@ function buildSectionSettings(section: AdminSection): Setting[] {
       },
       {
         key: settingKeys.freeleechCountdown,
-        value: String(Math.max(1, Number(trackerSetting.freeleechCountdown) || 72)),
+        value: String(Math.max(0, Number(trackerSetting.freeleechCountdown) || 0)),
         type: 'int',
         desc: '活动倒计时（小时）',
       },
@@ -304,6 +328,11 @@ function syncSettingsToState(map: Record<string, string>) {
 
   inviteSetting.openRegistration = parseBoolean(map[settingKeys.openRegistration], inviteSetting.openRegistration)
   inviteSetting.inviteOnly = parseBoolean(map[settingKeys.inviteOnly], inviteSetting.inviteOnly)
+  inviteSetting.emailVerificationRequired = parseBoolean(
+    map[settingKeys.emailVerificationRequired],
+    inviteSetting.emailVerificationRequired,
+  )
+  inviteSetting.smtpEnable = parseBoolean(map[settingKeys.smtpEnable], inviteSetting.smtpEnable)
   inviteSetting.globalMessage = map[settingKeys.globalMessage] || inviteSetting.globalMessage
 
   trackerSetting.announceInterval = parseNumber(map[settingKeys.announceInterval], trackerSetting.announceInterval)
@@ -345,6 +374,11 @@ async function saveActiveSection() {
   const payload = pickChangedSettings(candidatePayload)
   if (payload.length === 0) {
     MessagePlugin.info('配置未变化，无需保存')
+    return
+  }
+
+  if (activeSection.value === 'invite' && inviteSetting.emailVerificationRequired && !inviteSetting.smtpEnable) {
+    MessagePlugin.warning('已开启注册邮箱验证，请先开启 SMTP 发信开关')
     return
   }
 
@@ -581,6 +615,17 @@ onMounted(async () => {
             <span>仅邀请码注册</span>
             <t-switch :value="inviteSetting.inviteOnly" @change="updateInviteOnly" />
           </label>
+          <label>
+            <span>注册邮箱验证</span>
+            <t-switch
+              :value="inviteSetting.emailVerificationRequired"
+              @change="updateEmailVerificationRequired"
+            />
+          </label>
+          <label>
+            <span>SMTP 发信开关</span>
+            <t-switch :value="inviteSetting.smtpEnable" @change="updateSmtpEnable" />
+          </label>
           <label class="lg:col-span-2">
             <span>全局系统消息</span>
             <t-textarea v-model="inviteSetting.globalMessage" :autosize="{ minRows: 3, maxRows: 4 }" />
@@ -614,7 +659,7 @@ onMounted(async () => {
           </label>
           <label>
             <span>活动倒计时（小时）</span>
-            <t-input-number v-model="trackerSetting.freeleechCountdown" :min="1" :max="720" />
+            <t-input-number v-model="trackerSetting.freeleechCountdown" :min="0" :max="720" />
           </label>
           <label>
             <span>魔力值公式</span>

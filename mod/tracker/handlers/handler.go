@@ -2,8 +2,11 @@ package handlers
 
 import (
 	"encoding/hex"
+	"hash/fnv"
+	"math/rand"
 	"net"
 	"net/http"
+	"sort"
 	"strconv"
 	"time"
 
@@ -19,10 +22,21 @@ import (
 	"github.com/GoldenSheep402/Hermes/pkg/stdao"
 )
 
+const (
+	defaultNumWant           = 50
+	maxNumWant               = 200
+	defaultPeerFetchCount    = 120
+	maxPeerFetchCount        = 600
+	maxPeersPerSubnetInPhase = 2
+)
+
 // Registry TODO: multi tracker support
 func Registry(jinE *jin.Engine) {
 	jinE.GET("/announce/:passkey", Announce)
 	jinE.GET("/scrape/:passkey", Scrape)
+	// Backward-compatible routes for deployments that proxy tracker through /api/*.
+	jinE.GET("/api/announce/:passkey", Announce)
+	jinE.GET("/api/scrape/:passkey", Scrape)
 }
 
 // BencodeError sends an error back to the torrent client in bencode format.
@@ -157,11 +171,9 @@ func Announce(c *jin.Context) {
 	_ = trackerDao.Traffic.RecordDelta(ctx, user.ID, torrent.ID, uploadDelta, downloadDelta, isActive, isSeeder, peer.LastAction)
 
 	// 5. Build list of peers to return
-	limit := numWant
-	if limit <= 0 {
-		limit = 50
-	}
-	dbPeers, _ := trackerDao.Peer.GetPeersForTorrent(ctx, torrent.ID, limit)
+	limit := sanitizeNumWant(numWant)
+	dbPeers, _ := trackerDao.Peer.GetPeersForTorrent(ctx, torrent.ID, calcPeerFetchCount(limit))
+	selectedPeers := SelectPeersForResponse(peer, dbPeers, limit)
 
 	// Build bencode response
 	resp := map[string]interface{}{
@@ -172,10 +184,10 @@ func Announce(c *jin.Context) {
 	}
 
 	if compact != 0 {
-		resp["peers"] = BuildCompactPeerList(realIP, lanIP, peer.PeerID, dbPeers)
+		resp["peers"] = BuildCompactPeerList(realIP, lanIP, peer.PeerID, selectedPeers)
 	} else {
 		// Dictionary format
-		resp["peers"] = BuildPeerList(realIP, lanIP, peer.PeerID, dbPeers)
+		resp["peers"] = BuildPeerList(realIP, lanIP, peer.PeerID, selectedPeers)
 	}
 
 	c.Writer.Header().Set("Content-Type", "text/plain")
@@ -255,6 +267,241 @@ func computeCounterDelta(lastPeer *trackerModel.Peer, current int64, event strin
 		return current
 	}
 	return 0
+}
+
+func sanitizeNumWant(numWant int) int {
+	if numWant <= 0 {
+		return defaultNumWant
+	}
+	if numWant > maxNumWant {
+		return maxNumWant
+	}
+	return numWant
+}
+
+func calcPeerFetchCount(limit int) int {
+	limit = sanitizeNumWant(limit)
+	fetchCount := limit * 4
+	if fetchCount < defaultPeerFetchCount {
+		fetchCount = defaultPeerFetchCount
+	}
+	if fetchCount > maxPeerFetchCount {
+		fetchCount = maxPeerFetchCount
+	}
+	return fetchCount
+}
+
+// SelectPeersForResponse applies a smarter peer selection strategy:
+// - filter duplicates and same-account peers
+// - prefer opposite role (leecher gets seeders, seeder gets leechers)
+// - prefer LAN-affinity and active peers
+// - keep subnet diversity to avoid hotspot peers
+func SelectPeersForResponse(requester *trackerModel.Peer, dbPeers []*trackerModel.Peer, limit int) []*trackerModel.Peer {
+	limit = sanitizeNumWant(limit)
+	if requester == nil || len(dbPeers) == 0 || limit <= 0 {
+		return []*trackerModel.Peer{}
+	}
+
+	candidates := filterPeerCandidates(requester, dbPeers)
+	if len(candidates) == 0 {
+		return []*trackerModel.Peer{}
+	}
+
+	rotatePeersForFairness(candidates, requester.PeerID)
+
+	preferred, fallback := splitPeersByRole(requester, candidates)
+	sortPeersWithStrategy(requester, preferred)
+	sortPeersWithStrategy(requester, fallback)
+
+	selected := make([]*trackerModel.Peer, 0, limit)
+	selectedSet := make(map[string]struct{}, limit)
+	subnetCount := make(map[string]int, limit)
+
+	selected = appendPeersWithSubnetDiversity(selected, preferred, limit, subnetCount, selectedSet)
+	if len(selected) < limit {
+		selected = appendPeersWithSubnetDiversity(selected, fallback, limit, subnetCount, selectedSet)
+	}
+	return selected
+}
+
+func filterPeerCandidates(requester *trackerModel.Peer, peers []*trackerModel.Peer) []*trackerModel.Peer {
+	result := make([]*trackerModel.Peer, 0, len(peers))
+	seenPeerID := make(map[string]struct{}, len(peers))
+	seenEndpoint := make(map[string]struct{}, len(peers))
+
+	for _, p := range peers {
+		if p == nil {
+			continue
+		}
+		if p.PeerID == "" || p.PeerID == requester.PeerID {
+			continue
+		}
+		if p.UserID != "" && requester.UserID != "" && p.UserID == requester.UserID {
+			continue
+		}
+		if p.Port <= 0 || p.Port > 65535 {
+			continue
+		}
+		if _, exists := seenPeerID[p.PeerID]; exists {
+			continue
+		}
+		endpointKey := p.IP + ":" + strconv.Itoa(p.Port)
+		if _, exists := seenEndpoint[endpointKey]; exists {
+			continue
+		}
+		seenPeerID[p.PeerID] = struct{}{}
+		seenEndpoint[endpointKey] = struct{}{}
+		result = append(result, p)
+	}
+	return result
+}
+
+func splitPeersByRole(requester *trackerModel.Peer, peers []*trackerModel.Peer) ([]*trackerModel.Peer, []*trackerModel.Peer) {
+	preferred := make([]*trackerModel.Peer, 0, len(peers))
+	fallback := make([]*trackerModel.Peer, 0, len(peers))
+
+	for _, p := range peers {
+		// Seeder should receive leechers first for better upload opportunities.
+		// Leecher should receive seeders first for better download opportunities.
+		if requester.IsSeeder {
+			if !p.IsSeeder {
+				preferred = append(preferred, p)
+			} else {
+				fallback = append(fallback, p)
+			}
+		} else {
+			if p.IsSeeder {
+				preferred = append(preferred, p)
+			} else {
+				fallback = append(fallback, p)
+			}
+		}
+	}
+	return preferred, fallback
+}
+
+func rotatePeersForFairness(peers []*trackerModel.Peer, requesterPeerID string) {
+	if len(peers) <= 1 {
+		return
+	}
+	h := fnv.New64a()
+	_, _ = h.Write([]byte(requesterPeerID))
+	_, _ = h.Write([]byte(":"))
+	_, _ = h.Write([]byte(time.Now().UTC().Format("200601021504"))) // minute-level rotation
+	seed := int64(h.Sum64() & 0x7fffffffffffffff)
+	r := rand.New(rand.NewSource(seed))
+	r.Shuffle(len(peers), func(i, j int) {
+		peers[i], peers[j] = peers[j], peers[i]
+	})
+}
+
+func sortPeersWithStrategy(requester *trackerModel.Peer, peers []*trackerModel.Peer) {
+	if len(peers) <= 1 {
+		return
+	}
+
+	sort.SliceStable(peers, func(i, j int) bool {
+		a := peers[i]
+		b := peers[j]
+
+		// Prefer LAN-affinity first when available.
+		aLAN := lanAffinityScore(requester, a)
+		bLAN := lanAffinityScore(requester, b)
+		if aLAN != bLAN {
+			return aLAN > bLAN
+		}
+
+		if requester.IsSeeder {
+			// For seeding peers, prioritize active leechers with more remaining data.
+			if a.Left != b.Left {
+				return a.Left > b.Left
+			}
+			if !a.LastAction.Equal(b.LastAction) {
+				return a.LastAction.After(b.LastAction)
+			}
+			if a.Downloaded != b.Downloaded {
+				return a.Downloaded > b.Downloaded
+			}
+		} else {
+			// For leechers, prioritize active seeders with richer historical upload.
+			if !a.LastAction.Equal(b.LastAction) {
+				return a.LastAction.After(b.LastAction)
+			}
+			if a.Uploaded != b.Uploaded {
+				return a.Uploaded > b.Uploaded
+			}
+			if a.Left != b.Left {
+				return a.Left < b.Left
+			}
+		}
+
+		return a.PeerID < b.PeerID
+	})
+}
+
+func appendPeersWithSubnetDiversity(
+	dst []*trackerModel.Peer,
+	src []*trackerModel.Peer,
+	limit int,
+	subnetCount map[string]int,
+	selectedSet map[string]struct{},
+) []*trackerModel.Peer {
+	if len(dst) >= limit || len(src) == 0 {
+		return dst
+	}
+
+	// Phase 1: keep subnet diversity.
+	for _, p := range src {
+		if len(dst) >= limit {
+			return dst
+		}
+		if _, exists := selectedSet[p.PeerID]; exists {
+			continue
+		}
+		subnetKey := peerSubnetKey(p.IP)
+		if subnetCount[subnetKey] >= maxPeersPerSubnetInPhase {
+			continue
+		}
+		dst = append(dst, p)
+		selectedSet[p.PeerID] = struct{}{}
+		subnetCount[subnetKey]++
+	}
+
+	// Phase 2: fill remaining slots even if subnet quota is exceeded.
+	for _, p := range src {
+		if len(dst) >= limit {
+			return dst
+		}
+		if _, exists := selectedSet[p.PeerID]; exists {
+			continue
+		}
+		dst = append(dst, p)
+		selectedSet[p.PeerID] = struct{}{}
+		subnetCount[peerSubnetKey(p.IP)]++
+	}
+	return dst
+}
+
+func lanAffinityScore(requester, candidate *trackerModel.Peer) int {
+	if requester == nil || candidate == nil {
+		return 0
+	}
+	score := 0
+	if requester.IP != "" && requester.IP == candidate.IP {
+		score++
+	}
+	if requester.LanIP != "" && candidate.LanIP != "" && isSameSubnet24(requester.LanIP, candidate.LanIP) {
+		score++
+	}
+	return score
+}
+
+func peerSubnetKey(ip string) string {
+	parsed := net.ParseIP(ip).To4()
+	if parsed == nil {
+		return ip
+	}
+	return strconv.Itoa(int(parsed[0])) + "." + strconv.Itoa(int(parsed[1])) + "." + strconv.Itoa(int(parsed[2]))
 }
 
 // BuildPeerList constructs the list of peers to be returned to the client,

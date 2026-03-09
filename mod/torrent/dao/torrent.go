@@ -147,6 +147,43 @@ func (t *torrent) GetByHash(ctx context.Context, hash string) (*model.Torrent, e
 	return &torrent, nil
 }
 
+func (t *torrent) DeleteByID(ctx context.Context, torrentID string) error {
+	if strings.TrimSpace(torrentID) == "" {
+		return status.Error(codes.InvalidArgument, "Torrent ID cannot be empty")
+	}
+
+	db := t.GetTxFromCtx(ctx).WithContext(ctx)
+	return db.Transaction(func(tx *gorm.DB) error {
+		var current model.Torrent
+		if err := tx.Model(&model.Torrent{}).Where("id = ?", torrentID).First(&current).Error; err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return status.Error(codes.NotFound, "Torrent not found")
+			}
+			return status.Error(codes.Internal, "Internal error")
+		}
+
+		if err := tx.Model(&model.Torrent{}).Where("id = ?", torrentID).Update("is_active", false).Error; err != nil {
+			return status.Error(codes.Internal, "Internal error")
+		}
+
+		if err := tx.Where("id = ?", torrentID).Delete(&model.Torrent{}).Error; err != nil {
+			return status.Error(codes.Internal, "Internal error")
+		}
+
+		if err := tx.Where("torrent_id = ?", torrentID).Delete(&model.TorrentFile{}).Error; err != nil {
+			return status.Error(codes.Internal, "Internal error")
+		}
+		if err := tx.Where("torrent_id = ?", torrentID).Delete(&model.TorrentBlob{}).Error; err != nil {
+			return status.Error(codes.Internal, "Internal error")
+		}
+		if err := tx.Where("torrent_id = ?", torrentID).Delete(&model.TorrentPiece{}).Error; err != nil {
+			return status.Error(codes.Internal, "Internal error")
+		}
+
+		return nil
+	})
+}
+
 func isDuplicateInfoHashError(err error) bool {
 	if err == nil {
 		return false

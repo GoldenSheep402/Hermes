@@ -42,6 +42,6 @@ user:
     AdminAccount: "admin@admin.com"
     AdminPassword: "admin@admin.com"
 TrackerV1:
-    Endpoint: "http://172.16.7.183:27811/tracker/announce/key/"
+    Endpoint: "http://172.16.7.183:27811"
     AllowedSubnets: [
     ]

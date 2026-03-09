@@ -6,8 +6,10 @@ import (
 )
 
 var (
-	Torrent     = &torrent{}
-	TorrentFile = &torrentFile{}
+	Torrent      = &torrent{}
+	TorrentFile  = &torrentFile{}
+	TorrentBlob  = &torrentBlob{}
+	TorrentPiece = &torrentPiece{}
 )
 
 func Init(db *gorm.DB, rds *redis.Client) error {
@@ -15,6 +17,12 @@ func Init(db *gorm.DB, rds *redis.Client) error {
 		return err
 	}
 	if err := TorrentFile.Init(db); err != nil {
+		return err
+	}
+	if err := TorrentBlob.Init(db); err != nil {
+		return err
+	}
+	if err := TorrentPiece.Init(db); err != nil {
 		return err
 	}
 	return nil

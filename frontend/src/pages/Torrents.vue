@@ -5,8 +5,9 @@ import { SearchIcon } from 'tdesign-icons-vue-next'
 import type { Category } from '@/lib/proto/category/v1/category.pb'
 import type { Resource, ResourceMeta } from '@/lib/proto/resource/v1/resource.pb'
 import type { TorrentInfo } from '@/lib/proto/torrent/v1/torrent.pb'
-import { CategoryService, ResourceService, TorrentService } from '@/services/grpc'
+import { CategoryService, ResourceService, TorrentService, UserService } from '@/services/grpc'
 import { formatBytes, formatDateTime } from '@/utils/format'
+import { downloadTorrentFile } from '@/utils/torrent'
 
 type PromotionKey = 'normal' | 'free' | '2xfree' | '50down'
 
@@ -18,6 +19,8 @@ interface CategoryOption {
 
 interface TorrentRecord {
   id: string
+  resourceId: string
+  torrentId: string
   categoryId: string
   categoryLabel: string
   categoryIcon: string
@@ -66,6 +69,7 @@ const isMobile = ref(false)
 const categoryOptions = ref<CategoryOption[]>([])
 const torrents = ref<TorrentRecord[]>([])
 const loadError = ref('')
+const downloadingRowIds = ref<string[]>([])
 
 const filters = reactive<FilterState>({
   keyword: '',
@@ -129,12 +133,14 @@ const desktopColumns = [
   { colKey: 'leechers', title: 'L', width: 70, align: 'right' },
   { colKey: 'completed', title: 'C', width: 90, align: 'right' },
   { colKey: 'uploader', title: '发布者', width: 120 },
+  { colKey: 'actions', title: '操作', width: 180, fixed: 'right' },
 ]
 
 const mobileColumns = [
   { colKey: 'title', title: '标题', minWidth: 270 },
   { colKey: 'size', title: '体积', width: 110, align: 'right' },
   { colKey: 'seeders', title: 'S', width: 70, align: 'right' },
+  { colKey: 'actions', title: '操作', width: 140 },
 ]
 
 const tableColumns = computed(() => (isMobile.value ? mobileColumns : desktopColumns))
@@ -216,6 +222,44 @@ function parseIntLike(value: string | number | undefined): number {
     return Number.isFinite(parsed) ? parsed : 0
   }
   return 0
+}
+
+function rowDetailPath(row: TorrentRecord): string {
+  const resourceId = row.resourceId || row.id
+  return resourceId ? `/torrents/${resourceId}` : '/torrents'
+}
+
+function isRowDownloading(rowId: string): boolean {
+  return downloadingRowIds.value.includes(rowId)
+}
+
+function setRowDownloading(rowId: string, loading: boolean) {
+  const current = new Set(downloadingRowIds.value)
+  if (loading) {
+    current.add(rowId)
+  } else {
+    current.delete(rowId)
+  }
+  downloadingRowIds.value = Array.from(current)
+}
+
+async function downloadFromRow(row: TorrentRecord) {
+  if (!row.torrentId) {
+    MessagePlugin.warning('当前资源缺少 torrentId，暂不可下载')
+    return
+  }
+
+  const rowId = row.id || row.torrentId
+  setRowDownloading(rowId, true)
+  try {
+    await downloadTorrentFile(row.torrentId, row.title || row.torrentId)
+    MessagePlugin.success('种子下载已开始')
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : '下载失败'
+    MessagePlugin.error(message)
+  } finally {
+    setRowDownloading(rowId, false)
+  }
 }
 
 function normalizeText(value: string): string {
@@ -339,6 +383,8 @@ function mapResourceToTorrent(resource: Resource, torrent: TorrentInfo | undefin
 
   return {
     id: resource.id || torrent?.id || '',
+    resourceId: resource.id || '',
+    torrentId: resource.torrentId || torrent?.id || '',
     categoryId: category.id,
     categoryLabel: category.name,
     categoryIcon: category.icon,
@@ -352,7 +398,7 @@ function mapResourceToTorrent(resource: Resource, torrent: TorrentInfo | undefin
     seeders: torrent?.seedCount || resource.seedCount || 0,
     leechers: torrent?.leechCount || resource.leechCount || 0,
     completed: torrent?.snatchCount || resource.snatchCount || 0,
-    uploader: resource.uploaderName || resource.uploaderId || 'Anonymous',
+    uploader: resource.uploaderName || '未知用户',
     anonymous: false,
     imdbId: getMetaValue(metadata, ['imdb', 'imdb_id', 'imdbId']),
     imdbRating,
@@ -363,6 +409,47 @@ function mapResourceToTorrent(resource: Resource, torrent: TorrentInfo | undefin
     status,
     downloaded: false,
   }
+}
+
+async function loadUploaderNameMap(resources: Resource[]): Promise<Map<string, string>> {
+  const hasNameIds = new Set(
+    resources
+      .filter((item) => Boolean(item.uploaderId) && Boolean(item.uploaderName?.trim()))
+      .map((item) => item.uploaderId as string),
+  )
+  const uploaderIds = Array.from(
+    new Set(
+      resources
+        .map((item) => item.uploaderId || '')
+        .filter((id) => Boolean(id) && !hasNameIds.has(id)),
+    ),
+  )
+
+  const uploaderMap = new Map<string, string>()
+  if (uploaderIds.length === 0) {
+    return uploaderMap
+  }
+
+  for (let i = 0; i < uploaderIds.length; i += 10) {
+    const chunk = uploaderIds.slice(i, i + 10)
+    const settled = await Promise.allSettled(
+      chunk.map(async (id) => {
+        const response = await UserService.GetUserProfile({ id })
+        const username = response.user?.username?.trim()
+        if (username) {
+          uploaderMap.set(id, username)
+        }
+      }),
+    )
+
+    for (const result of settled) {
+      if (result.status === 'rejected') {
+        continue
+      }
+    }
+  }
+
+  return uploaderMap
 }
 
 async function loadTorrentDetailMap(resources: Resource[]): Promise<Map<string, TorrentInfo>> {
@@ -412,7 +499,14 @@ async function fetchTorrents() {
     }
 
     const detailMap = await loadTorrentDetailMap(resources)
-    torrents.value = resources.map((resource) => mapResourceToTorrent(resource, detailMap.get(resource.torrentId || '')))
+    const uploaderMap = await loadUploaderNameMap(resources)
+    torrents.value = resources.map((resource) => {
+      const record = mapResourceToTorrent(resource, detailMap.get(resource.torrentId || ''))
+      if (!resource.uploaderName && resource.uploaderId) {
+        record.uploader = uploaderMap.get(resource.uploaderId) || '未知用户'
+      }
+      return record
+    })
 
     // 如果后端分类为空，至少保证筛选按钮可用
     if (categoryOptions.value.length === 0) {
@@ -554,7 +648,15 @@ onBeforeUnmount(() => {
                   {{ tag }}
                 </t-tag>
               </div>
-              <p class="text-sm font-600 leading-5 text-[var(--app-text)]">{{ row.title }}</p>
+              <router-link
+                v-if="row.resourceId || row.id"
+                class="inline-block text-sm font-600 leading-5 text-[var(--app-text)] hover:text-sky-600"
+                :to="rowDetailPath(row)"
+                @click.stop
+              >
+                {{ row.title }}
+              </router-link>
+              <p v-else class="text-sm font-600 leading-5 text-[var(--app-text)]">{{ row.title }}</p>
               <p class="text-xs leading-4 text-[var(--muted-text)]">{{ row.subtitle }}</p>
             </div>
           </t-popup>
@@ -585,6 +687,26 @@ onBeforeUnmount(() => {
 
         <template #uploader="{ row }">
           <span>{{ row.anonymous ? 'Anonymous' : row.uploader }}</span>
+        </template>
+
+        <template #actions="{ row }">
+          <div class="inline-flex items-center gap-1">
+            <router-link v-if="row.resourceId || row.id" :to="rowDetailPath(row)">
+              <t-button size="small" variant="text">查看</t-button>
+            </router-link>
+            <t-button v-else size="small" variant="text" disabled>查看</t-button>
+
+            <t-button
+              theme="primary"
+              variant="outline"
+              size="small"
+              :disabled="!row.torrentId"
+              :loading="isRowDownloading(row.id || row.torrentId)"
+              @click="downloadFromRow(row)"
+            >
+              下载
+            </t-button>
+          </div>
         </template>
       </t-table>
     </t-card>

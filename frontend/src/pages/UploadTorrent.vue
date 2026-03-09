@@ -252,6 +252,7 @@ onMounted(async () => {
             <input
               ref="fileInputRef"
               class="hidden-file-input"
+              hidden
               type="file"
               accept=".torrent"
               @change="onFileChange"
@@ -386,6 +387,10 @@ onMounted(async () => {
   font-size: 12px;
   color: var(--muted-text);
   line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
 }
 
 .guide-list {

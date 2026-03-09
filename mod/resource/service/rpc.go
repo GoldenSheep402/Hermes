@@ -15,8 +15,11 @@ import (
 	"github.com/GoldenSheep402/Hermes/mod/casbinX/rbac"
 	"github.com/GoldenSheep402/Hermes/mod/resource/dao"
 	"github.com/GoldenSheep402/Hermes/mod/resource/model"
+	torrentCommon "github.com/GoldenSheep402/Hermes/mod/torrent/common"
 	torrentDao "github.com/GoldenSheep402/Hermes/mod/torrent/dao"
 	torrentModel "github.com/GoldenSheep402/Hermes/mod/torrent/model"
+	userDao "github.com/GoldenSheep402/Hermes/mod/user/dao"
+	userModel "github.com/GoldenSheep402/Hermes/mod/user/model"
 	"github.com/GoldenSheep402/Hermes/pkg/ctxKey"
 	"github.com/GoldenSheep402/Hermes/pkg/stdao"
 	"github.com/GoldenSheep402/Hermes/pkg/torrent"
@@ -61,11 +64,30 @@ func (s *S) CreateResource(ctx context.Context, req *resourceV1.CreateResourceRe
 		return nil, status.Error(codes.InvalidArgument, "Title, CategoryID, and TorrentData are required")
 	}
 
-	// 1. Process Torrent
+	// 1. Parse original torrent first.
+	// InfoHash is derived from the info dict and should not depend on announce URLs.
 	parsed, err := torrent.Parse(req.TorrentData)
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, "Invalid torrent data")
 	}
+
+	uploader, err := userDao.User.GetByID(ctx, uploaderID)
+	if err != nil || uploader == nil || uploader.Passkey == "" {
+		return nil, status.Error(codes.Unauthenticated, "invalid user passkey")
+	}
+
+	announceURLs, err := torrentCommon.BuildAnnounceURLsForPasskey(ctx, uploader.Passkey)
+	if err != nil {
+		return nil, status.Error(codes.FailedPrecondition, "tracker endpoint not available")
+	}
+
+	// Rewrite tracker URLs only for persisted raw bytes.
+	normalizedData, err := torrent.RewriteDownloadTorrentWithTrackers(req.TorrentData, announceURLs)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "Failed to normalize torrent data")
+	}
+
+	// 2. Process Torrent
 	tID := ulid.Make().String()
 	torrentBase := &torrentModel.Torrent{
 		Model:        stdao.Model{ID: tID},
@@ -73,6 +95,8 @@ func (s *S) CreateResource(ctx context.Context, req *resourceV1.CreateResourceRe
 		UploaderID:   uploaderID,
 		Name:         parsed.Name,
 		Size:         parsed.Size,
+		PieceLength:  parsed.PieceLength,
+		PieceCount:   parsed.PieceCount,
 		IsSingleFile: len(parsed.Files) <= 1,
 		FileCount:    len(parsed.Files),
 	}
@@ -85,8 +109,11 @@ func (s *S) CreateResource(ctx context.Context, req *resourceV1.CreateResourceRe
 			Size:      f.Size,
 		})
 	}
-	if _, err := torrentDao.Torrent.Create(ctx, torrentBase, files); err != nil {
+	if _, err := torrentDao.Torrent.Create(ctx, torrentBase, files, normalizedData, parsed.PieceHashes); err != nil {
 		s.Log.Errorw("failed to save torrent", "err", err)
+		if status.Code(err) == codes.AlreadyExists {
+			return nil, err
+		}
 		return nil, status.Error(codes.Internal, "Failed to create torrent record")
 	}
 
@@ -137,6 +164,12 @@ func (s *S) GetResource(ctx context.Context, req *resourceV1.GetResourceRequest)
 	if res.DoubleUntil != nil {
 		doubleUntil = res.DoubleUntil.Format(time.RFC3339)
 	}
+	uploaderName := ""
+	if res.UploaderID != "" {
+		if uploader, err := userDao.User.GetByID(ctx, res.UploaderID); err == nil && uploader != nil {
+			uploaderName = uploader.Username
+		}
+	}
 
 	return &resourceV1.GetResourceResponse{
 		Resource: &resourceV1.Resource{
@@ -158,6 +191,7 @@ func (s *S) GetResource(ctx context.Context, req *resourceV1.GetResourceRequest)
 			ThankCount:   int32(res.ThankCount),
 			CreatedAt:    res.CreatedAt.Format(time.RFC3339),
 			UpdatedAt:    res.UpdatedAt.Format(time.RFC3339),
+			UploaderName: uploaderName,
 		},
 	}, nil
 }
@@ -171,6 +205,36 @@ func (s *S) ListResources(ctx context.Context, req *resourceV1.ListResourcesRequ
 	if err != nil {
 		s.Log.Errorw("failed to list resources", "err", err)
 		return nil, status.Error(codes.Internal, "Failed to list resources")
+	}
+
+	uploaderIDs := make([]string, 0, len(list))
+	uploaderIDSet := make(map[string]struct{}, len(list))
+	for _, item := range list {
+		if item.UploaderID == "" {
+			continue
+		}
+		if _, exists := uploaderIDSet[item.UploaderID]; exists {
+			continue
+		}
+		uploaderIDSet[item.UploaderID] = struct{}{}
+		uploaderIDs = append(uploaderIDs, item.UploaderID)
+	}
+
+	uploaderNameMap := make(map[string]string, len(uploaderIDs))
+	if len(uploaderIDs) > 0 {
+		var users []userModel.User
+		err = userDao.User.GetTxFromCtx(ctx).
+			WithContext(ctx).
+			Select("id", "username").
+			Where("id IN ?", uploaderIDs).
+			Find(&users).Error
+		if err != nil {
+			s.Log.Warnw("failed to load uploader usernames", "err", err)
+		} else {
+			for _, user := range users {
+				uploaderNameMap[user.ID] = user.Username
+			}
+		}
 	}
 
 	var pList []*resourceV1.Resource
@@ -200,6 +264,7 @@ func (s *S) ListResources(ctx context.Context, req *resourceV1.ListResourcesRequ
 			ThankCount:   int32(res.ThankCount),
 			CreatedAt:    res.CreatedAt.Format(time.RFC3339),
 			UpdatedAt:    res.UpdatedAt.Format(time.RFC3339),
+			UploaderName: uploaderNameMap[res.UploaderID],
 		})
 	}
 

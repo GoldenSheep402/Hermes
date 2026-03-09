@@ -2,9 +2,10 @@
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { MessagePlugin } from 'tdesign-vue-next'
 import type { Category } from '@/lib/proto/category/v1/category.pb'
+import type { Setting } from '@/lib/proto/system/v1/system.pb'
 import type { PermissionKey } from '@/constants/permissions'
 import { PermissionKeys } from '@/constants/permissions'
-import { CategoryService } from '@/services/grpc'
+import { CategoryService, SystemService } from '@/services/grpc'
 import { useAuthStore } from '@/store'
 
 type AdminSection = 'site' | 'invite' | 'tracker' | 'torrent' | 'category' | 'user'
@@ -61,6 +62,7 @@ const trackerSetting = reactive({
   globalFreeleech: false,
   freeleechCountdown: 72,
   bonusFormula: 'seed_time * 1.15 + torrent_size_factor',
+  trackerList: '',
 })
 
 const torrentSetting = reactive({
@@ -73,6 +75,24 @@ const userSetting = reactive({
   resetTrafficTarget: '',
   promoteTarget: '',
 })
+
+const settingsLoading = ref(false)
+const settingsSaving = ref(false)
+const settingsMap = ref<Record<string, string>>({})
+
+const settingKeys = {
+  siteName: 'site.name',
+  maintenanceMode: 'site.maintenance_mode',
+  marquee: 'site.marquee',
+  openRegistration: 'invite.open_registration',
+  inviteOnly: 'invite.only',
+  globalMessage: 'invite.global_message',
+  announceInterval: 'tracker.announce_interval',
+  globalFreeleech: 'tracker.global_freeleech',
+  freeleechCountdown: 'tracker.freeleech_countdown_hours',
+  bonusFormula: 'tracker.bonus_formula',
+  trackerList: 'tracker.list',
+} as const
 
 const categoryRows = ref<CategoryRow[]>([])
 const categoryLoading = ref(false)
@@ -126,7 +146,7 @@ watch(activeSection, async (section) => {
 })
 
 function saveSection() {
-  MessagePlugin.success('配置已保存（示例）')
+  void saveActiveSection()
 }
 
 function runAction(label: string) {
@@ -147,6 +167,158 @@ function updateInviteOnly(value: boolean) {
 
 function updateGlobalFreeleech(value: boolean) {
   trackerSetting.globalFreeleech = value
+}
+
+function parseBoolean(input: string | undefined, fallback: boolean): boolean {
+  if (!input) {
+    return fallback
+  }
+  const normalized = input.trim().toLowerCase()
+  if (['1', 'true', 'yes', 'on'].includes(normalized)) {
+    return true
+  }
+  if (['0', 'false', 'no', 'off'].includes(normalized)) {
+    return false
+  }
+  return fallback
+}
+
+function parseNumber(input: string | undefined, fallback: number): number {
+  if (!input) {
+    return fallback
+  }
+  const value = Number(input)
+  return Number.isFinite(value) ? value : fallback
+}
+
+function boolToValue(input: boolean): string {
+  return input ? 'true' : 'false'
+}
+
+function buildSectionSettings(section: AdminSection): Setting[] {
+  if (section === 'site') {
+    return [
+      { key: settingKeys.siteName, value: siteSetting.siteName.trim(), type: 'string', desc: '站点名称' },
+      { key: settingKeys.maintenanceMode, value: boolToValue(siteSetting.maintenanceMode), type: 'bool', desc: '维护模式' },
+      { key: settingKeys.marquee, value: siteSetting.marquee.trim(), type: 'string', desc: '公告跑马灯' },
+    ]
+  }
+
+  if (section === 'invite') {
+    return [
+      {
+        key: settingKeys.openRegistration,
+        value: boolToValue(inviteSetting.openRegistration),
+        type: 'bool',
+        desc: '开启自由注册',
+      },
+      { key: settingKeys.inviteOnly, value: boolToValue(inviteSetting.inviteOnly), type: 'bool', desc: '仅邀请码注册' },
+      { key: settingKeys.globalMessage, value: inviteSetting.globalMessage.trim(), type: 'string', desc: '全局系统消息' },
+    ]
+  }
+
+  if (section === 'tracker') {
+    return [
+      {
+        key: settingKeys.announceInterval,
+        value: String(Math.max(60, Number(trackerSetting.announceInterval) || 1800)),
+        type: 'int',
+        desc: 'announce 最小间隔（秒）',
+      },
+      {
+        key: settingKeys.globalFreeleech,
+        value: boolToValue(trackerSetting.globalFreeleech),
+        type: 'bool',
+        desc: '全站 freeleech 开关',
+      },
+      {
+        key: settingKeys.freeleechCountdown,
+        value: String(Math.max(1, Number(trackerSetting.freeleechCountdown) || 72)),
+        type: 'int',
+        desc: '活动倒计时（小时）',
+      },
+      { key: settingKeys.bonusFormula, value: trackerSetting.bonusFormula.trim(), type: 'string', desc: '魔力值公式' },
+      {
+        key: settingKeys.trackerList,
+        value: trackerSetting.trackerList
+          .split('\n')
+          .map((line) => line.trim())
+          .filter((line) => line.length > 0)
+          .join('\n'),
+        type: 'string',
+        desc: 'Tracker 列表，一行一个地址',
+      },
+    ]
+  }
+
+  return []
+}
+
+function syncSettingsToState(map: Record<string, string>) {
+  siteSetting.siteName = map[settingKeys.siteName] || siteSetting.siteName
+  siteSetting.maintenanceMode = parseBoolean(map[settingKeys.maintenanceMode], siteSetting.maintenanceMode)
+  siteSetting.marquee = map[settingKeys.marquee] || siteSetting.marquee
+
+  inviteSetting.openRegistration = parseBoolean(map[settingKeys.openRegistration], inviteSetting.openRegistration)
+  inviteSetting.inviteOnly = parseBoolean(map[settingKeys.inviteOnly], inviteSetting.inviteOnly)
+  inviteSetting.globalMessage = map[settingKeys.globalMessage] || inviteSetting.globalMessage
+
+  trackerSetting.announceInterval = parseNumber(map[settingKeys.announceInterval], trackerSetting.announceInterval)
+  trackerSetting.globalFreeleech = parseBoolean(map[settingKeys.globalFreeleech], trackerSetting.globalFreeleech)
+  trackerSetting.freeleechCountdown = parseNumber(map[settingKeys.freeleechCountdown], trackerSetting.freeleechCountdown)
+  trackerSetting.bonusFormula = map[settingKeys.bonusFormula] || trackerSetting.bonusFormula
+  trackerSetting.trackerList = map[settingKeys.trackerList] || trackerSetting.trackerList
+}
+
+async function loadSystemSettings() {
+  settingsLoading.value = true
+  try {
+    const response = await SystemService.GetSettings({})
+    const map: Record<string, string> = {}
+    for (const item of response.settings || []) {
+      if (!item.key) {
+        continue
+      }
+      map[item.key] = item.value || ''
+    }
+    settingsMap.value = map
+    syncSettingsToState(map)
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : '加载系统设置失败'
+    MessagePlugin.error(message)
+  } finally {
+    settingsLoading.value = false
+  }
+}
+
+async function saveActiveSection() {
+  const payload = buildSectionSettings(activeSection.value)
+  if (payload.length === 0) {
+    MessagePlugin.info('当前分区暂无可保存配置')
+    return
+  }
+
+  settingsSaving.value = true
+  try {
+    await SystemService.SetSettings({ settings: payload })
+
+    const merged = { ...settingsMap.value }
+    for (const item of payload) {
+      if (!item.key) {
+        continue
+      }
+      merged[item.key] = item.value || ''
+    }
+    settingsMap.value = merged
+    syncSettingsToState(merged)
+
+    MessagePlugin.success('配置已保存')
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : '保存配置失败'
+    MessagePlugin.error(message)
+  } finally {
+    settingsSaving.value = false
+  }
 }
 
 function flattenCategories(items: Category[] | undefined, depth = 0): CategoryRow[] {
@@ -300,6 +472,7 @@ async function removeCategory(row: CategoryRow) {
 }
 
 onMounted(async () => {
+  await loadSystemSettings()
   if (activeSection.value === 'category') {
     await loadCategories()
   }
@@ -325,7 +498,7 @@ onMounted(async () => {
     </aside>
 
     <section>
-      <t-card v-if="activeSection === 'site'" title="站点基础设置" size="small">
+      <t-card v-if="activeSection === 'site'" title="站点基础设置" size="small" :loading="settingsLoading">
         <div class="form-grid">
           <label>
             <span>站点名称</span>
@@ -341,11 +514,14 @@ onMounted(async () => {
           </label>
         </div>
         <template #footer>
-          <t-button theme="primary" @click="saveSection">保存设置</t-button>
+          <div class="flex items-center gap-2">
+            <t-button theme="primary" :loading="settingsSaving" @click="saveSection">保存设置</t-button>
+            <t-button variant="outline" :loading="settingsLoading" @click="loadSystemSettings">刷新设置</t-button>
+          </div>
         </template>
       </t-card>
 
-      <t-card v-else-if="activeSection === 'invite'" title="注册与邀请控制" size="small">
+      <t-card v-else-if="activeSection === 'invite'" title="注册与邀请控制" size="small" :loading="settingsLoading">
         <div class="form-grid">
           <label>
             <span>自由注册</span>
@@ -362,13 +538,13 @@ onMounted(async () => {
         </div>
         <template #footer>
           <div class="flex gap-2">
-            <t-button theme="primary" @click="saveSection">保存设置</t-button>
+            <t-button theme="primary" :loading="settingsSaving" @click="saveSection">保存设置</t-button>
             <t-button variant="outline" @click="runAction('发送全局消息')">发送全局消息</t-button>
           </div>
         </template>
       </t-card>
 
-      <t-card v-else-if="activeSection === 'tracker'" title="Tracker 及业务参数" size="small">
+      <t-card v-else-if="activeSection === 'tracker'" title="Tracker 及业务参数" size="small" :loading="settingsLoading">
         <div class="form-grid">
           <label>
             <span>Announce 最小间隔（秒）</span>
@@ -386,9 +562,20 @@ onMounted(async () => {
             <span>魔力值公式</span>
             <t-input v-model="trackerSetting.bonusFormula" />
           </label>
+          <label class="lg:col-span-2">
+            <span>Tracker URL 列表（系统设置 list）</span>
+            <t-textarea
+              v-model="trackerSetting.trackerList"
+              :autosize="{ minRows: 4, maxRows: 8 }"
+              placeholder="一行一个地址，例如：&#10;https://tracker.example.com/announce&#10;https://backup.example.com/announce"
+            />
+          </label>
         </div>
         <template #footer>
-          <t-button theme="primary" @click="saveSection">保存设置</t-button>
+          <div class="flex items-center gap-2">
+            <t-button theme="primary" :loading="settingsSaving" @click="saveSection">保存设置</t-button>
+            <t-button variant="outline" :loading="settingsLoading" @click="loadSystemSettings">刷新设置</t-button>
+          </div>
         </template>
       </t-card>
 

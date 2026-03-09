@@ -3,8 +3,10 @@ package service
 import (
 	"context"
 
+	"github.com/GoldenSheep402/Hermes/mod/torrent/common"
 	"github.com/GoldenSheep402/Hermes/mod/torrent/dao"
 	"github.com/GoldenSheep402/Hermes/mod/torrent/model"
+	userDao "github.com/GoldenSheep402/Hermes/mod/user/dao"
 	"github.com/GoldenSheep402/Hermes/pkg/ctxKey"
 	torrentV1 "github.com/GoldenSheep402/Hermes/pkg/proto/torrent/v1"
 	"github.com/GoldenSheep402/Hermes/pkg/stdao"
@@ -41,25 +43,34 @@ func (s *S) UploadTorrent(ctx context.Context, req *torrentV1.UploadTorrentReque
 		return nil, status.Error(codes.InvalidArgument, "Empty torrent data")
 	}
 
-	// 1. Parse torrent
+	// 1. Parse original torrent first.
+	// InfoHash is derived from the info dict and should not depend on announce URLs.
 	parsed, err := torrent.Parse(req.TorrentData)
 	if err != nil {
 		s.Log.Errorw("failed to parse torrent", "error", err)
 		return nil, status.Error(codes.InvalidArgument, "Invalid torrent file")
 	}
 
-	// 2. Validate hash doesn't already exist
-	existing, err := dao.Torrent.GetByHash(ctx, parsed.InfoHash)
-	if err == nil && existing != nil {
-		return nil, status.Error(codes.AlreadyExists, "Torrent already exists")
-	} else if err != nil && status.Code(err) != codes.NotFound {
-		s.Log.Errorw("failed to check existing torrent", "error", err)
-		return nil, status.Error(codes.Internal, "Internal error")
+	uploader, err := userDao.User.GetByID(ctx, uploaderID)
+	if err != nil || uploader == nil || uploader.Passkey == "" {
+		return nil, status.Error(codes.Unauthenticated, "invalid user passkey")
+	}
+
+	announceURLs, err := common.BuildAnnounceURLsForPasskey(ctx, uploader.Passkey)
+	if err != nil {
+		return nil, status.Error(codes.FailedPrecondition, "tracker endpoint not available")
+	}
+
+	// Rewrite tracker URLs only for persisted raw bytes.
+	normalizedData, err := torrent.RewriteDownloadTorrentWithTrackers(req.TorrentData, announceURLs)
+	if err != nil {
+		s.Log.Errorw("failed to rewrite torrent at upload", "error", err)
+		return nil, status.Error(codes.Internal, "Failed to normalize torrent file")
 	}
 
 	// uploaderID is already authenticated via requireAuth
 
-	// 3. Map to Model
+	// 2. Map to Model (from original parse result)
 	torrentModel := &model.Torrent{
 		Model:        stdao.Model{ID: ulid.Make().String()},
 		InfoHash:     parsed.InfoHash,
@@ -73,7 +84,7 @@ func (s *S) UploadTorrent(ctx context.Context, req *torrentV1.UploadTorrentReque
 		IsActive:     true,
 	}
 
-	// 4. Map files
+	// 3. Map files
 	var files []model.TorrentFile
 	for _, f := range parsed.Files {
 		files = append(files, model.TorrentFile{
@@ -84,14 +95,14 @@ func (s *S) UploadTorrent(ctx context.Context, req *torrentV1.UploadTorrentReque
 		})
 	}
 
-	// 5. Save to DB
-	id, err := dao.Torrent.Create(ctx, torrentModel, files)
+	// 4. Save to DB
+	id, err := dao.Torrent.Create(ctx, torrentModel, files, normalizedData, parsed.PieceHashes)
 	if err != nil {
 		s.Log.Errorw("failed to create torrent", "error", err)
 		return nil, err // DAO returns proper grpc status
 	}
 
-	// 6. Return response
+	// 5. Return response
 	return &torrentV1.UploadTorrentResponse{
 		TorrentId: id,
 		InfoHash:  parsed.InfoHash,
@@ -99,7 +110,8 @@ func (s *S) UploadTorrent(ctx context.Context, req *torrentV1.UploadTorrentReque
 }
 
 func (s *S) DownloadTorrent(ctx context.Context, req *torrentV1.DownloadTorrentRequest) (*torrentV1.DownloadTorrentResponse, error) {
-	if _, err := requireAuth(ctx); err != nil {
+	uid, err := requireAuth(ctx)
+	if err != nil {
 		return nil, err
 	}
 
@@ -107,12 +119,40 @@ func (s *S) DownloadTorrent(ctx context.Context, req *torrentV1.DownloadTorrentR
 		return nil, status.Error(codes.InvalidArgument, "Torrent ID cannot be empty")
 	}
 
-	// For downloading, we need the original .torrent byte stream.
-	// Currently, the Hermes Torrent module architecture parses and saves metadata to DB.
-	// To generate a .torrent on the fly from the DB requires pulling Tracker URL + Metadata.
-	// For now, this requires extending the DB or using a generic Torrent re-generator.
-	// We'll return an unimplemented error until the file storage architecture is fully clarified (e.g. MinIO vs DB blob).
-	return nil, status.Error(codes.Unimplemented, "DownloadTorrent requires blob storage integration")
+	rawData, err := dao.TorrentBlob.GetRawByTorrentID(ctx, req.TorrentId)
+	if err != nil {
+		if status.Code(err) == codes.NotFound {
+			if _, baseErr := dao.Torrent.GetBase(ctx, req.TorrentId); baseErr != nil {
+				s.Log.Errorw("failed to get torrent for download", "id", req.TorrentId, "err", baseErr)
+				return nil, status.Error(codes.NotFound, "Torrent not found")
+			}
+			return nil, status.Error(codes.FailedPrecondition, "Torrent raw data not available")
+		}
+		s.Log.Errorw("failed to get torrent blob for download", "id", req.TorrentId, "err", err)
+		return nil, status.Error(codes.Internal, "Failed to download torrent")
+	}
+
+	user, err := userDao.User.GetByID(ctx, uid)
+	if err != nil || user == nil || user.Passkey == "" {
+		s.Log.Errorw("failed to get passkey for download", "uid", uid, "err", err)
+		return nil, status.Error(codes.Unauthenticated, "invalid user passkey")
+	}
+
+	announceURLs, err := common.BuildAnnounceURLsForPasskey(ctx, user.Passkey)
+	if err != nil {
+		s.Log.Errorw("failed to resolve tracker endpoint for download", "uid", uid, "err", err)
+		return nil, status.Error(codes.FailedPrecondition, "tracker endpoint not available")
+	}
+
+	downloadData, err := torrent.RewriteDownloadTorrentWithTrackers(rawData, announceURLs)
+	if err != nil {
+		s.Log.Errorw("failed to rewrite torrent download data", "id", req.TorrentId, "err", err)
+		return nil, status.Error(codes.Internal, "Failed to build torrent download")
+	}
+
+	return &torrentV1.DownloadTorrentResponse{
+		TorrentData: downloadData,
+	}, nil
 }
 
 func (s *S) GetTorrent(ctx context.Context, req *torrentV1.GetTorrentRequest) (*torrentV1.GetTorrentResponse, error) {

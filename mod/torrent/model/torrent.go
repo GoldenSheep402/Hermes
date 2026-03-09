@@ -8,7 +8,7 @@ import (
 // Business-level information (title, description, category) lives in the Resource model.
 type Torrent struct {
 	stdao.Model
-	InfoHash     string `gorm:"uniqueIndex;size:64;not null" json:"info_hash"`
+	InfoHash     string `gorm:"size:64;uniqueIndex;not null" json:"info_hash"`
 	UploaderID   string `gorm:"type:char(26);index;not null" json:"uploader_id"`
 	Name         string `gorm:"size:512;not null" json:"name"`
 	Size         int64  `gorm:"not null;default:0" json:"size"`

@@ -34,6 +34,8 @@ type ParsedTorrent struct {
 	PieceLength int64
 	// Total number of pieces the torrent is split into
 	PieceCount int
+	// SHA1 hash for each piece (40-char hex string)
+	PieceHashes []string
 	// If true, the client must not use DHT or PEX to find peers
 	IsPrivate bool
 	// Often used to indicate the site or group that released the torrent
@@ -95,6 +97,13 @@ func Parse(data []byte) (*ParsedTorrent, error) {
 		CreatedBy:    mi.CreatedBy,
 		Encoding:     mi.Encoding,
 		UrlList:      mi.UrlList,
+	}
+
+	if len(info.Pieces)%20 != 0 {
+		return nil, fmt.Errorf("invalid pieces length: %d", len(info.Pieces))
+	}
+	for i := 0; i < len(info.Pieces); i += 20 {
+		pt.PieceHashes = append(pt.PieceHashes, hex.EncodeToString(info.Pieces[i:i+20]))
 	}
 
 	if len(info.Files) > 0 {

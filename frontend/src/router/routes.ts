@@ -1,4 +1,5 @@
 import type { RouteRecordRaw } from 'vue-router'
+import { PermissionKeys } from '@/constants/permissions'
 
 const DefaultLayout = () => import('@/layouts/DefaultLayout.vue')
 
@@ -42,6 +43,14 @@ export const routes: RouteRecordRaw[] = [
         path: 'torrents',
         name: 'Torrents',
         component: () => import('@/pages/Torrents.vue'),
+        meta: {
+          requiresAuth: true,
+        },
+      },
+      {
+        path: 'upload',
+        name: 'UploadTorrent',
+        component: () => import('@/pages/UploadTorrent.vue'),
         meta: {
           requiresAuth: true,
         },
@@ -100,7 +109,7 @@ export const routes: RouteRecordRaw[] = [
         component: () => import('@/pages/Admin.vue'),
         meta: {
           requiresAuth: true,
-          requiresStaff: true,
+          requiredPermissions: [PermissionKeys.AdminPanelAccess],
         },
       },
     ],

@@ -1,6 +1,7 @@
 package user
 
 import (
+	"context"
 	"errors"
 
 	"github.com/oklog/ulid/v2"
@@ -10,6 +11,7 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/GoldenSheep402/Hermes/core/kernel"
+	"github.com/GoldenSheep402/Hermes/mod/casbinX/rbac"
 	"github.com/GoldenSheep402/Hermes/mod/grpcGateway/gateway"
 	"github.com/GoldenSheep402/Hermes/mod/user/dao"
 	"github.com/GoldenSheep402/Hermes/mod/user/model"
@@ -72,7 +74,7 @@ func (m *Mod) Load(h *kernel.Hub) error {
 }
 
 func (m *Mod) Start(h *kernel.Hub) error {
-	return dao.User.DB().Transaction(func(tx *gorm.DB) error {
+	err := dao.User.DB().Transaction(func(tx *gorm.DB) error {
 		// Seed default user group if not exists
 		var count int64
 		if err := tx.Model(&model.UserGroup{}).Where("name = ?", "default").Count(&count).Error; err != nil {
@@ -120,4 +122,30 @@ func (m *Mod) Start(h *kernel.Hub) error {
 
 		return nil
 	})
+	if err != nil {
+		return err
+	}
+
+	if rbac.CasbinManager.Enforcer == nil {
+		return errors.New("casbin enforcer is not initialized")
+	}
+
+	users, err := dao.User.GetList(context.Background())
+	if err != nil {
+		return err
+	}
+
+	adminCount := 0
+	for _, user := range users {
+		if user == nil || !user.IsAdmin {
+			continue
+		}
+		if err = rbac.CasbinManager.SetUserGlobalAdmin(user.ID); err != nil {
+			return err
+		}
+		adminCount++
+	}
+
+	h.Log.Infow("synced admin users to casbin", "count", adminCount)
+	return nil
 }

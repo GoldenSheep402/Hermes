@@ -3,3 +3,4 @@
 
 config.yaml
 *.log
+/frontend/.vscode/

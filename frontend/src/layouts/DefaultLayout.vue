@@ -2,13 +2,15 @@
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { MessagePlugin } from 'tdesign-vue-next'
+import type { PermissionKey } from '@/constants/permissions'
+import { PermissionKeys } from '@/constants/permissions'
 import { useAppStore, useAuthStore } from '@/store'
 import { formatBytes, formatNumber, formatRatio } from '@/utils/format'
 
 interface NavItem {
   path: string
   label: string
-  staffOnly?: boolean
+  requiredPermission?: PermissionKey
 }
 
 const route = useRoute()
@@ -19,14 +21,17 @@ const appStore = useAppStore()
 const navItems: NavItem[] = [
   { path: '/home', label: '首页 Home' },
   { path: '/torrents', label: '种子 Torrents' },
+  { path: '/upload', label: '发布 Upload' },
   { path: '/forums', label: '论坛 Forums' },
   { path: '/top10', label: '排行榜 Top 10' },
   { path: '/rules', label: '规则 Rules' },
   { path: '/faq', label: 'FAQ' },
-  { path: '/admin', label: '管理后台 Staff', staffOnly: true },
+  { path: '/admin', label: '管理后台 Staff', requiredPermission: PermissionKeys.AdminPanelAccess },
 ]
 
-const visibleNavItems = computed(() => navItems.filter((item) => !item.staffOnly || authStore.isStaff))
+const visibleNavItems = computed(() =>
+  navItems.filter((item) => !item.requiredPermission || authStore.hasPermission(item.requiredPermission)),
+)
 const userInitial = computed(() => authStore.profile.username.slice(0, 1).toUpperCase() || 'U')
 const ratioDanger = computed(() => authStore.ratio < 1)
 

@@ -23,6 +23,15 @@ export default function setupAuthGuard(router: Router) {
       }
     }
 
+    const requiredPermissions = Array.isArray(to.meta.requiredPermissions)
+      ? to.meta.requiredPermissions
+      : []
+
+    if (requiredPermissions.length > 0 && !authStore.hasPermissions(requiredPermissions)) {
+      MessagePlugin.warning('当前账号缺少访问权限')
+      return { path: '/403' }
+    }
+
     if (to.meta.requiresStaff && !authStore.isStaff) {
       MessagePlugin.warning('当前账号无管理后台权限')
       return { path: '/403' }

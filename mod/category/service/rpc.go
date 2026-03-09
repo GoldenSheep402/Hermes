@@ -9,6 +9,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	"github.com/GoldenSheep402/Hermes/mod/casbinX/rbac"
+	"github.com/GoldenSheep402/Hermes/mod/casbinX/rbacValues"
 	"github.com/GoldenSheep402/Hermes/mod/category/dao"
 	"github.com/GoldenSheep402/Hermes/mod/category/model"
 	"github.com/GoldenSheep402/Hermes/pkg/ctxKey"
@@ -34,6 +35,36 @@ func requireAdmin(ctx context.Context) error {
 		return status.Error(codes.PermissionDenied, "admin privileges required")
 	}
 	return nil
+}
+
+// requireCategoryManage is a future-proof hook:
+// allow global admin OR users granted category write permission in Casbin.
+func requireCategoryManage(ctx context.Context, categoryID string) error {
+	userID, ok := ctx.Value(ctxKey.UID).(string)
+	if !ok || userID == "" {
+		return status.Error(codes.Unauthenticated, "unauthenticated")
+	}
+
+	isAdmin, err := rbac.CasbinManager.CheckUserIsGlobalAdmin(userID)
+	if err == nil && isAdmin {
+		return nil
+	}
+
+	resourceCandidates := []string{
+		rbacValues.CategoryIDPrefix("*"),
+	}
+	if categoryID != "" {
+		resourceCandidates = append(resourceCandidates, rbacValues.CategoryIDPrefix(categoryID))
+	}
+
+	for _, resource := range resourceCandidates {
+		allowed, checkErr := rbac.CasbinManager.CheckUserPermission(userID, resource, rbacValues.Write)
+		if checkErr == nil && allowed {
+			return nil
+		}
+	}
+
+	return status.Error(codes.PermissionDenied, "category manage permission required")
 }
 
 // requireAuth checks if caller is authenticated.
@@ -66,7 +97,7 @@ func convertModelToProto(c *model.Category) *categoryV1.Category {
 }
 
 func (s *S) CreateCategory(ctx context.Context, req *categoryV1.CreateCategoryRequest) (*categoryV1.CreateCategoryResponse, error) {
-	if err := requireAdmin(ctx); err != nil {
+	if err := requireCategoryManage(ctx, ""); err != nil {
 		return nil, err
 	}
 
@@ -138,7 +169,11 @@ func (s *S) ListCategories(ctx context.Context, req *categoryV1.ListCategoriesRe
 }
 
 func (s *S) UpdateCategory(ctx context.Context, req *categoryV1.UpdateCategoryRequest) (*categoryV1.UpdateCategoryResponse, error) {
-	if err := requireAdmin(ctx); err != nil {
+	categoryID := ""
+	if req != nil && req.Category != nil {
+		categoryID = req.Category.Id
+	}
+	if err := requireCategoryManage(ctx, categoryID); err != nil {
 		return nil, err
 	}
 	if req.Category == nil || req.Category.Id == "" {
@@ -171,7 +206,7 @@ func (s *S) UpdateCategory(ctx context.Context, req *categoryV1.UpdateCategoryRe
 }
 
 func (s *S) DeleteCategory(ctx context.Context, req *categoryV1.DeleteCategoryRequest) (*categoryV1.DeleteCategoryResponse, error) {
-	if err := requireAdmin(ctx); err != nil {
+	if err := requireCategoryManage(ctx, req.Id); err != nil {
 		return nil, err
 	}
 	if req.Id == "" {
@@ -187,7 +222,11 @@ func (s *S) DeleteCategory(ctx context.Context, req *categoryV1.DeleteCategoryRe
 }
 
 func (s *S) CreateMetaTemplate(ctx context.Context, req *categoryV1.CreateMetaTemplateRequest) (*categoryV1.CreateMetaTemplateResponse, error) {
-	if err := requireAdmin(ctx); err != nil {
+	categoryID := ""
+	if req != nil && req.Template != nil {
+		categoryID = req.Template.CategoryId
+	}
+	if err := requireCategoryManage(ctx, categoryID); err != nil {
 		return nil, err
 	}
 	if req.Template == nil || req.Template.CategoryId == "" || req.Template.Key == "" || req.Template.Label == "" {
@@ -214,7 +253,11 @@ func (s *S) CreateMetaTemplate(ctx context.Context, req *categoryV1.CreateMetaTe
 }
 
 func (s *S) UpdateMetaTemplate(ctx context.Context, req *categoryV1.UpdateMetaTemplateRequest) (*categoryV1.UpdateMetaTemplateResponse, error) {
-	if err := requireAdmin(ctx); err != nil {
+	categoryID := ""
+	if req != nil && req.Template != nil {
+		categoryID = req.Template.CategoryId
+	}
+	if err := requireCategoryManage(ctx, categoryID); err != nil {
 		return nil, err
 	}
 	if req.Template == nil || req.Template.Id == "" {
@@ -241,7 +284,7 @@ func (s *S) UpdateMetaTemplate(ctx context.Context, req *categoryV1.UpdateMetaTe
 }
 
 func (s *S) DeleteMetaTemplate(ctx context.Context, req *categoryV1.DeleteMetaTemplateRequest) (*categoryV1.DeleteMetaTemplateResponse, error) {
-	if err := requireAdmin(ctx); err != nil {
+	if err := requireCategoryManage(ctx, ""); err != nil {
 		return nil, err
 	}
 	if req.Id == "" {

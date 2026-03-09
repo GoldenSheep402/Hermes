@@ -1,5 +1,7 @@
 import { defineStore } from 'pinia'
 import { AuthService, UserService } from '@/services/grpc'
+import type { PermissionKey } from '@/constants/permissions'
+import { resolvePermissionsByRoles } from '@/constants/permissions'
 
 export interface PtUserProfile {
   id: string
@@ -43,11 +45,25 @@ export const useAuthStore = defineStore('hermes/auth', {
     accessToken: '',
     refreshToken: '',
     profile: createDefaultProfile(),
+    permissions: [] as PermissionKey[],
   }),
 
   getters: {
     isLoggedIn: (state): boolean => state.accessToken.length > 0,
     isStaff: (state): boolean => state.profile.roles.includes('staff'),
+    hasPermission: (state) => (permission: string): boolean => {
+      if (state.permissions.includes(permission as PermissionKey)) {
+        return true
+      }
+      return resolvePermissionsByRoles(state.profile.roles).includes(permission as PermissionKey)
+    },
+    hasPermissions: (state) => (requiredPermissions: string[]): boolean =>
+      requiredPermissions.every((permission) => {
+        if (state.permissions.includes(permission as PermissionKey)) {
+          return true
+        }
+        return resolvePermissionsByRoles(state.profile.roles).includes(permission as PermissionKey)
+      }),
     ratio: (state): number => {
       if (state.profile.downloadBytes === 0) {
         return state.profile.uploadBytes > 0 ? 99.99 : 0
@@ -109,6 +125,7 @@ export const useAuthStore = defineStore('hermes/auth', {
       const upload = parseInt64(userProfile?.realUpload ?? user.uploaded)
       const download = parseInt64(userProfile?.realDownload ?? user.downloaded)
       const isStaff = Boolean(user.isAdmin)
+      const roles = isStaff ? ['user', 'staff'] : ['user']
 
       this.profile = {
         id: user.id,
@@ -122,8 +139,9 @@ export const useAuthStore = defineStore('hermes/auth', {
         inboxUnread: 0,
         inviteCount: user.inviteCount || 0,
         avatar: user.avatar || '',
-        roles: isStaff ? ['user', 'staff'] : ['user'],
+        roles,
       }
+      this.permissions = resolvePermissionsByRoles(roles)
     },
 
     logout() {

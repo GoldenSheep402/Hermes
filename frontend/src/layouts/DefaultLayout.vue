@@ -51,7 +51,7 @@ async function handleLogout() {
     :class="isAdminRoute ? 'h-screen overflow-hidden' : 'min-h-screen'"
   >
     <header class="sticky top-0 z-40 border-b border-[var(--app-border)] bg-[var(--panel-bg)]/95 backdrop-blur">
-      <section class="mx-auto max-w-[1480px] px-3 py-3">
+      <section class="w-full px-3 py-3">
         <div class="grid gap-3 lg:grid-cols-[240px_1fr_280px] lg:items-center">
           <div class="flex items-center gap-3">
             <div class="h-10 w-10 rounded-lg bg-gradient-to-br from-sky-500 to-cyan-400"></div>
@@ -99,7 +99,7 @@ async function handleLogout() {
       </section>
 
       <nav class="border-t border-[var(--app-border)] bg-[var(--panel-bg)]/90">
-        <div class="mx-auto flex max-w-[1480px] gap-1 overflow-x-auto px-3 py-2">
+        <div class="flex w-full gap-1 overflow-x-auto px-3 py-2">
           <router-link
             v-for="item in visibleNavItems"
             :key="item.path"
@@ -114,7 +114,7 @@ async function handleLogout() {
     </header>
 
     <main
-      class="mx-auto flex min-h-0 w-full max-w-[1480px] flex-1 px-3 py-4"
+      class="flex min-h-0 w-full flex-1 px-3 py-4"
       :class="isAdminRoute ? 'h-0 overflow-hidden' : ''"
     >
       <div

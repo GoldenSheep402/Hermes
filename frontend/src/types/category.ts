@@ -59,9 +59,3 @@ export interface UploadFormState {
   tags: string
   screenshots: string
 }
-
-export interface UploadCustomMetaEntry {
-  id: string
-  key: string
-  value: string
-}

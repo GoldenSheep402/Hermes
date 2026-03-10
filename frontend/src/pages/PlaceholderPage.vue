@@ -6,7 +6,9 @@ defineProps<{
 </script>
 
 <template>
-  <t-card :title="title" size="small">
-    <p class="text-sm text-[var(--muted-text)]">{{ description }}</p>
-  </t-card>
+  <section class="w-full">
+    <t-card :title="title" size="small" class="w-full">
+      <p class="text-sm text-[var(--muted-text)]">{{ description }}</p>
+    </t-card>
+  </section>
 </template>

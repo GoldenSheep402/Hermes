@@ -7,7 +7,6 @@ import type { ResourceMeta } from '@/lib/proto/resource/v1/resource.pb'
 import { CategoryService, ResourceService } from '@/services/grpc'
 import type {
   UploadCategoryOption as CategoryOption,
-  UploadCustomMetaEntry as CustomMetaEntry,
   UploadFormState,
 } from '@/types/category'
 
@@ -19,7 +18,6 @@ const loadingCategories = ref(false)
 const submitting = ref(false)
 const selectedFile = ref<File | null>(null)
 const templateValues = reactive<Record<string, string>>({})
-const customMetadata = ref<CustomMetaEntry[]>([])
 
 const form = reactive<UploadFormState>({
   title: '',
@@ -89,14 +87,6 @@ function flattenCategories(nodes: Category[] | undefined, depth = 0): CategoryOp
   return output
 }
 
-function createCustomMetaEntry(): CustomMetaEntry {
-  return {
-    id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-    key: '',
-    value: '',
-  }
-}
-
 function resetTemplateValues() {
   const current = { ...templateValues }
   for (const key of Object.keys(templateValues)) {
@@ -162,22 +152,15 @@ function templatePlaceholder(tpl: CategoryMetaTemplate): string {
   return `请输入 ${tpl.label || tpl.key || '元数据'}`
 }
 
-function addCustomMetadata() {
-  customMetadata.value.push(createCustomMetaEntry())
-}
-
-function removeCustomMetadata(id: string) {
-  customMetadata.value = customMetadata.value.filter((item) => item.id !== id)
-}
-
 async function loadCategories() {
   loadingCategories.value = true
   try {
     const response = await CategoryService.ListCategories({})
     categories.value = flattenCategories(response.categories)
 
-    if (categories.value.length > 0) {
-      form.categoryId = categories.value[0].id
+    const exists = categories.value.some((item) => item.id === form.categoryId)
+    if (!exists) {
+      form.categoryId = ''
     }
     resetTemplateValues()
   } catch (error: unknown) {
@@ -245,15 +228,6 @@ function buildMetadata(): ResourceMeta[] {
     }
     const value = String(templateValues[key] || '').trim()
     if (!value) {
-      continue
-    }
-    metadataMap.set(key, value)
-  }
-
-  for (const item of customMetadata.value) {
-    const key = item.key.trim()
-    const value = item.value.trim()
-    if (!key || !value) {
       continue
     }
     metadataMap.set(key, value)
@@ -336,8 +310,8 @@ onMounted(async () => {
 </script>
 
 <template>
-  <section class="grid gap-4 lg:grid-cols-[1.2fr_320px]">
-    <t-card title="发布种子" size="small">
+  <section class="upload-page grid w-full items-start gap-4 lg:grid-cols-[minmax(0,1fr)_340px]">
+    <t-card title="发布种子" size="small" class="w-full">
       <div class="form-grid">
         <label>
           <span>主标题 *</span>
@@ -350,8 +324,8 @@ onMounted(async () => {
         </label>
 
         <label>
-          <span>分类 *</span>
-          <t-select v-model="form.categoryId" :loading="loadingCategories" placeholder="选择分类">
+          <span>分类 <span class="required-mark">*</span></span>
+          <t-select v-model="form.categoryId" :loading="loadingCategories" placeholder="请选择分类（必选）">
             <t-option
               v-for="item in categories"
               :key="item.id"
@@ -428,25 +402,6 @@ onMounted(async () => {
         </label>
 
         <label class="lg:col-span-2">
-          <span>自定义元数据（可选）</span>
-          <div class="custom-meta-list">
-            <div v-if="customMetadata.length === 0" class="custom-meta-empty">
-              当前未添加自定义元数据
-            </div>
-
-            <div v-for="item in customMetadata" :key="item.id" class="custom-meta-row">
-              <t-input v-model="item.key" clearable placeholder="键，例如：author / isbn / game_version" />
-              <t-input v-model="item.value" clearable placeholder="值" />
-              <t-button variant="text" theme="danger" @click="removeCustomMetadata(item.id)">
-                删除
-              </t-button>
-            </div>
-
-            <t-button size="small" variant="outline" @click="addCustomMetadata">添加元数据</t-button>
-          </div>
-        </label>
-
-        <label class="lg:col-span-2">
           <span>标签</span>
           <t-input v-model="form.tags" clearable placeholder="逗号分隔，例如：中字, Free, HDR" />
         </label>
@@ -473,18 +428,27 @@ onMounted(async () => {
       </template>
     </t-card>
 
-    <t-card title="发布说明" size="small">
+    <t-card title="发布说明" size="small" class="upload-guide-card w-full">
       <ul class="guide-list">
         <li>文件必须是 `.torrent` 格式。</li>
         <li>主标题和分类为必填项。</li>
-        <li>分类模板元数据会自动显示，必填项需填写。</li>
-        <li>你也可以额外添加任意键值元数据（用于非影视资源）。</li>
+        <li>选择类别或子类别后，会读取该分类的元数据模板并自动显示字段。</li>
+        <li>仅允许填写该分类模板字段，不支持自定义元数据。</li>
       </ul>
     </t-card>
   </section>
 </template>
 
 <style scoped>
+.upload-page {
+  align-content: start;
+}
+
+.upload-guide-card {
+  position: sticky;
+  top: 0;
+}
+
 .form-grid {
   display: grid;
   grid-template-columns: repeat(1, minmax(0, 1fr));
@@ -546,30 +510,9 @@ onMounted(async () => {
   flex: 1;
 }
 
-.custom-meta-list {
-  display: grid;
-  gap: 8px;
-  padding: 10px;
-  border: 1px dashed var(--app-border);
-  border-radius: 8px;
-  background: var(--soft-bg);
-}
-
-.custom-meta-empty {
-  font-size: 12px;
-  color: var(--muted-text);
-}
-
-.custom-meta-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr auto;
-  gap: 8px;
-  align-items: center;
-}
-
 @media (max-width: 1023px) {
-  .custom-meta-row {
-    grid-template-columns: 1fr;
+  .upload-guide-card {
+    position: static;
   }
 }
 

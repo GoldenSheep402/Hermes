@@ -18,6 +18,11 @@ func TestComputeCounterDelta(t *testing.T) {
 		require.Equal(t, int64(120), delta)
 	})
 
+	t.Run("first_start_alias_uses_current", func(t *testing.T) {
+		delta := computeCounterDelta(nil, 120, normalizeAnnounceEvent("start"), getUploaded)
+		require.Equal(t, int64(120), delta)
+	})
+
 	t.Run("first_no_event_ignored", func(t *testing.T) {
 		delta := computeCounterDelta(nil, 120, "", getUploaded)
 		require.Equal(t, int64(0), delta)
@@ -35,11 +40,26 @@ func TestComputeCounterDelta(t *testing.T) {
 		require.Equal(t, int64(50), delta)
 	})
 
+	t.Run("counter_reset_on_start_alias", func(t *testing.T) {
+		last := &trackerModel.Peer{Uploaded: 300}
+		delta := computeCounterDelta(last, 50, normalizeAnnounceEvent("start"), getUploaded)
+		require.Equal(t, int64(50), delta)
+	})
+
 	t.Run("counter_reset_without_started", func(t *testing.T) {
 		last := &trackerModel.Peer{Uploaded: 300}
 		delta := computeCounterDelta(last, 50, "", getUploaded)
 		require.Equal(t, int64(0), delta)
 	})
+}
+
+func TestNormalizeAnnounceEvent(t *testing.T) {
+	require.Equal(t, "started", normalizeAnnounceEvent("start"))
+	require.Equal(t, "started", normalizeAnnounceEvent("started"))
+	require.Equal(t, "stopped", normalizeAnnounceEvent("stop"))
+	require.Equal(t, "completed", normalizeAnnounceEvent("complete"))
+	require.Equal(t, "started", normalizeAnnounceEvent(" Started "))
+	require.Equal(t, "", normalizeAnnounceEvent(""))
 }
 
 func TestSanitizeNumWant(t *testing.T) {

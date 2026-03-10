@@ -6,17 +6,6 @@ import "google/api/annotations.proto";
 
 // ─── Messages ───────────────────────────────────────────────────────────────
 
-message UserTrafficInfo {
-  string userId = 1;
-  int64 realUpload = 2;
-  int64 realDownload = 3;
-  int64 bonusUpload = 4;
-  int64 bonusDownload = 5;
-  double ratio = 6;
-  int64 uploadRate = 7;
-  int64 downloadRate = 8;
-}
-
 message TransferHistoryItem {
   string id = 1;
   string torrentId = 2;
@@ -38,16 +27,22 @@ message TorrentStatsInfo {
   int64 totalDownload = 6;
 }
 
+message StreamSiteTrafficRequest {
+  int32 intervalSeconds = 1;
+  double smoothingFactor = 2;
+}
+
+message SiteTrafficRatePoint {
+  string timestamp = 1;
+  int64 uploadRate = 2;
+  int64 downloadRate = 3;
+  int64 rawUploadRate = 4;
+  int64 rawDownloadRate = 5;
+}
+
 // ─── Service ────────────────────────────────────────────────────────────────
 
 service TrafficService {
-  rpc GetUserTraffic(GetUserTrafficRequest) returns (GetUserTrafficResponse) {
-    option (google.api.http) = {
-      post : "/gapi/traffic/v1/user"
-      body : "*"
-    };
-  }
-
   rpc ListTransferHistory(ListTransferHistoryRequest)
       returns (ListTransferHistoryResponse) {
     option (google.api.http) = {
@@ -63,12 +58,14 @@ service TrafficService {
       body : "*"
     };
   }
+
+  rpc StreamSiteTraffic(StreamSiteTrafficRequest)
+      returns (stream SiteTrafficRatePoint) {
+    option (google.api.http) = { get : "/gapi/traffic/v1/site/stream" };
+  }
 }
 
 // ─── Requests / Responses ───────────────────────────────────────────────────
-
-message GetUserTrafficRequest { string userId = 1; }
-message GetUserTrafficResponse { UserTrafficInfo traffic = 1; }
 
 message ListTransferHistoryRequest {
   string userId = 1;

@@ -19,18 +19,18 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	TrafficService_GetUserTraffic_FullMethodName      = "/traffic.v1.TrafficService/GetUserTraffic"
 	TrafficService_ListTransferHistory_FullMethodName = "/traffic.v1.TrafficService/ListTransferHistory"
 	TrafficService_GetTorrentStats_FullMethodName     = "/traffic.v1.TrafficService/GetTorrentStats"
+	TrafficService_StreamSiteTraffic_FullMethodName   = "/traffic.v1.TrafficService/StreamSiteTraffic"
 )
 
 // TrafficServiceClient is the client API for TrafficService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type TrafficServiceClient interface {
-	GetUserTraffic(ctx context.Context, in *GetUserTrafficRequest, opts ...grpc.CallOption) (*GetUserTrafficResponse, error)
 	ListTransferHistory(ctx context.Context, in *ListTransferHistoryRequest, opts ...grpc.CallOption) (*ListTransferHistoryResponse, error)
 	GetTorrentStats(ctx context.Context, in *GetTorrentStatsRequest, opts ...grpc.CallOption) (*GetTorrentStatsResponse, error)
+	StreamSiteTraffic(ctx context.Context, in *StreamSiteTrafficRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[SiteTrafficRatePoint], error)
 }
 
 type trafficServiceClient struct {
@@ -39,16 +39,6 @@ type trafficServiceClient struct {
 
 func NewTrafficServiceClient(cc grpc.ClientConnInterface) TrafficServiceClient {
 	return &trafficServiceClient{cc}
-}
-
-func (c *trafficServiceClient) GetUserTraffic(ctx context.Context, in *GetUserTrafficRequest, opts ...grpc.CallOption) (*GetUserTrafficResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(GetUserTrafficResponse)
-	err := c.cc.Invoke(ctx, TrafficService_GetUserTraffic_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
 }
 
 func (c *trafficServiceClient) ListTransferHistory(ctx context.Context, in *ListTransferHistoryRequest, opts ...grpc.CallOption) (*ListTransferHistoryResponse, error) {
@@ -71,13 +61,32 @@ func (c *trafficServiceClient) GetTorrentStats(ctx context.Context, in *GetTorre
 	return out, nil
 }
 
+func (c *trafficServiceClient) StreamSiteTraffic(ctx context.Context, in *StreamSiteTrafficRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[SiteTrafficRatePoint], error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	stream, err := c.cc.NewStream(ctx, &TrafficService_ServiceDesc.Streams[0], TrafficService_StreamSiteTraffic_FullMethodName, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &grpc.GenericClientStream[StreamSiteTrafficRequest, SiteTrafficRatePoint]{ClientStream: stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type TrafficService_StreamSiteTrafficClient = grpc.ServerStreamingClient[SiteTrafficRatePoint]
+
 // TrafficServiceServer is the server API for TrafficService service.
 // All implementations must embed UnimplementedTrafficServiceServer
 // for forward compatibility.
 type TrafficServiceServer interface {
-	GetUserTraffic(context.Context, *GetUserTrafficRequest) (*GetUserTrafficResponse, error)
 	ListTransferHistory(context.Context, *ListTransferHistoryRequest) (*ListTransferHistoryResponse, error)
 	GetTorrentStats(context.Context, *GetTorrentStatsRequest) (*GetTorrentStatsResponse, error)
+	StreamSiteTraffic(*StreamSiteTrafficRequest, grpc.ServerStreamingServer[SiteTrafficRatePoint]) error
 	mustEmbedUnimplementedTrafficServiceServer()
 }
 
@@ -88,14 +97,14 @@ type TrafficServiceServer interface {
 // pointer dereference when methods are called.
 type UnimplementedTrafficServiceServer struct{}
 
-func (UnimplementedTrafficServiceServer) GetUserTraffic(context.Context, *GetUserTrafficRequest) (*GetUserTrafficResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method GetUserTraffic not implemented")
-}
 func (UnimplementedTrafficServiceServer) ListTransferHistory(context.Context, *ListTransferHistoryRequest) (*ListTransferHistoryResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ListTransferHistory not implemented")
 }
 func (UnimplementedTrafficServiceServer) GetTorrentStats(context.Context, *GetTorrentStatsRequest) (*GetTorrentStatsResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetTorrentStats not implemented")
+}
+func (UnimplementedTrafficServiceServer) StreamSiteTraffic(*StreamSiteTrafficRequest, grpc.ServerStreamingServer[SiteTrafficRatePoint]) error {
+	return status.Error(codes.Unimplemented, "method StreamSiteTraffic not implemented")
 }
 func (UnimplementedTrafficServiceServer) mustEmbedUnimplementedTrafficServiceServer() {}
 func (UnimplementedTrafficServiceServer) testEmbeddedByValue()                        {}
@@ -116,24 +125,6 @@ func RegisterTrafficServiceServer(s grpc.ServiceRegistrar, srv TrafficServiceSer
 		t.testEmbeddedByValue()
 	}
 	s.RegisterService(&TrafficService_ServiceDesc, srv)
-}
-
-func _TrafficService_GetUserTraffic_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetUserTrafficRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(TrafficServiceServer).GetUserTraffic(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: TrafficService_GetUserTraffic_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TrafficServiceServer).GetUserTraffic(ctx, req.(*GetUserTrafficRequest))
-	}
-	return interceptor(ctx, in, info, handler)
 }
 
 func _TrafficService_ListTransferHistory_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -172,6 +163,17 @@ func _TrafficService_GetTorrentStats_Handler(srv interface{}, ctx context.Contex
 	return interceptor(ctx, in, info, handler)
 }
 
+func _TrafficService_StreamSiteTraffic_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(StreamSiteTrafficRequest)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(TrafficServiceServer).StreamSiteTraffic(m, &grpc.GenericServerStream[StreamSiteTrafficRequest, SiteTrafficRatePoint]{ServerStream: stream})
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type TrafficService_StreamSiteTrafficServer = grpc.ServerStreamingServer[SiteTrafficRatePoint]
+
 // TrafficService_ServiceDesc is the grpc.ServiceDesc for TrafficService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -179,10 +181,6 @@ var TrafficService_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "traffic.v1.TrafficService",
 	HandlerType: (*TrafficServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
-		{
-			MethodName: "GetUserTraffic",
-			Handler:    _TrafficService_GetUserTraffic_Handler,
-		},
 		{
 			MethodName: "ListTransferHistory",
 			Handler:    _TrafficService_ListTransferHistory_Handler,
@@ -192,6 +190,12 @@ var TrafficService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _TrafficService_GetTorrentStats_Handler,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "StreamSiteTraffic",
+			Handler:       _TrafficService_StreamSiteTraffic_Handler,
+			ServerStreams: true,
+		},
+	},
 	Metadata: "traffic/v1/traffic.proto",
 }

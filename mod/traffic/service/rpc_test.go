@@ -9,17 +9,6 @@ import (
 	"go.uber.org/zap"
 )
 
-func TestTrafficService_GetUserTraffic(t *testing.T) {
-	s := &S{
-		Log: zap.NewNop().Sugar(),
-	}
-
-	resp, err := s.GetUserTraffic(context.Background(), &trafficV1.GetUserTrafficRequest{UserId: ""})
-	assert.Error(t, err)
-	assert.Nil(t, resp)
-	assert.Contains(t, err.Error(), "unauthenticated")
-}
-
 func TestTrafficService_ListTransferHistory(t *testing.T) {
 	s := &S{
 		Log: zap.NewNop().Sugar(),

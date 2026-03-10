@@ -20,6 +20,8 @@ const (
 	userTrafficDirtySetKey    = "tracker:traffic:dirty:users"
 	torrentTrafficDirtySetKey = "tracker:traffic:dirty:torrents"
 	pairTrafficDirtySetKey    = "tracker:traffic:dirty:pairs"
+	siteRealtimeUploadKey     = "tracker:traffic:realtime:site:upload"
+	siteRealtimeDownloadKey   = "tracker:traffic:realtime:site:download"
 
 	trafficVersionField = "_version"
 
@@ -101,16 +103,22 @@ func (t *traffic) RecordDelta(
 			pipe.HIncrBy(ctx, torrentKey, "total_upload", uploadDelta)
 			pipe.HIncrBy(ctx, pairKey, "uploaded", uploadDelta)
 			pipe.HIncrBy(ctx, realtimeUploadKey, realtimeField, uploadDelta)
+			pipe.HIncrBy(ctx, siteRealtimeUploadKey, realtimeField, uploadDelta)
 			pipe.HDel(ctx, realtimeUploadKey, expiredField)
+			pipe.HDel(ctx, siteRealtimeUploadKey, expiredField)
 			pipe.Expire(ctx, realtimeUploadKey, realtimeBucketTTL)
+			pipe.Expire(ctx, siteRealtimeUploadKey, realtimeBucketTTL)
 		}
 		if downloadDelta > 0 {
 			pipe.HIncrBy(ctx, userKey, "real_download", downloadDelta)
 			pipe.HIncrBy(ctx, torrentKey, "total_download", downloadDelta)
 			pipe.HIncrBy(ctx, pairKey, "downloaded", downloadDelta)
 			pipe.HIncrBy(ctx, realtimeDownloadKey, realtimeField, downloadDelta)
+			pipe.HIncrBy(ctx, siteRealtimeDownloadKey, realtimeField, downloadDelta)
 			pipe.HDel(ctx, realtimeDownloadKey, expiredField)
+			pipe.HDel(ctx, siteRealtimeDownloadKey, expiredField)
 			pipe.Expire(ctx, realtimeDownloadKey, realtimeBucketTTL)
+			pipe.Expire(ctx, siteRealtimeDownloadKey, realtimeBucketTTL)
 		}
 		pipe.HIncrBy(ctx, userKey, trafficVersionField, 1)
 		pipe.HIncrBy(ctx, torrentKey, trafficVersionField, 1)
@@ -134,10 +142,17 @@ func (t *traffic) GetUserRealtimeRate(ctx context.Context, userID string) (int64
 	if t.rds == nil || userID == "" {
 		return 0, 0, nil
 	}
+	return t.getRealtimeRateByKeys(ctx, userRealtimeUploadKey(userID), userRealtimeDownloadKey(userID))
+}
 
-	uploadKey := userRealtimeUploadKey(userID)
-	downloadKey := userRealtimeDownloadKey(userID)
+func (t *traffic) GetSiteRealtimeRate(ctx context.Context) (int64, int64, error) {
+	if t.rds == nil {
+		return 0, 0, nil
+	}
+	return t.getRealtimeRateByKeys(ctx, siteRealtimeUploadKey, siteRealtimeDownloadKey)
+}
 
+func (t *traffic) getRealtimeRateByKeys(ctx context.Context, uploadKey, downloadKey string) (int64, int64, error) {
 	pipe := t.rds.Pipeline()
 	uploadCmd := pipe.HGetAll(ctx, uploadKey)
 	downloadCmd := pipe.HGetAll(ctx, downloadKey)

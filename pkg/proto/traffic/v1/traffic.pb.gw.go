@@ -35,33 +35,6 @@ var (
 	_ = metadata.Join
 )
 
-func request_TrafficService_GetUserTraffic_0(ctx context.Context, marshaler runtime.Marshaler, client TrafficServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var (
-		protoReq GetUserTrafficRequest
-		metadata runtime.ServerMetadata
-	)
-	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-	if req.Body != nil {
-		_, _ = io.Copy(io.Discard, req.Body)
-	}
-	msg, err := client.GetUserTraffic(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
-}
-
-func local_request_TrafficService_GetUserTraffic_0(ctx context.Context, marshaler runtime.Marshaler, server TrafficServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var (
-		protoReq GetUserTrafficRequest
-		metadata runtime.ServerMetadata
-	)
-	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-	msg, err := server.GetUserTraffic(ctx, &protoReq)
-	return msg, metadata, err
-}
-
 func request_TrafficService_ListTransferHistory_0(ctx context.Context, marshaler runtime.Marshaler, client TrafficServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
 		protoReq ListTransferHistoryRequest
@@ -116,32 +89,40 @@ func local_request_TrafficService_GetTorrentStats_0(ctx context.Context, marshal
 	return msg, metadata, err
 }
 
+var filter_TrafficService_StreamSiteTraffic_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+
+func request_TrafficService_StreamSiteTraffic_0(ctx context.Context, marshaler runtime.Marshaler, client TrafficServiceClient, req *http.Request, pathParams map[string]string) (TrafficService_StreamSiteTrafficClient, runtime.ServerMetadata, error) {
+	var (
+		protoReq StreamSiteTrafficRequest
+		metadata runtime.ServerMetadata
+	)
+	if req.Body != nil {
+		_, _ = io.Copy(io.Discard, req.Body)
+	}
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_TrafficService_StreamSiteTraffic_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	stream, err := client.StreamSiteTraffic(ctx, &protoReq)
+	if err != nil {
+		return nil, metadata, err
+	}
+	header, err := stream.Header()
+	if err != nil {
+		return nil, metadata, err
+	}
+	metadata.HeaderMD = header
+	return stream, metadata, nil
+}
+
 // RegisterTrafficServiceHandlerServer registers the http handlers for service TrafficService to "mux".
 // UnaryRPC     :call TrafficServiceServer directly.
 // StreamingRPC :currently unsupported pending https://github.com/grpc/grpc-go/issues/906.
 // Note that using this registration option will cause many gRPC library features to stop working. Consider using RegisterTrafficServiceHandlerFromEndpoint instead.
 // GRPC interceptors will not work for this type of registration. To use interceptors, you must use the "runtime.WithMiddlewares" option in the "runtime.NewServeMux" call.
 func RegisterTrafficServiceHandlerServer(ctx context.Context, mux *runtime.ServeMux, server TrafficServiceServer) error {
-	mux.Handle(http.MethodPost, pattern_TrafficService_GetUserTraffic_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		ctx, cancel := context.WithCancel(req.Context())
-		defer cancel()
-		var stream runtime.ServerTransportStream
-		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
-		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/traffic.v1.TrafficService/GetUserTraffic", runtime.WithHTTPPathPattern("/gapi/traffic/v1/user"))
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		resp, md, err := local_request_TrafficService_GetUserTraffic_0(annotatedContext, inboundMarshaler, server, req, pathParams)
-		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
-		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
-		if err != nil {
-			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		forward_TrafficService_GetUserTraffic_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-	})
 	mux.Handle(http.MethodPost, pattern_TrafficService_ListTransferHistory_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -183,6 +164,13 @@ func RegisterTrafficServiceHandlerServer(ctx context.Context, mux *runtime.Serve
 		forward_TrafficService_GetTorrentStats_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
 
+	mux.Handle(http.MethodGet, pattern_TrafficService_StreamSiteTraffic_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		err := status.Error(codes.Unimplemented, "streaming calls are not yet supported in the in-process transport")
+		_, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+		return
+	})
+
 	return nil
 }
 
@@ -222,23 +210,6 @@ func RegisterTrafficServiceHandler(ctx context.Context, mux *runtime.ServeMux, c
 // doesn't go through the normal gRPC flow (creating a gRPC client etc.) then it will be up to the passed in
 // "TrafficServiceClient" to call the correct interceptors. This client ignores the HTTP middlewares.
 func RegisterTrafficServiceHandlerClient(ctx context.Context, mux *runtime.ServeMux, client TrafficServiceClient) error {
-	mux.Handle(http.MethodPost, pattern_TrafficService_GetUserTraffic_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		ctx, cancel := context.WithCancel(req.Context())
-		defer cancel()
-		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/traffic.v1.TrafficService/GetUserTraffic", runtime.WithHTTPPathPattern("/gapi/traffic/v1/user"))
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		resp, md, err := request_TrafficService_GetUserTraffic_0(annotatedContext, inboundMarshaler, client, req, pathParams)
-		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
-		if err != nil {
-			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		forward_TrafficService_GetUserTraffic_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-	})
 	mux.Handle(http.MethodPost, pattern_TrafficService_ListTransferHistory_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -273,17 +244,34 @@ func RegisterTrafficServiceHandlerClient(ctx context.Context, mux *runtime.Serve
 		}
 		forward_TrafficService_GetTorrentStats_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
+	mux.Handle(http.MethodGet, pattern_TrafficService_StreamSiteTraffic_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/traffic.v1.TrafficService/StreamSiteTraffic", runtime.WithHTTPPathPattern("/gapi/traffic/v1/site/stream"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_TrafficService_StreamSiteTraffic_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_TrafficService_StreamSiteTraffic_0(annotatedContext, mux, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+	})
 	return nil
 }
 
 var (
-	pattern_TrafficService_GetUserTraffic_0      = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"gapi", "traffic", "v1", "user"}, ""))
 	pattern_TrafficService_ListTransferHistory_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"gapi", "traffic", "v1", "history"}, ""))
 	pattern_TrafficService_GetTorrentStats_0     = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"gapi", "traffic", "v1", "torrent"}, ""))
+	pattern_TrafficService_StreamSiteTraffic_0   = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4}, []string{"gapi", "traffic", "v1", "site", "stream"}, ""))
 )
 
 var (
-	forward_TrafficService_GetUserTraffic_0      = runtime.ForwardResponseMessage
 	forward_TrafficService_ListTransferHistory_0 = runtime.ForwardResponseMessage
 	forward_TrafficService_GetTorrentStats_0     = runtime.ForwardResponseMessage
+	forward_TrafficService_StreamSiteTraffic_0   = runtime.ForwardResponseStream
 )

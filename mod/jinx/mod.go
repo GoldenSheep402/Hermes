@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
@@ -39,7 +40,7 @@ func (m *Mod) Init(hub *kernel.Hub) error {
 	m.j = jin.New()
 	corsConf := cors.DefaultConfig()
 	corsConf.AllowAllOrigins = true
-	corsConf.AllowCredentials = true
+	corsConf.AllowCredentials = false
 	corsConf.AddAllowHeaders("Authorization")
 	m.j.Use(
 		jin.Recovery(),
@@ -104,4 +105,36 @@ func (m *Mod) Stop(wg *sync.WaitGroup, ctx context.Context) error {
 		return err
 	}
 	return nil
+}
+
+func resolveCORSAllowedOrigins() []string {
+	defaultOrigins := []string{
+		"http://localhost:5173",
+		"http://127.0.0.1:5173",
+		"http://localhost:4173",
+		"http://127.0.0.1:4173",
+	}
+
+	cfg := conf.Get()
+	if cfg == nil || len(cfg.CORS.AllowOrigins) == 0 {
+		return defaultOrigins
+	}
+
+	seen := make(map[string]struct{}, len(cfg.CORS.AllowOrigins))
+	origins := make([]string, 0, len(cfg.CORS.AllowOrigins))
+	for _, origin := range cfg.CORS.AllowOrigins {
+		normalized := strings.TrimSpace(origin)
+		if normalized == "" {
+			continue
+		}
+		if _, ok := seen[normalized]; ok {
+			continue
+		}
+		seen[normalized] = struct{}{}
+		origins = append(origins, normalized)
+	}
+	if len(origins) == 0 {
+		return defaultOrigins
+	}
+	return origins
 }

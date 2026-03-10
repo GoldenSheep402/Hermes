@@ -86,7 +86,7 @@ export async function downloadTorrentFile(torrentId: string, displayName: string
   const response = await fetch(buildDownloadUrl(torrentIdText), {
     method: 'GET',
     headers,
-    credentials: 'include',
+    credentials: 'omit',
   })
   if (!response.ok) {
     const message = await readDownloadErrorMessage(response)

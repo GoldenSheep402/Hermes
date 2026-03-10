@@ -22,106 +22,6 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-type UserTrafficInfo struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	UserId        string                 `protobuf:"bytes,1,opt,name=userId,proto3" json:"userId,omitempty"`
-	RealUpload    int64                  `protobuf:"varint,2,opt,name=realUpload,proto3" json:"realUpload,omitempty"`
-	RealDownload  int64                  `protobuf:"varint,3,opt,name=realDownload,proto3" json:"realDownload,omitempty"`
-	BonusUpload   int64                  `protobuf:"varint,4,opt,name=bonusUpload,proto3" json:"bonusUpload,omitempty"`
-	BonusDownload int64                  `protobuf:"varint,5,opt,name=bonusDownload,proto3" json:"bonusDownload,omitempty"`
-	Ratio         float64                `protobuf:"fixed64,6,opt,name=ratio,proto3" json:"ratio,omitempty"`
-	UploadRate    int64                  `protobuf:"varint,7,opt,name=uploadRate,proto3" json:"uploadRate,omitempty"`
-	DownloadRate  int64                  `protobuf:"varint,8,opt,name=downloadRate,proto3" json:"downloadRate,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *UserTrafficInfo) Reset() {
-	*x = UserTrafficInfo{}
-	mi := &file_traffic_v1_traffic_proto_msgTypes[0]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *UserTrafficInfo) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*UserTrafficInfo) ProtoMessage() {}
-
-func (x *UserTrafficInfo) ProtoReflect() protoreflect.Message {
-	mi := &file_traffic_v1_traffic_proto_msgTypes[0]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use UserTrafficInfo.ProtoReflect.Descriptor instead.
-func (*UserTrafficInfo) Descriptor() ([]byte, []int) {
-	return file_traffic_v1_traffic_proto_rawDescGZIP(), []int{0}
-}
-
-func (x *UserTrafficInfo) GetUserId() string {
-	if x != nil {
-		return x.UserId
-	}
-	return ""
-}
-
-func (x *UserTrafficInfo) GetRealUpload() int64 {
-	if x != nil {
-		return x.RealUpload
-	}
-	return 0
-}
-
-func (x *UserTrafficInfo) GetRealDownload() int64 {
-	if x != nil {
-		return x.RealDownload
-	}
-	return 0
-}
-
-func (x *UserTrafficInfo) GetBonusUpload() int64 {
-	if x != nil {
-		return x.BonusUpload
-	}
-	return 0
-}
-
-func (x *UserTrafficInfo) GetBonusDownload() int64 {
-	if x != nil {
-		return x.BonusDownload
-	}
-	return 0
-}
-
-func (x *UserTrafficInfo) GetRatio() float64 {
-	if x != nil {
-		return x.Ratio
-	}
-	return 0
-}
-
-func (x *UserTrafficInfo) GetUploadRate() int64 {
-	if x != nil {
-		return x.UploadRate
-	}
-	return 0
-}
-
-func (x *UserTrafficInfo) GetDownloadRate() int64 {
-	if x != nil {
-		return x.DownloadRate
-	}
-	return 0
-}
-
 type TransferHistoryItem struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
@@ -139,7 +39,7 @@ type TransferHistoryItem struct {
 
 func (x *TransferHistoryItem) Reset() {
 	*x = TransferHistoryItem{}
-	mi := &file_traffic_v1_traffic_proto_msgTypes[1]
+	mi := &file_traffic_v1_traffic_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -151,7 +51,7 @@ func (x *TransferHistoryItem) String() string {
 func (*TransferHistoryItem) ProtoMessage() {}
 
 func (x *TransferHistoryItem) ProtoReflect() protoreflect.Message {
-	mi := &file_traffic_v1_traffic_proto_msgTypes[1]
+	mi := &file_traffic_v1_traffic_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -164,7 +64,7 @@ func (x *TransferHistoryItem) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TransferHistoryItem.ProtoReflect.Descriptor instead.
 func (*TransferHistoryItem) Descriptor() ([]byte, []int) {
-	return file_traffic_v1_traffic_proto_rawDescGZIP(), []int{1}
+	return file_traffic_v1_traffic_proto_rawDescGZIP(), []int{0}
 }
 
 func (x *TransferHistoryItem) GetId() string {
@@ -244,7 +144,7 @@ type TorrentStatsInfo struct {
 
 func (x *TorrentStatsInfo) Reset() {
 	*x = TorrentStatsInfo{}
-	mi := &file_traffic_v1_traffic_proto_msgTypes[2]
+	mi := &file_traffic_v1_traffic_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -256,7 +156,7 @@ func (x *TorrentStatsInfo) String() string {
 func (*TorrentStatsInfo) ProtoMessage() {}
 
 func (x *TorrentStatsInfo) ProtoReflect() protoreflect.Message {
-	mi := &file_traffic_v1_traffic_proto_msgTypes[2]
+	mi := &file_traffic_v1_traffic_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -269,7 +169,7 @@ func (x *TorrentStatsInfo) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TorrentStatsInfo.ProtoReflect.Descriptor instead.
 func (*TorrentStatsInfo) Descriptor() ([]byte, []int) {
-	return file_traffic_v1_traffic_proto_rawDescGZIP(), []int{2}
+	return file_traffic_v1_traffic_proto_rawDescGZIP(), []int{1}
 }
 
 func (x *TorrentStatsInfo) GetTorrentId() string {
@@ -314,27 +214,83 @@ func (x *TorrentStatsInfo) GetTotalDownload() int64 {
 	return 0
 }
 
-type GetUserTrafficRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	UserId        string                 `protobuf:"bytes,1,opt,name=userId,proto3" json:"userId,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+type StreamSiteTrafficRequest struct {
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	IntervalSeconds int32                  `protobuf:"varint,1,opt,name=intervalSeconds,proto3" json:"intervalSeconds,omitempty"`
+	SmoothingFactor float64                `protobuf:"fixed64,2,opt,name=smoothingFactor,proto3" json:"smoothingFactor,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
 }
 
-func (x *GetUserTrafficRequest) Reset() {
-	*x = GetUserTrafficRequest{}
+func (x *StreamSiteTrafficRequest) Reset() {
+	*x = StreamSiteTrafficRequest{}
+	mi := &file_traffic_v1_traffic_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *StreamSiteTrafficRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*StreamSiteTrafficRequest) ProtoMessage() {}
+
+func (x *StreamSiteTrafficRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_traffic_v1_traffic_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use StreamSiteTrafficRequest.ProtoReflect.Descriptor instead.
+func (*StreamSiteTrafficRequest) Descriptor() ([]byte, []int) {
+	return file_traffic_v1_traffic_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *StreamSiteTrafficRequest) GetIntervalSeconds() int32 {
+	if x != nil {
+		return x.IntervalSeconds
+	}
+	return 0
+}
+
+func (x *StreamSiteTrafficRequest) GetSmoothingFactor() float64 {
+	if x != nil {
+		return x.SmoothingFactor
+	}
+	return 0
+}
+
+type SiteTrafficRatePoint struct {
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	Timestamp       string                 `protobuf:"bytes,1,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
+	UploadRate      int64                  `protobuf:"varint,2,opt,name=uploadRate,proto3" json:"uploadRate,omitempty"`
+	DownloadRate    int64                  `protobuf:"varint,3,opt,name=downloadRate,proto3" json:"downloadRate,omitempty"`
+	RawUploadRate   int64                  `protobuf:"varint,4,opt,name=rawUploadRate,proto3" json:"rawUploadRate,omitempty"`
+	RawDownloadRate int64                  `protobuf:"varint,5,opt,name=rawDownloadRate,proto3" json:"rawDownloadRate,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
+}
+
+func (x *SiteTrafficRatePoint) Reset() {
+	*x = SiteTrafficRatePoint{}
 	mi := &file_traffic_v1_traffic_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *GetUserTrafficRequest) String() string {
+func (x *SiteTrafficRatePoint) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GetUserTrafficRequest) ProtoMessage() {}
+func (*SiteTrafficRatePoint) ProtoMessage() {}
 
-func (x *GetUserTrafficRequest) ProtoReflect() protoreflect.Message {
+func (x *SiteTrafficRatePoint) ProtoReflect() protoreflect.Message {
 	mi := &file_traffic_v1_traffic_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -346,60 +302,44 @@ func (x *GetUserTrafficRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use GetUserTrafficRequest.ProtoReflect.Descriptor instead.
-func (*GetUserTrafficRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use SiteTrafficRatePoint.ProtoReflect.Descriptor instead.
+func (*SiteTrafficRatePoint) Descriptor() ([]byte, []int) {
 	return file_traffic_v1_traffic_proto_rawDescGZIP(), []int{3}
 }
 
-func (x *GetUserTrafficRequest) GetUserId() string {
+func (x *SiteTrafficRatePoint) GetTimestamp() string {
 	if x != nil {
-		return x.UserId
+		return x.Timestamp
 	}
 	return ""
 }
 
-type GetUserTrafficResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Traffic       *UserTrafficInfo       `protobuf:"bytes,1,opt,name=traffic,proto3" json:"traffic,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *GetUserTrafficResponse) Reset() {
-	*x = GetUserTrafficResponse{}
-	mi := &file_traffic_v1_traffic_proto_msgTypes[4]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *GetUserTrafficResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*GetUserTrafficResponse) ProtoMessage() {}
-
-func (x *GetUserTrafficResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_traffic_v1_traffic_proto_msgTypes[4]
+func (x *SiteTrafficRatePoint) GetUploadRate() int64 {
 	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
+		return x.UploadRate
 	}
-	return mi.MessageOf(x)
+	return 0
 }
 
-// Deprecated: Use GetUserTrafficResponse.ProtoReflect.Descriptor instead.
-func (*GetUserTrafficResponse) Descriptor() ([]byte, []int) {
-	return file_traffic_v1_traffic_proto_rawDescGZIP(), []int{4}
-}
-
-func (x *GetUserTrafficResponse) GetTraffic() *UserTrafficInfo {
+func (x *SiteTrafficRatePoint) GetDownloadRate() int64 {
 	if x != nil {
-		return x.Traffic
+		return x.DownloadRate
 	}
-	return nil
+	return 0
+}
+
+func (x *SiteTrafficRatePoint) GetRawUploadRate() int64 {
+	if x != nil {
+		return x.RawUploadRate
+	}
+	return 0
+}
+
+func (x *SiteTrafficRatePoint) GetRawDownloadRate() int64 {
+	if x != nil {
+		return x.RawDownloadRate
+	}
+	return 0
 }
 
 type ListTransferHistoryRequest struct {
@@ -413,7 +353,7 @@ type ListTransferHistoryRequest struct {
 
 func (x *ListTransferHistoryRequest) Reset() {
 	*x = ListTransferHistoryRequest{}
-	mi := &file_traffic_v1_traffic_proto_msgTypes[5]
+	mi := &file_traffic_v1_traffic_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -425,7 +365,7 @@ func (x *ListTransferHistoryRequest) String() string {
 func (*ListTransferHistoryRequest) ProtoMessage() {}
 
 func (x *ListTransferHistoryRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_traffic_v1_traffic_proto_msgTypes[5]
+	mi := &file_traffic_v1_traffic_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -438,7 +378,7 @@ func (x *ListTransferHistoryRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListTransferHistoryRequest.ProtoReflect.Descriptor instead.
 func (*ListTransferHistoryRequest) Descriptor() ([]byte, []int) {
-	return file_traffic_v1_traffic_proto_rawDescGZIP(), []int{5}
+	return file_traffic_v1_traffic_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *ListTransferHistoryRequest) GetUserId() string {
@@ -472,7 +412,7 @@ type ListTransferHistoryResponse struct {
 
 func (x *ListTransferHistoryResponse) Reset() {
 	*x = ListTransferHistoryResponse{}
-	mi := &file_traffic_v1_traffic_proto_msgTypes[6]
+	mi := &file_traffic_v1_traffic_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -484,7 +424,7 @@ func (x *ListTransferHistoryResponse) String() string {
 func (*ListTransferHistoryResponse) ProtoMessage() {}
 
 func (x *ListTransferHistoryResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_traffic_v1_traffic_proto_msgTypes[6]
+	mi := &file_traffic_v1_traffic_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -497,7 +437,7 @@ func (x *ListTransferHistoryResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListTransferHistoryResponse.ProtoReflect.Descriptor instead.
 func (*ListTransferHistoryResponse) Descriptor() ([]byte, []int) {
-	return file_traffic_v1_traffic_proto_rawDescGZIP(), []int{6}
+	return file_traffic_v1_traffic_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *ListTransferHistoryResponse) GetItems() []*TransferHistoryItem {
@@ -523,7 +463,7 @@ type GetTorrentStatsRequest struct {
 
 func (x *GetTorrentStatsRequest) Reset() {
 	*x = GetTorrentStatsRequest{}
-	mi := &file_traffic_v1_traffic_proto_msgTypes[7]
+	mi := &file_traffic_v1_traffic_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -535,7 +475,7 @@ func (x *GetTorrentStatsRequest) String() string {
 func (*GetTorrentStatsRequest) ProtoMessage() {}
 
 func (x *GetTorrentStatsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_traffic_v1_traffic_proto_msgTypes[7]
+	mi := &file_traffic_v1_traffic_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -548,7 +488,7 @@ func (x *GetTorrentStatsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetTorrentStatsRequest.ProtoReflect.Descriptor instead.
 func (*GetTorrentStatsRequest) Descriptor() ([]byte, []int) {
-	return file_traffic_v1_traffic_proto_rawDescGZIP(), []int{7}
+	return file_traffic_v1_traffic_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *GetTorrentStatsRequest) GetTorrentId() string {
@@ -567,7 +507,7 @@ type GetTorrentStatsResponse struct {
 
 func (x *GetTorrentStatsResponse) Reset() {
 	*x = GetTorrentStatsResponse{}
-	mi := &file_traffic_v1_traffic_proto_msgTypes[8]
+	mi := &file_traffic_v1_traffic_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -579,7 +519,7 @@ func (x *GetTorrentStatsResponse) String() string {
 func (*GetTorrentStatsResponse) ProtoMessage() {}
 
 func (x *GetTorrentStatsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_traffic_v1_traffic_proto_msgTypes[8]
+	mi := &file_traffic_v1_traffic_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -592,7 +532,7 @@ func (x *GetTorrentStatsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetTorrentStatsResponse.ProtoReflect.Descriptor instead.
 func (*GetTorrentStatsResponse) Descriptor() ([]byte, []int) {
-	return file_traffic_v1_traffic_proto_rawDescGZIP(), []int{8}
+	return file_traffic_v1_traffic_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *GetTorrentStatsResponse) GetStats() *TorrentStatsInfo {
@@ -607,20 +547,7 @@ var File_traffic_v1_traffic_proto protoreflect.FileDescriptor
 const file_traffic_v1_traffic_proto_rawDesc = "" +
 	"\n" +
 	"\x18traffic/v1/traffic.proto\x12\n" +
-	"traffic.v1\x1a\x1cgoogle/api/annotations.proto\"\x8f\x02\n" +
-	"\x0fUserTrafficInfo\x12\x16\n" +
-	"\x06userId\x18\x01 \x01(\tR\x06userId\x12\x1e\n" +
-	"\n" +
-	"realUpload\x18\x02 \x01(\x03R\n" +
-	"realUpload\x12\"\n" +
-	"\frealDownload\x18\x03 \x01(\x03R\frealDownload\x12 \n" +
-	"\vbonusUpload\x18\x04 \x01(\x03R\vbonusUpload\x12$\n" +
-	"\rbonusDownload\x18\x05 \x01(\x03R\rbonusDownload\x12\x14\n" +
-	"\x05ratio\x18\x06 \x01(\x01R\x05ratio\x12\x1e\n" +
-	"\n" +
-	"uploadRate\x18\a \x01(\x03R\n" +
-	"uploadRate\x12\"\n" +
-	"\fdownloadRate\x18\b \x01(\x03R\fdownloadRate\"\x99\x02\n" +
+	"traffic.v1\x1a\x1cgoogle/api/annotations.proto\"\x99\x02\n" +
 	"\x13TransferHistoryItem\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1c\n" +
 	"\ttorrentId\x18\x02 \x01(\tR\ttorrentId\x12 \n" +
@@ -645,11 +572,18 @@ const file_traffic_v1_traffic_proto_rawDesc = "" +
 	"leechCount\x12 \n" +
 	"\vsnatchCount\x18\x04 \x01(\x05R\vsnatchCount\x12 \n" +
 	"\vtotalUpload\x18\x05 \x01(\x03R\vtotalUpload\x12$\n" +
-	"\rtotalDownload\x18\x06 \x01(\x03R\rtotalDownload\"/\n" +
-	"\x15GetUserTrafficRequest\x12\x16\n" +
-	"\x06userId\x18\x01 \x01(\tR\x06userId\"O\n" +
-	"\x16GetUserTrafficResponse\x125\n" +
-	"\atraffic\x18\x01 \x01(\v2\x1b.traffic.v1.UserTrafficInfoR\atraffic\"d\n" +
+	"\rtotalDownload\x18\x06 \x01(\x03R\rtotalDownload\"n\n" +
+	"\x18StreamSiteTrafficRequest\x12(\n" +
+	"\x0fintervalSeconds\x18\x01 \x01(\x05R\x0fintervalSeconds\x12(\n" +
+	"\x0fsmoothingFactor\x18\x02 \x01(\x01R\x0fsmoothingFactor\"\xc8\x01\n" +
+	"\x14SiteTrafficRatePoint\x12\x1c\n" +
+	"\ttimestamp\x18\x01 \x01(\tR\ttimestamp\x12\x1e\n" +
+	"\n" +
+	"uploadRate\x18\x02 \x01(\x03R\n" +
+	"uploadRate\x12\"\n" +
+	"\fdownloadRate\x18\x03 \x01(\x03R\fdownloadRate\x12$\n" +
+	"\rrawUploadRate\x18\x04 \x01(\x03R\rrawUploadRate\x12(\n" +
+	"\x0frawDownloadRate\x18\x05 \x01(\x03R\x0frawDownloadRate\"d\n" +
 	"\x1aListTransferHistoryRequest\x12\x16\n" +
 	"\x06userId\x18\x01 \x01(\tR\x06userId\x12\x12\n" +
 	"\x04page\x18\x02 \x01(\x05R\x04page\x12\x1a\n" +
@@ -660,11 +594,11 @@ const file_traffic_v1_traffic_proto_rawDesc = "" +
 	"\x16GetTorrentStatsRequest\x12\x1c\n" +
 	"\ttorrentId\x18\x01 \x01(\tR\ttorrentId\"M\n" +
 	"\x17GetTorrentStatsResponse\x122\n" +
-	"\x05stats\x18\x01 \x01(\v2\x1c.traffic.v1.TorrentStatsInfoR\x05stats2\x9a\x03\n" +
-	"\x0eTrafficService\x12y\n" +
-	"\x0eGetUserTraffic\x12!.traffic.v1.GetUserTrafficRequest\x1a\".traffic.v1.GetUserTrafficResponse\" \x82\xd3\xe4\x93\x02\x1a:\x01*\"\x15/gapi/traffic/v1/user\x12\x8b\x01\n" +
+	"\x05stats\x18\x01 \x01(\v2\x1c.traffic.v1.TorrentStatsInfoR\x05stats2\xa5\x03\n" +
+	"\x0eTrafficService\x12\x8b\x01\n" +
 	"\x13ListTransferHistory\x12&.traffic.v1.ListTransferHistoryRequest\x1a'.traffic.v1.ListTransferHistoryResponse\"#\x82\xd3\xe4\x93\x02\x1d:\x01*\"\x18/gapi/traffic/v1/history\x12\x7f\n" +
-	"\x0fGetTorrentStats\x12\".traffic.v1.GetTorrentStatsRequest\x1a#.traffic.v1.GetTorrentStatsResponse\"#\x82\xd3\xe4\x93\x02\x1d:\x01*\"\x18/gapi/traffic/v1/torrentBAZ?github.com/GoldenSheep402/Hermes/pkg/proto/traffic/v1;trafficV1b\x06proto3"
+	"\x0fGetTorrentStats\x12\".traffic.v1.GetTorrentStatsRequest\x1a#.traffic.v1.GetTorrentStatsResponse\"#\x82\xd3\xe4\x93\x02\x1d:\x01*\"\x18/gapi/traffic/v1/torrent\x12\x83\x01\n" +
+	"\x11StreamSiteTraffic\x12$.traffic.v1.StreamSiteTrafficRequest\x1a .traffic.v1.SiteTrafficRatePoint\"$\x82\xd3\xe4\x93\x02\x1e\x12\x1c/gapi/traffic/v1/site/stream0\x01BAZ?github.com/GoldenSheep402/Hermes/pkg/proto/traffic/v1;trafficV1b\x06proto3"
 
 var (
 	file_traffic_v1_traffic_proto_rawDescOnce sync.Once
@@ -678,33 +612,31 @@ func file_traffic_v1_traffic_proto_rawDescGZIP() []byte {
 	return file_traffic_v1_traffic_proto_rawDescData
 }
 
-var file_traffic_v1_traffic_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
+var file_traffic_v1_traffic_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
 var file_traffic_v1_traffic_proto_goTypes = []any{
-	(*UserTrafficInfo)(nil),             // 0: traffic.v1.UserTrafficInfo
-	(*TransferHistoryItem)(nil),         // 1: traffic.v1.TransferHistoryItem
-	(*TorrentStatsInfo)(nil),            // 2: traffic.v1.TorrentStatsInfo
-	(*GetUserTrafficRequest)(nil),       // 3: traffic.v1.GetUserTrafficRequest
-	(*GetUserTrafficResponse)(nil),      // 4: traffic.v1.GetUserTrafficResponse
-	(*ListTransferHistoryRequest)(nil),  // 5: traffic.v1.ListTransferHistoryRequest
-	(*ListTransferHistoryResponse)(nil), // 6: traffic.v1.ListTransferHistoryResponse
-	(*GetTorrentStatsRequest)(nil),      // 7: traffic.v1.GetTorrentStatsRequest
-	(*GetTorrentStatsResponse)(nil),     // 8: traffic.v1.GetTorrentStatsResponse
+	(*TransferHistoryItem)(nil),         // 0: traffic.v1.TransferHistoryItem
+	(*TorrentStatsInfo)(nil),            // 1: traffic.v1.TorrentStatsInfo
+	(*StreamSiteTrafficRequest)(nil),    // 2: traffic.v1.StreamSiteTrafficRequest
+	(*SiteTrafficRatePoint)(nil),        // 3: traffic.v1.SiteTrafficRatePoint
+	(*ListTransferHistoryRequest)(nil),  // 4: traffic.v1.ListTransferHistoryRequest
+	(*ListTransferHistoryResponse)(nil), // 5: traffic.v1.ListTransferHistoryResponse
+	(*GetTorrentStatsRequest)(nil),      // 6: traffic.v1.GetTorrentStatsRequest
+	(*GetTorrentStatsResponse)(nil),     // 7: traffic.v1.GetTorrentStatsResponse
 }
 var file_traffic_v1_traffic_proto_depIdxs = []int32{
-	0, // 0: traffic.v1.GetUserTrafficResponse.traffic:type_name -> traffic.v1.UserTrafficInfo
-	1, // 1: traffic.v1.ListTransferHistoryResponse.items:type_name -> traffic.v1.TransferHistoryItem
-	2, // 2: traffic.v1.GetTorrentStatsResponse.stats:type_name -> traffic.v1.TorrentStatsInfo
-	3, // 3: traffic.v1.TrafficService.GetUserTraffic:input_type -> traffic.v1.GetUserTrafficRequest
-	5, // 4: traffic.v1.TrafficService.ListTransferHistory:input_type -> traffic.v1.ListTransferHistoryRequest
-	7, // 5: traffic.v1.TrafficService.GetTorrentStats:input_type -> traffic.v1.GetTorrentStatsRequest
-	4, // 6: traffic.v1.TrafficService.GetUserTraffic:output_type -> traffic.v1.GetUserTrafficResponse
-	6, // 7: traffic.v1.TrafficService.ListTransferHistory:output_type -> traffic.v1.ListTransferHistoryResponse
-	8, // 8: traffic.v1.TrafficService.GetTorrentStats:output_type -> traffic.v1.GetTorrentStatsResponse
-	6, // [6:9] is the sub-list for method output_type
-	3, // [3:6] is the sub-list for method input_type
-	3, // [3:3] is the sub-list for extension type_name
-	3, // [3:3] is the sub-list for extension extendee
-	0, // [0:3] is the sub-list for field type_name
+	0, // 0: traffic.v1.ListTransferHistoryResponse.items:type_name -> traffic.v1.TransferHistoryItem
+	1, // 1: traffic.v1.GetTorrentStatsResponse.stats:type_name -> traffic.v1.TorrentStatsInfo
+	4, // 2: traffic.v1.TrafficService.ListTransferHistory:input_type -> traffic.v1.ListTransferHistoryRequest
+	6, // 3: traffic.v1.TrafficService.GetTorrentStats:input_type -> traffic.v1.GetTorrentStatsRequest
+	2, // 4: traffic.v1.TrafficService.StreamSiteTraffic:input_type -> traffic.v1.StreamSiteTrafficRequest
+	5, // 5: traffic.v1.TrafficService.ListTransferHistory:output_type -> traffic.v1.ListTransferHistoryResponse
+	7, // 6: traffic.v1.TrafficService.GetTorrentStats:output_type -> traffic.v1.GetTorrentStatsResponse
+	3, // 7: traffic.v1.TrafficService.StreamSiteTraffic:output_type -> traffic.v1.SiteTrafficRatePoint
+	5, // [5:8] is the sub-list for method output_type
+	2, // [2:5] is the sub-list for method input_type
+	2, // [2:2] is the sub-list for extension type_name
+	2, // [2:2] is the sub-list for extension extendee
+	0, // [0:2] is the sub-list for field type_name
 }
 
 func init() { file_traffic_v1_traffic_proto_init() }
@@ -718,7 +650,7 @@ func file_traffic_v1_traffic_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_traffic_v1_traffic_proto_rawDesc), len(file_traffic_v1_traffic_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   9,
+			NumMessages:   8,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

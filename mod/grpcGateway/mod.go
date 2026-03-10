@@ -8,11 +8,6 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/GoldenSheep402/Hermes/conf"
-	"github.com/GoldenSheep402/Hermes/core/kernel"
-	"github.com/GoldenSheep402/Hermes/core/logx"
-	"github.com/GoldenSheep402/Hermes/mod/grpcGateway/gateway"
-	"github.com/GoldenSheep402/Hermes/mod/grpcGateway/middleware"
 	grpcMiddleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	grpcAuth "github.com/grpc-ecosystem/go-grpc-middleware/auth"
 	grpcZap "github.com/grpc-ecosystem/go-grpc-middleware/logging/zap"
@@ -27,6 +22,12 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/reflection"
+
+	"github.com/GoldenSheep402/Hermes/conf"
+	"github.com/GoldenSheep402/Hermes/core/kernel"
+	"github.com/GoldenSheep402/Hermes/core/logx"
+	"github.com/GoldenSheep402/Hermes/mod/grpcGateway/gateway"
+	"github.com/GoldenSheep402/Hermes/mod/grpcGateway/middleware"
 )
 
 var _ kernel.Module = (*Mod)(nil)
@@ -54,6 +55,12 @@ func (m *Mod) PreInit(hub *kernel.Hub) error {
 				grpcRecovery.UnaryServerInterceptor(),
 				grpcAuth.UnaryServerInterceptor(middleware.AuthInterceptor),
 			),
+		),
+		grpc.ChainStreamInterceptor(
+			grpcCtxTags.StreamServerInterceptor(),
+			// grpcZap.StreamServerInterceptor(logx.NameSpace("grpcChainStream").Desugar()),
+			grpcRecovery.StreamServerInterceptor(),
+			grpcAuth.StreamServerInterceptor(middleware.AuthInterceptor),
 		),
 	)
 	reflection.Register(m.grpc)
@@ -93,6 +100,12 @@ func (m *Mod) PostInit(h *kernel.Hub) error {
 					grpcAuth.UnaryServerInterceptor(middleware.AuthInterceptor),
 				),
 			),
+			grpc.ChainStreamInterceptor(
+				grpcCtxTags.StreamServerInterceptor(),
+				// grpcZap.StreamServerInterceptor(logx.NameSpace("grpcChainStream").Desugar()),
+				grpcRecovery.StreamServerInterceptor(),
+				grpcAuth.StreamServerInterceptor(middleware.AuthInterceptor),
+			),
 		)
 		reflection.Register(m.grpc)
 		h.Map(m.grpc)
@@ -112,6 +125,12 @@ func (m *Mod) PostInit(h *kernel.Hub) error {
 				),
 			),
 			grpc.StatsHandler(otelgrpc.NewServerHandler()),
+			grpc.ChainStreamInterceptor(
+				grpcCtxTags.StreamServerInterceptor(),
+				// grpcZap.StreamServerInterceptor(logx.NameSpace("grpcChainStream").Desugar()),
+				grpcRecovery.StreamServerInterceptor(),
+				grpcAuth.StreamServerInterceptor(middleware.AuthInterceptor),
+			),
 		)
 		reflection.Register(m.grpc)
 		h.Map(m.grpc)

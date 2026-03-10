@@ -89,18 +89,41 @@ func (p *peer) GetPeersForTorrent(ctx context.Context, torrentID string, limit i
 		return nil, err
 	}
 
-	for _, val := range res {
+	stalePeerIDs := make([]string, 0)
+	for idx, val := range res {
 		if val == nil {
+			if idx < len(peerIDs) {
+				stalePeerIDs = append(stalePeerIDs, peerIDs[idx])
+			}
 			continue
 		}
-		strVal, ok := val.(string)
-		if !ok {
+
+		var payload []byte
+		switch v := val.(type) {
+		case string:
+			payload = []byte(v)
+		case []byte:
+			payload = v
+		default:
 			continue
 		}
+
 		var peer model.Peer
-		if err := json.Unmarshal([]byte(strVal), &peer); err == nil {
-			peers = append(peers, &peer)
+		if err := json.Unmarshal(payload, &peer); err != nil {
+			if idx < len(peerIDs) {
+				stalePeerIDs = append(stalePeerIDs, peerIDs[idx])
+			}
+			continue
 		}
+		peers = append(peers, &peer)
+	}
+
+	if len(stalePeerIDs) > 0 {
+		members := make([]interface{}, 0, len(stalePeerIDs))
+		for _, id := range stalePeerIDs {
+			members = append(members, id)
+		}
+		p.rds.ZRem(ctx, torrentPeersKey(torrentID), members...)
 	}
 
 	return peers, nil

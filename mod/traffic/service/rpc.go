@@ -1,20 +1,19 @@
 package service
 
 import (
-	"errors"
 	trafficV1 "github.com/GoldenSheep402/Hermes/pkg/proto/traffic/v1"
+	"math"
 
 	"context"
+	"time"
 
 	"github.com/GoldenSheep402/Hermes/mod/casbinX/rbac"
 	trackerDao "github.com/GoldenSheep402/Hermes/mod/tracker/dao"
 	"github.com/GoldenSheep402/Hermes/mod/traffic/dao"
-	userDao "github.com/GoldenSheep402/Hermes/mod/user/dao"
 	"github.com/GoldenSheep402/Hermes/pkg/ctxKey"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"gorm.io/gorm"
 )
 
 var _ trafficV1.TrafficServiceServer = (*S)(nil)
@@ -31,66 +30,6 @@ func requireAuth(ctx context.Context) error {
 		return status.Error(codes.Unauthenticated, "unauthenticated")
 	}
 	return nil
-}
-
-func (s S) GetUserTraffic(ctx context.Context, request *trafficV1.GetUserTrafficRequest) (*trafficV1.GetUserTrafficResponse, error) {
-	if err := requireAuth(ctx); err != nil {
-		return nil, err
-	}
-	if request.UserId == "" {
-		return nil, status.Error(codes.InvalidArgument, "User ID required")
-	}
-
-	callerID := ctx.Value(ctxKey.UID).(string)
-	if request.UserId != callerID {
-		isAdmin, err := rbac.CasbinManager.CheckUserIsGlobalAdmin(callerID)
-		if err != nil || !isAdmin {
-			return nil, status.Error(codes.PermissionDenied, "Not authorized to view other user's traffic")
-		}
-	}
-
-	ut, err := dao.UserTraffic.GetByUserID(ctx, request.UserId)
-	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		s.Log.Errorw("failed to get user traffic", "err", err)
-		return nil, status.Error(codes.NotFound, "User traffic not found")
-	}
-
-	var realUpload, realDownload, bonusUpload, bonusDownload int64
-	if err == nil && ut != nil {
-		realUpload = ut.RealUpload
-		realDownload = ut.RealDownload
-		bonusUpload = ut.BonusUpload
-		bonusDownload = ut.BonusDownload
-	} else if errors.Is(err, gorm.ErrRecordNotFound) {
-		user, userErr := userDao.User.GetByID(ctx, request.UserId)
-		if userErr == nil && user != nil {
-			realUpload = user.Uploaded
-			realDownload = user.Downloaded
-		}
-	}
-
-	uploadRate, downloadRate, rateErr := trackerDao.Traffic.GetUserRealtimeRate(ctx, request.UserId)
-	if rateErr != nil {
-		s.Log.Warnw("failed to get realtime traffic rate", "user_id", request.UserId, "err", rateErr)
-	}
-
-	var ratio float64
-	if realDownload+bonusDownload > 0 {
-		ratio = float64(realUpload+bonusUpload) / float64(realDownload+bonusDownload)
-	}
-
-	return &trafficV1.GetUserTrafficResponse{
-		Traffic: &trafficV1.UserTrafficInfo{
-			UserId:        request.UserId,
-			RealUpload:    realUpload,
-			RealDownload:  realDownload,
-			BonusUpload:   bonusUpload,
-			BonusDownload: bonusDownload,
-			Ratio:         ratio,
-			UploadRate:    uploadRate,
-			DownloadRate:  downloadRate,
-		},
-	}, nil
 }
 
 func (s S) ListTransferHistory(ctx context.Context, request *trafficV1.ListTransferHistoryRequest) (*trafficV1.ListTransferHistoryResponse, error) {
@@ -160,4 +99,89 @@ func (s S) GetTorrentStats(ctx context.Context, request *trafficV1.GetTorrentSta
 			TotalDownload: ts.TotalDownload,
 		},
 	}, nil
+}
+
+func (s S) StreamSiteTraffic(req *trafficV1.StreamSiteTrafficRequest, stream trafficV1.TrafficService_StreamSiteTrafficServer) error {
+	ctx := stream.Context()
+	if err := requireAuth(ctx); err != nil {
+		return err
+	}
+
+	intervalSeconds := clampInt32(req.GetIntervalSeconds(), 1, 5, 1)
+	smoothingFactor := clampFloat64(req.GetSmoothingFactor(), 0.05, 1, 0.35)
+	ticker := time.NewTicker(time.Duration(intervalSeconds) * time.Second)
+	defer ticker.Stop()
+
+	var smoothUpload float64
+	var smoothDownload float64
+	hasSample := false
+
+	sendPoint := func() error {
+		rawUploadRate, rawDownloadRate, err := trackerDao.Traffic.GetSiteRealtimeRate(ctx)
+		if err != nil {
+			s.Log.Warnw("failed to sample site realtime traffic", "err", err)
+			rawUploadRate = 0
+			rawDownloadRate = 0
+		}
+
+		if !hasSample {
+			smoothUpload = float64(rawUploadRate)
+			smoothDownload = float64(rawDownloadRate)
+			hasSample = true
+		} else {
+			smoothUpload = smoothingFactor*float64(rawUploadRate) + (1-smoothingFactor)*smoothUpload
+			smoothDownload = smoothingFactor*float64(rawDownloadRate) + (1-smoothingFactor)*smoothDownload
+		}
+
+		point := &trafficV1.SiteTrafficRatePoint{
+			Timestamp:       time.Now().Format(time.RFC3339),
+			UploadRate:      int64(math.Round(smoothUpload)),
+			DownloadRate:    int64(math.Round(smoothDownload)),
+			RawUploadRate:   rawUploadRate,
+			RawDownloadRate: rawDownloadRate,
+		}
+
+		return stream.Send(point)
+	}
+
+	if err := sendPoint(); err != nil {
+		return err
+	}
+
+	for {
+		select {
+		case <-ctx.Done():
+			return nil
+		case <-ticker.C:
+			if err := sendPoint(); err != nil {
+				return err
+			}
+		}
+	}
+}
+
+func clampInt32(value, min, max, fallback int32) int32 {
+	if value == 0 {
+		return fallback
+	}
+	if value < min {
+		return min
+	}
+	if value > max {
+		return max
+	}
+	return value
+}
+
+func clampFloat64(value, min, max, fallback float64) float64 {
+	if value == 0 {
+		return fallback
+	}
+	if value < min {
+		return min
+	}
+	if value > max {
+		return max
+	}
+	return value
 }

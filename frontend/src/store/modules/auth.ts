@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { AuthService, TrafficService, UserService } from '@/services/grpc'
+import { AuthService, UserService } from '@/services/grpc'
 import type { PermissionKey } from '@/constants/permissions'
 import { resolvePermissionsByRoles } from '@/constants/permissions'
 import type { AuthLoginPayload as LoginPayload, PtUserProfile } from '@/types/auth'
@@ -127,28 +127,6 @@ export const useAuthStore = defineStore('hermes/auth', {
         roles,
       }
       this.permissions = resolvePermissionsByRoles(roles)
-    },
-
-    async fetchRealtimeTraffic() {
-      if (!this.accessToken || !this.profile.id) {
-        return
-      }
-
-      const response = await TrafficService.GetUserTraffic({ userId: this.profile.id })
-      const traffic = response.traffic
-      if (!traffic) {
-        return
-      }
-
-      this.profile.uploadRateBytes = parseInt64(traffic.uploadRate)
-      this.profile.downloadRateBytes = parseInt64(traffic.downloadRate)
-
-      if (typeof traffic.realUpload !== 'undefined') {
-        this.profile.uploadBytes = parseInt64(traffic.realUpload)
-      }
-      if (typeof traffic.realDownload !== 'undefined') {
-        this.profile.downloadBytes = parseInt64(traffic.realDownload)
-      }
     },
 
     logout() {

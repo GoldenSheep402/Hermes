@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"sort"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/juanjiTech/jin"
@@ -105,7 +106,7 @@ func Announce(c *jin.Context) {
 	if err != nil {
 		numWant = 50
 	}
-	event := q.Get("event")
+	event := normalizeAnnounceEvent(q.Get("event"))
 
 	// Extract Real IP and LanIP (if any)
 	// We dynamically load AllowedSubnets from the global config so it responds to hot-reloads
@@ -121,6 +122,14 @@ func Announce(c *jin.Context) {
 
 	peerIDHex := hex.EncodeToString([]byte(peerIDRaw))
 	lastPeer, _ := trackerDao.Peer.Get(ctx, torrent.ID, peerIDHex)
+	now := time.Now()
+	startedAt := now
+	if lastPeer != nil && !lastPeer.StartedAt.IsZero() {
+		startedAt = lastPeer.StartedAt
+	}
+	if event == "started" || lastPeer == nil {
+		startedAt = now
+	}
 
 	peer := &trackerModel.Peer{
 		Model:      stdao.Model{ID: ulid.Make().String()},
@@ -135,7 +144,8 @@ func Announce(c *jin.Context) {
 		Left:       left,
 		Agent:      c.Request.Header.Get("User-Agent"),
 		IsSeeder:   isSeeder,
-		LastAction: time.Now(),
+		StartedAt:  startedAt,
+		LastAction: now,
 	}
 	uploadDelta := computeCounterDelta(lastPeer, uploaded, event, func(p *trackerModel.Peer) int64 {
 		return p.Uploaded
@@ -190,9 +200,9 @@ func Announce(c *jin.Context) {
 		resp["peers"] = BuildPeerList(realIP, lanIP, peer.PeerID, selectedPeers)
 	}
 
+	bencode.NewEncoder(c.Writer).Encode(resp)
 	c.Writer.Header().Set("Content-Type", "text/plain")
 	c.Writer.WriteHeader(http.StatusOK)
-	bencode.NewEncoder(c.Writer).Encode(resp)
 }
 
 func Scrape(c *jin.Context) {
@@ -267,6 +277,20 @@ func computeCounterDelta(lastPeer *trackerModel.Peer, current int64, event strin
 		return current
 	}
 	return 0
+}
+
+func normalizeAnnounceEvent(raw string) string {
+	event := strings.ToLower(strings.TrimSpace(raw))
+	switch event {
+	case "start":
+		return "started"
+	case "stop":
+		return "stopped"
+	case "complete":
+		return "completed"
+	default:
+		return event
+	}
 }
 
 func sanitizeNumWant(numWant int) int {

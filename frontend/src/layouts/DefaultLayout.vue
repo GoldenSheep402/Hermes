@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted } from 'vue'
+import { computed, onBeforeUnmount, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { MessagePlugin } from 'tdesign-vue-next'
 import { PermissionKeys } from '@/constants/permissions'
+import { TrafficService } from '@/services/grpc'
 import { useAppStore, useAuthStore } from '@/store'
 import type { NavItem } from '@/types/layout'
 import { formatBytes, formatNumber, formatRatio } from '@/utils/format'
@@ -29,7 +30,9 @@ const visibleNavItems = computed(() =>
 const isAdminRoute = computed(() => route.path === '/admin' || route.path.startsWith('/admin/'))
 const userInitial = computed(() => authStore.profile.username.slice(0, 1).toUpperCase() || 'U')
 const ratioDanger = computed(() => authStore.ratio < 1)
-let trafficPollTimer: number | undefined
+let siteTrafficStreamAbortController: AbortController | null = null
+let siteTrafficReconnectTimer: number | undefined
+let siteTrafficStreaming = false
 
 function isActive(path: string): boolean {
   return route.path === path || route.path.startsWith(`${path}/`)
@@ -45,28 +48,96 @@ async function handleLogout() {
   MessagePlugin.success('已退出登录')
 }
 
-async function refreshRealtimeTraffic() {
-  if (!authStore.isLoggedIn) {
-    return
+function parseInt64(value: string | number | undefined): number {
+  if (typeof value === 'number') {
+    return Number.isFinite(value) ? value : 0
   }
-  try {
-    await authStore.fetchRealtimeTraffic()
-  } catch {
-    // Realtime traffic is best-effort and should not block layout rendering.
+  if (typeof value === 'string' && value.trim() !== '') {
+    const parsed = Number(value)
+    return Number.isFinite(parsed) ? parsed : 0
+  }
+  return 0
+}
+
+function clearSiteTrafficReconnectTimer() {
+  if (typeof siteTrafficReconnectTimer !== 'undefined') {
+    window.clearTimeout(siteTrafficReconnectTimer)
+    siteTrafficReconnectTimer = undefined
   }
 }
 
-onMounted(() => {
-  void refreshRealtimeTraffic()
-  trafficPollTimer = window.setInterval(() => {
-    void refreshRealtimeTraffic()
-  }, 5000)
-})
+function stopSiteTrafficStream() {
+  clearSiteTrafficReconnectTimer()
+  if (siteTrafficStreamAbortController) {
+    siteTrafficStreamAbortController.abort()
+    siteTrafficStreamAbortController = null
+  }
+}
+
+function scheduleSiteTrafficReconnect() {
+  if (!authStore.isLoggedIn) {
+    return
+  }
+  clearSiteTrafficReconnectTimer()
+  siteTrafficReconnectTimer = window.setTimeout(() => {
+    void startSiteTrafficStream()
+  }, 1500)
+}
+
+async function startSiteTrafficStream() {
+  if (!authStore.isLoggedIn || siteTrafficStreaming) {
+    return
+  }
+
+  stopSiteTrafficStream()
+  siteTrafficStreaming = true
+  const controller = new AbortController()
+  siteTrafficStreamAbortController = controller
+
+  try {
+    await TrafficService.StreamSiteTraffic(
+      {
+        intervalSeconds: 1,
+        smoothingFactor: 0.35,
+      },
+      (point) => {
+        authStore.profile.uploadRateBytes = parseInt64(point?.uploadRate)
+        authStore.profile.downloadRateBytes = parseInt64(point?.downloadRate)
+      },
+      { signal: controller.signal },
+    )
+
+    if (!controller.signal.aborted) {
+      scheduleSiteTrafficReconnect()
+    }
+  } catch {
+    if (!controller.signal.aborted) {
+      scheduleSiteTrafficReconnect()
+    }
+  } finally {
+    if (siteTrafficStreamAbortController === controller) {
+      siteTrafficStreamAbortController = null
+    }
+    siteTrafficStreaming = false
+  }
+}
+
+watch(
+  () => authStore.accessToken,
+  (token) => {
+    if (token) {
+      void startSiteTrafficStream()
+      return
+    }
+    stopSiteTrafficStream()
+    authStore.profile.uploadRateBytes = 0
+    authStore.profile.downloadRateBytes = 0
+  },
+  { immediate: true },
+)
 
 onBeforeUnmount(() => {
-  if (typeof trafficPollTimer !== 'undefined') {
-    window.clearInterval(trafficPollTimer)
-  }
+  stopSiteTrafficStream()
 })
 </script>
 
@@ -88,14 +159,14 @@ onBeforeUnmount(() => {
 
           <div class="grid grid-cols-2 gap-2 md:grid-cols-4">
             <div class="monitor-card">
-              <p class="monitor-label">⬆ Upload 实时</p>
+              <p class="monitor-label">⬆ 全站 Upload 实时</p>
               <p class="monitor-value text-emerald-600">{{ formatBytes(authStore.profile.uploadRateBytes) }}/s</p>
-              <p class="monitor-sub">总量 {{ formatBytes(authStore.profile.uploadBytes) }}</p>
+              <p class="monitor-sub">我的总量 {{ formatBytes(authStore.profile.uploadBytes) }}</p>
             </div>
             <div class="monitor-card">
-              <p class="monitor-label">⬇ Download 实时</p>
+              <p class="monitor-label">⬇ 全站 Download 实时</p>
               <p class="monitor-value text-sky-600">{{ formatBytes(authStore.profile.downloadRateBytes) }}/s</p>
-              <p class="monitor-sub">总量 {{ formatBytes(authStore.profile.downloadBytes) }}</p>
+              <p class="monitor-sub">我的总量 {{ formatBytes(authStore.profile.downloadBytes) }}</p>
             </div>
             <div class="monitor-card">
               <p class="monitor-label">📊 Ratio</p>

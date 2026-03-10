@@ -5,17 +5,6 @@
 */
 
 import * as fm from "../../fetch.pb"
-export type UserTrafficInfo = {
-  userId?: string
-  realUpload?: string
-  realDownload?: string
-  bonusUpload?: string
-  bonusDownload?: string
-  ratio?: number
-  uploadRate?: string
-  downloadRate?: string
-}
-
 export type TransferHistoryItem = {
   id?: string
   torrentId?: string
@@ -37,12 +26,17 @@ export type TorrentStatsInfo = {
   totalDownload?: string
 }
 
-export type GetUserTrafficRequest = {
-  userId?: string
+export type StreamSiteTrafficRequest = {
+  intervalSeconds?: number
+  smoothingFactor?: number
 }
 
-export type GetUserTrafficResponse = {
-  traffic?: UserTrafficInfo
+export type SiteTrafficRatePoint = {
+  timestamp?: string
+  uploadRate?: string
+  downloadRate?: string
+  rawUploadRate?: string
+  rawDownloadRate?: string
 }
 
 export type ListTransferHistoryRequest = {
@@ -65,13 +59,13 @@ export type GetTorrentStatsResponse = {
 }
 
 export class TrafficService {
-  static GetUserTraffic(req: GetUserTrafficRequest, initReq?: fm.InitReq): Promise<GetUserTrafficResponse> {
-    return fm.fetchReq<GetUserTrafficRequest, GetUserTrafficResponse>(`/gapi/traffic/v1/user`, {...initReq, method: "POST", body: JSON.stringify(req, fm.replacer)})
-  }
   static ListTransferHistory(req: ListTransferHistoryRequest, initReq?: fm.InitReq): Promise<ListTransferHistoryResponse> {
     return fm.fetchReq<ListTransferHistoryRequest, ListTransferHistoryResponse>(`/gapi/traffic/v1/history`, {...initReq, method: "POST", body: JSON.stringify(req, fm.replacer)})
   }
   static GetTorrentStats(req: GetTorrentStatsRequest, initReq?: fm.InitReq): Promise<GetTorrentStatsResponse> {
     return fm.fetchReq<GetTorrentStatsRequest, GetTorrentStatsResponse>(`/gapi/traffic/v1/torrent`, {...initReq, method: "POST", body: JSON.stringify(req, fm.replacer)})
+  }
+  static StreamSiteTraffic(req: StreamSiteTrafficRequest, entityNotifier?: fm.NotifyStreamEntityArrival<SiteTrafficRatePoint>, initReq?: fm.InitReq): Promise<void> {
+    return fm.fetchStreamingRequest<StreamSiteTrafficRequest, SiteTrafficRatePoint>(`/gapi/traffic/v1/site/stream?${fm.renderURLSearchParams(req, [])}`, entityNotifier, {...initReq, method: "GET"})
   }
 }

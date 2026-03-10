@@ -48,6 +48,53 @@
         ]
       }
     },
+    "/gapi/traffic/v1/site/stream": {
+      "get": {
+        "operationId": "TrafficService_StreamSiteTraffic",
+        "responses": {
+          "200": {
+            "description": "A successful response.(streaming responses)",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "result": {
+                  "$ref": "#/definitions/v1SiteTrafficRatePoint"
+                },
+                "error": {
+                  "$ref": "#/definitions/rpcStatus"
+                }
+              },
+              "title": "Stream result of v1SiteTrafficRatePoint"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "intervalSeconds",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "smoothingFactor",
+            "in": "query",
+            "required": false,
+            "type": "number",
+            "format": "double"
+          }
+        ],
+        "tags": [
+          "TrafficService"
+        ]
+      }
+    },
     "/gapi/traffic/v1/torrent": {
       "post": {
         "operationId": "TrafficService_GetTorrentStats",
@@ -72,38 +119,6 @@
             "required": true,
             "schema": {
               "$ref": "#/definitions/v1GetTorrentStatsRequest"
-            }
-          }
-        ],
-        "tags": [
-          "TrafficService"
-        ]
-      }
-    },
-    "/gapi/traffic/v1/user": {
-      "post": {
-        "operationId": "TrafficService_GetUserTraffic",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1GetUserTrafficResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/v1GetUserTrafficRequest"
             }
           }
         ],
@@ -158,22 +173,6 @@
         }
       }
     },
-    "v1GetUserTrafficRequest": {
-      "type": "object",
-      "properties": {
-        "userId": {
-          "type": "string"
-        }
-      }
-    },
-    "v1GetUserTrafficResponse": {
-      "type": "object",
-      "properties": {
-        "traffic": {
-          "$ref": "#/definitions/v1UserTrafficInfo"
-        }
-      }
-    },
     "v1ListTransferHistoryRequest": {
       "type": "object",
       "properties": {
@@ -201,6 +200,30 @@
           }
         },
         "total": {
+          "type": "string",
+          "format": "int64"
+        }
+      }
+    },
+    "v1SiteTrafficRatePoint": {
+      "type": "object",
+      "properties": {
+        "timestamp": {
+          "type": "string"
+        },
+        "uploadRate": {
+          "type": "string",
+          "format": "int64"
+        },
+        "downloadRate": {
+          "type": "string",
+          "format": "int64"
+        },
+        "rawUploadRate": {
+          "type": "string",
+          "format": "int64"
+        },
+        "rawDownloadRate": {
           "type": "string",
           "format": "int64"
         }
@@ -266,42 +289,6 @@
         },
         "lastAction": {
           "type": "string"
-        }
-      }
-    },
-    "v1UserTrafficInfo": {
-      "type": "object",
-      "properties": {
-        "userId": {
-          "type": "string"
-        },
-        "realUpload": {
-          "type": "string",
-          "format": "int64"
-        },
-        "realDownload": {
-          "type": "string",
-          "format": "int64"
-        },
-        "bonusUpload": {
-          "type": "string",
-          "format": "int64"
-        },
-        "bonusDownload": {
-          "type": "string",
-          "format": "int64"
-        },
-        "ratio": {
-          "type": "number",
-          "format": "double"
-        },
-        "uploadRate": {
-          "type": "string",
-          "format": "int64"
-        },
-        "downloadRate": {
-          "type": "string",
-          "format": "int64"
         }
       }
     }

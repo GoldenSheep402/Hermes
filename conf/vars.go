@@ -34,4 +34,7 @@ type GlobalConfig struct {
 		Endpoint       string   `yaml:"Endpoint"`
 		AllowedSubnets []string `yaml:"AllowedSubnets"`
 	} `yaml:"TrackerV1"`
+	CORS struct {
+		AllowOrigins []string `yaml:"AllowOrigins"`
+	} `yaml:"CORS"`
 }

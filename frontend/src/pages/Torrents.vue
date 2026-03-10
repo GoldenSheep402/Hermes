@@ -501,8 +501,8 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="space-y-3">
-    <t-card title="种子筛选" size="small">
+  <div class="mx-auto w-full max-w-[1400px] space-y-3">
+    <t-card title="种子筛选" size="small" class="w-full">
       <div class="grid gap-3 xl:grid-cols-[1.4fr_1fr_1fr_1fr_auto_auto]">
         <t-input v-model="filters.keyword" clearable placeholder="标题搜索 / IMDB ID" @enter="fetchTorrents">
           <template #prefix-icon>
@@ -553,7 +553,7 @@ onBeforeUnmount(() => {
       <p v-if="loadError" class="mt-3 text-xs text-rose-600">{{ loadError }}</p>
     </t-card>
 
-    <t-card size="small">
+    <t-card size="small" class="w-full">
       <template #title>
         <div class="flex items-center gap-2">
           <span>种子列表</span>

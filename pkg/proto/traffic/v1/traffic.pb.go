@@ -30,6 +30,8 @@ type UserTrafficInfo struct {
 	BonusUpload   int64                  `protobuf:"varint,4,opt,name=bonusUpload,proto3" json:"bonusUpload,omitempty"`
 	BonusDownload int64                  `protobuf:"varint,5,opt,name=bonusDownload,proto3" json:"bonusDownload,omitempty"`
 	Ratio         float64                `protobuf:"fixed64,6,opt,name=ratio,proto3" json:"ratio,omitempty"`
+	UploadRate    int64                  `protobuf:"varint,7,opt,name=uploadRate,proto3" json:"uploadRate,omitempty"`
+	DownloadRate  int64                  `protobuf:"varint,8,opt,name=downloadRate,proto3" json:"downloadRate,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -102,6 +104,20 @@ func (x *UserTrafficInfo) GetBonusDownload() int64 {
 func (x *UserTrafficInfo) GetRatio() float64 {
 	if x != nil {
 		return x.Ratio
+	}
+	return 0
+}
+
+func (x *UserTrafficInfo) GetUploadRate() int64 {
+	if x != nil {
+		return x.UploadRate
+	}
+	return 0
+}
+
+func (x *UserTrafficInfo) GetDownloadRate() int64 {
+	if x != nil {
+		return x.DownloadRate
 	}
 	return 0
 }
@@ -591,7 +607,7 @@ var File_traffic_v1_traffic_proto protoreflect.FileDescriptor
 const file_traffic_v1_traffic_proto_rawDesc = "" +
 	"\n" +
 	"\x18traffic/v1/traffic.proto\x12\n" +
-	"traffic.v1\x1a\x1cgoogle/api/annotations.proto\"\xcb\x01\n" +
+	"traffic.v1\x1a\x1cgoogle/api/annotations.proto\"\x8f\x02\n" +
 	"\x0fUserTrafficInfo\x12\x16\n" +
 	"\x06userId\x18\x01 \x01(\tR\x06userId\x12\x1e\n" +
 	"\n" +
@@ -600,7 +616,11 @@ const file_traffic_v1_traffic_proto_rawDesc = "" +
 	"\frealDownload\x18\x03 \x01(\x03R\frealDownload\x12 \n" +
 	"\vbonusUpload\x18\x04 \x01(\x03R\vbonusUpload\x12$\n" +
 	"\rbonusDownload\x18\x05 \x01(\x03R\rbonusDownload\x12\x14\n" +
-	"\x05ratio\x18\x06 \x01(\x01R\x05ratio\"\x99\x02\n" +
+	"\x05ratio\x18\x06 \x01(\x01R\x05ratio\x12\x1e\n" +
+	"\n" +
+	"uploadRate\x18\a \x01(\x03R\n" +
+	"uploadRate\x12\"\n" +
+	"\fdownloadRate\x18\b \x01(\x03R\fdownloadRate\"\x99\x02\n" +
 	"\x13TransferHistoryItem\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1c\n" +
 	"\ttorrentId\x18\x02 \x01(\tR\ttorrentId\x12 \n" +

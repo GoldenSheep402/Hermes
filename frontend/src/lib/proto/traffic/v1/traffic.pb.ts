@@ -12,6 +12,8 @@ export type UserTrafficInfo = {
   bonusUpload?: string
   bonusDownload?: string
   ratio?: number
+  uploadRate?: string
+  downloadRate?: string
 }
 
 export type TransferHistoryItem = {

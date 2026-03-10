@@ -294,6 +294,14 @@
         "ratio": {
           "type": "number",
           "format": "double"
+        },
+        "uploadRate": {
+          "type": "string",
+          "format": "int64"
+        },
+        "downloadRate": {
+          "type": "string",
+          "format": "int64"
         }
       }
     }

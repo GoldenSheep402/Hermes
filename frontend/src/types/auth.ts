@@ -6,6 +6,8 @@ export interface PtUserProfile {
   reputation: number
   uploadBytes: number
   downloadBytes: number
+  uploadRateBytes: number
+  downloadRateBytes: number
   bonusPoints: number
   inboxUnread: number
   inviteCount: number

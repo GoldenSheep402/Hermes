@@ -22,6 +22,10 @@ const (
 	pairTrafficDirtySetKey    = "tracker:traffic:dirty:pairs"
 
 	trafficVersionField = "_version"
+
+	realtimeWindowSeconds     int64 = 60
+	realtimeBucketSpanSeconds int64 = 5
+	realtimeBucketTTL               = 10 * time.Minute
 )
 
 var removeDirtyIfVersionUnchanged = redis.NewScript(`
@@ -86,15 +90,27 @@ func (t *traffic) RecordDelta(
 	pipe := t.rds.TxPipeline()
 
 	if uploadDelta > 0 || downloadDelta > 0 {
+		realtimeBucket := alignRealtimeBucket(actionAt.Unix())
+		realtimeField := strconv.FormatInt(realtimeBucket, 10)
+		expiredField := strconv.FormatInt(realtimeBucket-realtimeWindowSeconds-realtimeBucketSpanSeconds, 10)
+		realtimeUploadKey := userRealtimeUploadKey(userID)
+		realtimeDownloadKey := userRealtimeDownloadKey(userID)
+
 		if uploadDelta > 0 {
 			pipe.HIncrBy(ctx, userKey, "real_upload", uploadDelta)
 			pipe.HIncrBy(ctx, torrentKey, "total_upload", uploadDelta)
 			pipe.HIncrBy(ctx, pairKey, "uploaded", uploadDelta)
+			pipe.HIncrBy(ctx, realtimeUploadKey, realtimeField, uploadDelta)
+			pipe.HDel(ctx, realtimeUploadKey, expiredField)
+			pipe.Expire(ctx, realtimeUploadKey, realtimeBucketTTL)
 		}
 		if downloadDelta > 0 {
 			pipe.HIncrBy(ctx, userKey, "real_download", downloadDelta)
 			pipe.HIncrBy(ctx, torrentKey, "total_download", downloadDelta)
 			pipe.HIncrBy(ctx, pairKey, "downloaded", downloadDelta)
+			pipe.HIncrBy(ctx, realtimeDownloadKey, realtimeField, downloadDelta)
+			pipe.HDel(ctx, realtimeDownloadKey, expiredField)
+			pipe.Expire(ctx, realtimeDownloadKey, realtimeBucketTTL)
 		}
 		pipe.HIncrBy(ctx, userKey, trafficVersionField, 1)
 		pipe.HIncrBy(ctx, torrentKey, trafficVersionField, 1)
@@ -112,6 +128,27 @@ func (t *traffic) RecordDelta(
 
 	_, err := pipe.Exec(ctx)
 	return err
+}
+
+func (t *traffic) GetUserRealtimeRate(ctx context.Context, userID string) (int64, int64, error) {
+	if t.rds == nil || userID == "" {
+		return 0, 0, nil
+	}
+
+	uploadKey := userRealtimeUploadKey(userID)
+	downloadKey := userRealtimeDownloadKey(userID)
+
+	pipe := t.rds.Pipeline()
+	uploadCmd := pipe.HGetAll(ctx, uploadKey)
+	downloadCmd := pipe.HGetAll(ctx, downloadKey)
+	if _, err := pipe.Exec(ctx); err != nil && !errors.Is(err, redis.Nil) {
+		return 0, 0, err
+	}
+
+	nowUnix := time.Now().Unix()
+	uploadRate := computeRealtimeRate(uploadCmd.Val(), nowUnix)
+	downloadRate := computeRealtimeRate(downloadCmd.Val(), nowUnix)
+	return uploadRate, downloadRate, nil
 }
 
 // FlushPending flushes at most batchSize dirty keys from Redis to DB.
@@ -493,6 +530,14 @@ func userTrafficKey(userID string) string {
 	return "tracker:traffic:user:" + userID
 }
 
+func userRealtimeUploadKey(userID string) string {
+	return "tracker:traffic:realtime:user:" + userID + ":upload"
+}
+
+func userRealtimeDownloadKey(userID string) string {
+	return "tracker:traffic:realtime:user:" + userID + ":download"
+}
+
 func torrentTrafficKey(torrentID string) string {
 	return "tracker:traffic:torrent:" + torrentID
 }
@@ -540,4 +585,60 @@ func nonNegative(v int64) int64 {
 		return 0
 	}
 	return v
+}
+
+func alignRealtimeBucket(unix int64) int64 {
+	if unix <= 0 {
+		return 0
+	}
+	return (unix / realtimeBucketSpanSeconds) * realtimeBucketSpanSeconds
+}
+
+func computeRealtimeRate(buckets map[string]string, nowUnix int64) int64 {
+	if len(buckets) == 0 || nowUnix <= 0 {
+		return 0
+	}
+
+	windowStart := nowUnix - realtimeWindowSeconds
+	var sum int64
+	oldest := nowUnix
+	hasTraffic := false
+
+	for ts, value := range buckets {
+		bucketUnix := parseInt64(ts)
+		if bucketUnix <= 0 {
+			continue
+		}
+		if bucketUnix < windowStart || bucketUnix > nowUnix {
+			continue
+		}
+
+		delta := parseInt64(value)
+		if delta <= 0 {
+			continue
+		}
+
+		sum += delta
+		if !hasTraffic || bucketUnix < oldest {
+			oldest = bucketUnix
+		}
+		hasTraffic = true
+	}
+
+	if !hasTraffic || sum <= 0 {
+		return 0
+	}
+
+	coveredSeconds := nowUnix - oldest + realtimeBucketSpanSeconds
+	if coveredSeconds < realtimeBucketSpanSeconds {
+		coveredSeconds = realtimeBucketSpanSeconds
+	}
+	if coveredSeconds > realtimeWindowSeconds {
+		coveredSeconds = realtimeWindowSeconds
+	}
+	if coveredSeconds <= 0 {
+		coveredSeconds = realtimeWindowSeconds
+	}
+
+	return sum / coveredSeconds
 }

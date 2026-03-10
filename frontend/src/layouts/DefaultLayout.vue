@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onBeforeUnmount, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { MessagePlugin } from 'tdesign-vue-next'
 import { PermissionKeys } from '@/constants/permissions'
@@ -29,6 +29,7 @@ const visibleNavItems = computed(() =>
 const isAdminRoute = computed(() => route.path === '/admin' || route.path.startsWith('/admin/'))
 const userInitial = computed(() => authStore.profile.username.slice(0, 1).toUpperCase() || 'U')
 const ratioDanger = computed(() => authStore.ratio < 1)
+let trafficPollTimer: number | undefined
 
 function isActive(path: string): boolean {
   return route.path === path || route.path.startsWith(`${path}/`)
@@ -43,6 +44,30 @@ async function handleLogout() {
   await router.replace('/login')
   MessagePlugin.success('已退出登录')
 }
+
+async function refreshRealtimeTraffic() {
+  if (!authStore.isLoggedIn) {
+    return
+  }
+  try {
+    await authStore.fetchRealtimeTraffic()
+  } catch {
+    // Realtime traffic is best-effort and should not block layout rendering.
+  }
+}
+
+onMounted(() => {
+  void refreshRealtimeTraffic()
+  trafficPollTimer = window.setInterval(() => {
+    void refreshRealtimeTraffic()
+  }, 5000)
+})
+
+onBeforeUnmount(() => {
+  if (typeof trafficPollTimer !== 'undefined') {
+    window.clearInterval(trafficPollTimer)
+  }
+})
 </script>
 
 <template>
@@ -63,12 +88,14 @@ async function handleLogout() {
 
           <div class="grid grid-cols-2 gap-2 md:grid-cols-4">
             <div class="monitor-card">
-              <p class="monitor-label">⬆ Upload</p>
-              <p class="monitor-value text-emerald-600">{{ formatBytes(authStore.profile.uploadBytes) }}</p>
+              <p class="monitor-label">⬆ Upload 实时</p>
+              <p class="monitor-value text-emerald-600">{{ formatBytes(authStore.profile.uploadRateBytes) }}/s</p>
+              <p class="monitor-sub">总量 {{ formatBytes(authStore.profile.uploadBytes) }}</p>
             </div>
             <div class="monitor-card">
-              <p class="monitor-label">⬇ Download</p>
-              <p class="monitor-value text-sky-600">{{ formatBytes(authStore.profile.downloadBytes) }}</p>
+              <p class="monitor-label">⬇ Download 实时</p>
+              <p class="monitor-value text-sky-600">{{ formatBytes(authStore.profile.downloadRateBytes) }}/s</p>
+              <p class="monitor-sub">总量 {{ formatBytes(authStore.profile.downloadBytes) }}</p>
             </div>
             <div class="monitor-card">
               <p class="monitor-label">📊 Ratio</p>
@@ -118,8 +145,8 @@ async function handleLogout() {
       :class="isAdminRoute ? 'h-0 overflow-hidden' : ''"
     >
       <div
-        class="route-page-host flex min-h-0 w-full flex-1"
-        :class="isAdminRoute ? 'h-full min-h-0 overflow-hidden' : ''"
+        class="route-page-host min-h-0 w-full flex-1"
+        :class="isAdminRoute ? 'flex h-full min-h-0 overflow-hidden' : 'block'"
       >
         <router-view />
       </div>
@@ -144,6 +171,13 @@ async function handleLogout() {
 .monitor-value {
   font-size: 13px;
   font-weight: 700;
+  line-height: 1.2;
+  margin-top: 2px;
+}
+
+.monitor-sub {
+  color: var(--muted-text);
+  font-size: 11px;
   line-height: 1.2;
   margin-top: 2px;
 }

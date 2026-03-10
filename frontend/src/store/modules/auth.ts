@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { AuthService, UserService } from '@/services/grpc'
+import { AuthService, TrafficService, UserService } from '@/services/grpc'
 import type { PermissionKey } from '@/constants/permissions'
 import { resolvePermissionsByRoles } from '@/constants/permissions'
 import type { AuthLoginPayload as LoginPayload, PtUserProfile } from '@/types/auth'
@@ -13,6 +13,8 @@ function createDefaultProfile(): PtUserProfile {
     reputation: 0,
     uploadBytes: 0,
     downloadBytes: 0,
+    uploadRateBytes: 0,
+    downloadRateBytes: 0,
     bonusPoints: 0,
     inboxUnread: 0,
     inviteCount: 0,
@@ -116,6 +118,8 @@ export const useAuthStore = defineStore('hermes/auth', {
         reputation: 0,
         uploadBytes: upload,
         downloadBytes: download,
+        uploadRateBytes: 0,
+        downloadRateBytes: 0,
         bonusPoints: parseInt64(user.bonusPoints),
         inboxUnread: 0,
         inviteCount: user.inviteCount || 0,
@@ -123,6 +127,28 @@ export const useAuthStore = defineStore('hermes/auth', {
         roles,
       }
       this.permissions = resolvePermissionsByRoles(roles)
+    },
+
+    async fetchRealtimeTraffic() {
+      if (!this.accessToken || !this.profile.id) {
+        return
+      }
+
+      const response = await TrafficService.GetUserTraffic({ userId: this.profile.id })
+      const traffic = response.traffic
+      if (!traffic) {
+        return
+      }
+
+      this.profile.uploadRateBytes = parseInt64(traffic.uploadRate)
+      this.profile.downloadRateBytes = parseInt64(traffic.downloadRate)
+
+      if (typeof traffic.realUpload !== 'undefined') {
+        this.profile.uploadBytes = parseInt64(traffic.realUpload)
+      }
+      if (typeof traffic.realDownload !== 'undefined') {
+        this.profile.downloadBytes = parseInt64(traffic.realDownload)
+      }
     },
 
     logout() {

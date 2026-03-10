@@ -29,6 +29,7 @@ const (
 	defaultPeerFetchCount    = 120
 	maxPeerFetchCount        = 600
 	maxPeersPerSubnetInPhase = 2
+	announceDedupeWindow     = 12 * time.Second
 )
 
 // Registry TODO: multi tracker support
@@ -121,6 +122,21 @@ func Announce(c *jin.Context) {
 	isSeeder := left == 0
 
 	peerIDHex := hex.EncodeToString([]byte(peerIDRaw))
+
+	isUniqueAnnounce, dedupeErr := trackerDao.Peer.MarkAnnounceUnique(
+		ctx,
+		torrent.ID,
+		peerIDHex,
+		uploaded,
+		downloaded,
+		left,
+		announceDedupeWindow,
+	)
+	if dedupeErr != nil {
+		// Degrade gracefully: keep tracker available even if dedupe cache check fails.
+		isUniqueAnnounce = true
+	}
+
 	lastPeer, _ := trackerDao.Peer.Get(ctx, torrent.ID, peerIDHex)
 	now := time.Now()
 	startedAt := now
@@ -147,12 +163,16 @@ func Announce(c *jin.Context) {
 		StartedAt:  startedAt,
 		LastAction: now,
 	}
-	uploadDelta := computeCounterDelta(lastPeer, uploaded, event, func(p *trackerModel.Peer) int64 {
-		return p.Uploaded
-	})
-	downloadDelta := computeCounterDelta(lastPeer, downloaded, event, func(p *trackerModel.Peer) int64 {
-		return p.Downloaded
-	})
+	uploadDelta := int64(0)
+	downloadDelta := int64(0)
+	if isUniqueAnnounce {
+		uploadDelta = computeCounterDelta(lastPeer, uploaded, event, func(p *trackerModel.Peer) int64 {
+			return p.Uploaded
+		})
+		downloadDelta = computeCounterDelta(lastPeer, downloaded, event, func(p *trackerModel.Peer) int64 {
+			return p.Downloaded
+		})
+	}
 	isActive := event != "stopped"
 
 	if event == "stopped" {

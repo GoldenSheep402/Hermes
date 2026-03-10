@@ -33,6 +33,7 @@ const ratioDanger = computed(() => authStore.ratio < 1)
 let siteTrafficStreamAbortController: AbortController | null = null
 let siteTrafficReconnectTimer: number | undefined
 let siteTrafficStreaming = false
+let profileRefreshTimer: number | undefined
 
 function isActive(path: string): boolean {
   return route.path === path || route.path.startsWith(`${path}/`)
@@ -66,12 +67,29 @@ function clearSiteTrafficReconnectTimer() {
   }
 }
 
+function clearProfileRefreshTimer() {
+  if (typeof profileRefreshTimer !== 'undefined') {
+    window.clearInterval(profileRefreshTimer)
+    profileRefreshTimer = undefined
+  }
+}
+
 function stopSiteTrafficStream() {
   clearSiteTrafficReconnectTimer()
   if (siteTrafficStreamAbortController) {
     siteTrafficStreamAbortController.abort()
     siteTrafficStreamAbortController = null
   }
+}
+
+function startProfileRefresh() {
+  clearProfileRefreshTimer()
+  profileRefreshTimer = window.setInterval(() => {
+    if (!authStore.isLoggedIn) {
+      return
+    }
+    void authStore.fetchProfile().catch(() => {})
+  }, 15000)
 }
 
 function scheduleSiteTrafficReconnect() {
@@ -127,9 +145,11 @@ watch(
   (token) => {
     if (token) {
       void startSiteTrafficStream()
+      startProfileRefresh()
       return
     }
     stopSiteTrafficStream()
+    clearProfileRefreshTimer()
     authStore.profile.uploadRateBytes = 0
     authStore.profile.downloadRateBytes = 0
   },
@@ -138,6 +158,7 @@ watch(
 
 onBeforeUnmount(() => {
   stopSiteTrafficStream()
+  clearProfileRefreshTimer()
 })
 </script>
 

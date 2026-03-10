@@ -90,6 +90,8 @@ export const useAuthStore = defineStore('hermes/auth', {
     },
 
     async fetchProfile() {
+      const currentUploadRate = this.profile.uploadRateBytes
+      const currentDownloadRate = this.profile.downloadRateBytes
       const [basicUserResult, userProfileResult] = await Promise.allSettled([
         UserService.GetUser({}),
         UserService.GetUserProfile({}),
@@ -118,8 +120,8 @@ export const useAuthStore = defineStore('hermes/auth', {
         reputation: 0,
         uploadBytes: upload,
         downloadBytes: download,
-        uploadRateBytes: 0,
-        downloadRateBytes: 0,
+        uploadRateBytes: currentUploadRate,
+        downloadRateBytes: currentDownloadRate,
         bonusPoints: parseInt64(user.bonusPoints),
         inboxUnread: 0,
         inviteCount: user.inviteCount || 0,

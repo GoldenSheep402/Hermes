@@ -10,6 +10,7 @@ import (
 
 	"github.com/GoldenSheep402/Hermes/mod/casbinX/rbac"
 	resourceDao "github.com/GoldenSheep402/Hermes/mod/resource/dao"
+	trackerDao "github.com/GoldenSheep402/Hermes/mod/tracker/dao"
 	trafficDao "github.com/GoldenSheep402/Hermes/mod/traffic/dao"
 	"github.com/GoldenSheep402/Hermes/mod/user/dao"
 	"github.com/GoldenSheep402/Hermes/mod/user/model"
@@ -77,27 +78,33 @@ func (s *S) GetUserProfile(ctx context.Context, req *userV1.GetUserProfileReques
 		return nil, status.Error(codes.NotFound, "user not found")
 	}
 
-	// Fetch real traffic data
-	traffic, err := trafficDao.UserTraffic.GetByUserID(ctx, id)
 	var realUpload, realDownload int64
 	var ratio float64
-	if err == nil && traffic != nil {
-		realUpload = traffic.RealUpload
-		realDownload = traffic.RealDownload
-		if realDownload > 0 {
-			ratio = float64(realUpload) / float64(realDownload)
-		} else if realUpload > 0 {
-			ratio = -1 // infinity
-		}
+
+	// Prefer tracker Redis totals for fresher values; fallback to DB snapshots.
+	if upload, download, found, redisErr := trackerDao.Traffic.GetUserTotals(ctx, id); redisErr == nil && found {
+		realUpload = upload
+		realDownload = download
 	} else {
-		// Fallback to basic user struct if traffic record not initialized yet
-		realUpload = user.Uploaded
-		realDownload = user.Downloaded
-		if realDownload > 0 {
-			ratio = float64(realUpload) / float64(realDownload)
-		} else if realUpload > 0 {
-			ratio = -1 // infinity
+		if redisErr != nil {
+			s.Log.Warnw("failed to load realtime traffic totals from redis", "user_id", id, "err", redisErr)
 		}
+
+		traffic, err := trafficDao.UserTraffic.GetByUserID(ctx, id)
+		if err == nil && traffic != nil {
+			realUpload = traffic.RealUpload
+			realDownload = traffic.RealDownload
+		} else {
+			// Fallback to basic user struct if traffic record not initialized yet.
+			realUpload = user.Uploaded
+			realDownload = user.Downloaded
+		}
+	}
+
+	if realDownload > 0 {
+		ratio = float64(realUpload) / float64(realDownload)
+	} else if realUpload > 0 {
+		ratio = -1 // infinity
 	}
 
 	// Fetch real activity counts

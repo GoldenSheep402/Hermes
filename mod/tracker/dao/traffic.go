@@ -145,6 +145,31 @@ func (t *traffic) GetUserRealtimeRate(ctx context.Context, userID string) (int64
 	return t.getRealtimeRateByKeys(ctx, userRealtimeUploadKey(userID), userRealtimeDownloadKey(userID))
 }
 
+func (t *traffic) GetUserTotals(ctx context.Context, userID string) (int64, int64, bool, error) {
+	if t.rds == nil || userID == "" {
+		return 0, 0, false, nil
+	}
+
+	key := userTrafficKey(userID)
+	exists, err := t.rds.Exists(ctx, key).Result()
+	if err != nil {
+		return 0, 0, false, err
+	}
+	if exists <= 0 {
+		return 0, 0, false, nil
+	}
+
+	values, err := t.rds.HMGet(ctx, key, "real_upload", "real_download").Result()
+	if err != nil && !errors.Is(err, redis.Nil) {
+		return 0, 0, false, err
+	}
+	if len(values) < 2 {
+		return 0, 0, true, nil
+	}
+
+	return parseAnyInt64(values[0]), parseAnyInt64(values[1]), true, nil
+}
+
 func (t *traffic) GetSiteRealtimeRate(ctx context.Context) (int64, int64, error) {
 	if t.rds == nil {
 		return 0, 0, nil
@@ -582,6 +607,25 @@ func parseInt64(v string) int64 {
 		return 0
 	}
 	return nonNegative(n)
+}
+
+func parseAnyInt64(v interface{}) int64 {
+	switch value := v.(type) {
+	case nil:
+		return 0
+	case int64:
+		return nonNegative(value)
+	case int32:
+		return nonNegative(int64(value))
+	case int:
+		return nonNegative(int64(value))
+	case []byte:
+		return parseInt64(string(value))
+	case string:
+		return parseInt64(value)
+	default:
+		return 0
+	}
 }
 
 func parseBool(v string) bool {

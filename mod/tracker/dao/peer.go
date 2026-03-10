@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/GoldenSheep402/Hermes/mod/tracker/model"
@@ -28,6 +29,41 @@ func peerKey(torrentID, peerID string) string {
 // Torrent peers set: tracker:torrent_peers:{torrent_id}
 func torrentPeersKey(torrentID string) string {
 	return fmt.Sprintf("tracker:torrent_peers:%s", torrentID)
+}
+
+func announceDedupeKey(torrentID, peerID string, uploaded, downloaded, left int64) string {
+	return fmt.Sprintf(
+		"tracker:announce:dedupe:%s:%s:%s:%s:%s",
+		torrentID,
+		peerID,
+		strconv.FormatInt(uploaded, 10),
+		strconv.FormatInt(downloaded, 10),
+		strconv.FormatInt(left, 10),
+	)
+}
+
+func (p *peer) MarkAnnounceUnique(
+	ctx context.Context,
+	torrentID, peerID string,
+	uploaded, downloaded, left int64,
+	ttl time.Duration,
+) (bool, error) {
+	if p.rds == nil {
+		return true, nil
+	}
+	if ttl <= 0 {
+		ttl = 3 * time.Second
+	}
+	ok, err := p.rds.SetNX(
+		ctx,
+		announceDedupeKey(torrentID, peerID, uploaded, downloaded, left),
+		1,
+		ttl,
+	).Result()
+	if err != nil {
+		return true, err
+	}
+	return ok, nil
 }
 
 func (p *peer) Upsert(ctx context.Context, peerData *model.Peer) error {

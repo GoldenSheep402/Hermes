@@ -23,8 +23,13 @@ func TestComputeCounterDelta(t *testing.T) {
 		require.Equal(t, int64(120), delta)
 	})
 
-	t.Run("first_no_event_ignored", func(t *testing.T) {
+	t.Run("first_empty_event_uses_current", func(t *testing.T) {
 		delta := computeCounterDelta(nil, 120, "", getUploaded)
+		require.Equal(t, int64(120), delta)
+	})
+
+	t.Run("first_completed_ignored", func(t *testing.T) {
+		delta := computeCounterDelta(nil, 120, "completed", getUploaded)
 		require.Equal(t, int64(0), delta)
 	})
 
@@ -60,6 +65,7 @@ func TestNormalizeAnnounceEvent(t *testing.T) {
 	require.Equal(t, "completed", normalizeAnnounceEvent("complete"))
 	require.Equal(t, "started", normalizeAnnounceEvent(" Started "))
 	require.Equal(t, "", normalizeAnnounceEvent(""))
+	require.Equal(t, "", normalizeAnnounceEvent("paused"))
 }
 
 func TestSanitizeNumWant(t *testing.T) {
@@ -168,6 +174,18 @@ func TestSelectPeersForResponseLanAffinity(t *testing.T) {
 	selected := SelectPeersForResponse(requester, []*trackerModel.Peer{lanPeer, wanPeer}, 1)
 	require.Len(t, selected, 1)
 	require.Equal(t, "lan", selected[0].PeerID)
+}
+
+func TestSelectPeersForResponseSamePublicIPWithoutSharedLANIsNotPreferred(t *testing.T) {
+	now := time.Now()
+	requester := makePeer("req", "u1", "20.20.20.1", "192.168.1.2", 6881, false, 100, 0, 0, now)
+
+	samePublicDifferentLAN := makePeer("same-public", "u2", "20.20.20.1", "10.0.0.3", 6001, true, 0, 500, 100, now.Add(-2*time.Minute))
+	activeWAN := makePeer("active-wan", "u3", "30.30.30.1", "", 6002, true, 0, 500, 100, now)
+
+	selected := SelectPeersForResponse(requester, []*trackerModel.Peer{samePublicDifferentLAN, activeWAN}, 1)
+	require.Len(t, selected, 1)
+	require.Equal(t, "active-wan", selected[0].PeerID)
 }
 
 func makePeer(

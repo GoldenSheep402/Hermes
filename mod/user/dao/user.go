@@ -106,7 +106,15 @@ func (u *user) IsAdmin(ctx context.Context, uid string) (bool, error) {
 }
 
 func (u *user) UpdateInfo(ctx context.Context, _user *model.User) error {
-	return u.Std.GetTxFromCtx(ctx).WithContext(ctx).Model(&model.User{}).Where("id = ?", _user.ID).Updates(_user).Error
+	err := u.Std.GetTxFromCtx(ctx).WithContext(ctx).Model(&model.User{}).Where("id = ?", _user.ID).Updates(_user).Error
+	if err != nil {
+		return err
+	}
+	if _user.Passkey != "" {
+		u.InvalidatePasskeyCache(ctx, _user.Passkey)
+		u.cachePasskeyHit(ctx, _user.Passkey, _user.ID, _user.IsEnabled)
+	}
+	return nil
 }
 
 func (u *user) GetList(ctx context.Context) ([]*model.User, error) {

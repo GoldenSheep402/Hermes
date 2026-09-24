@@ -61,38 +61,3 @@ func TestBuildAnnounceURLValidation(t *testing.T) {
 	_, err = BuildAnnounceURL("tracker.hermes.local", "")
 	require.Error(t, err)
 }
-
-func TestBuildAnnounceURLsFromEndpoints(t *testing.T) {
-	t.Parallel()
-
-	list, err := BuildAnnounceURLsFromEndpoints([]string{
-		"https://tracker-a.hermes.local/announce",
-		"https://tracker-a.hermes.local/announce", // duplicate
-		"tracker-b.hermes.local:8080",
-		"", // invalid
-	}, "pk123")
-	require.NoError(t, err)
-	require.Equal(t, []string{
-		"https://tracker-a.hermes.local/announce/pk123",
-		"http://tracker-b.hermes.local:8080/announce/pk123",
-	}, list)
-}
-
-func TestParseTrackerList(t *testing.T) {
-	t.Parallel()
-
-	t.Run("newline", func(t *testing.T) {
-		list := parseTrackerList("https://a/announce\nhttps://b/announce\n# comment\nhttps://a/announce")
-		require.Equal(t, []string{"https://a/announce", "https://b/announce"}, list)
-	})
-
-	t.Run("comma", func(t *testing.T) {
-		list := parseTrackerList("https://a/announce, https://b/announce, https://a/announce")
-		require.Equal(t, []string{"https://a/announce", "https://b/announce"}, list)
-	})
-
-	t.Run("json array", func(t *testing.T) {
-		list := parseTrackerList(`["https://a/announce","https://b/announce","https://a/announce"]`)
-		require.Equal(t, []string{"https://a/announce", "https://b/announce"}, list)
-	})
-}

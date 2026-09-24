@@ -13,7 +13,7 @@ var (
 )
 
 func Init(db *gorm.DB, rds *redis.Client) error {
-	if err := Torrent.Init(db); err != nil {
+	if err := Torrent.Init(db, rds); err != nil {
 		return err
 	}
 	if err := TorrentFile.Init(db); err != nil {

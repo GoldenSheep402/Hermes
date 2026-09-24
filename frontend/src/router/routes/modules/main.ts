@@ -46,6 +46,14 @@ const mainRoute: RouteRecordRaw = {
       },
     },
     {
+      path: 'bonus',
+      name: 'Bonus',
+      component: () => import('@/pages/Bonus.vue'),
+      meta: {
+        requiresAuth: true,
+      },
+    },
+    {
       path: 'forums',
       name: 'Forums',
       component: () => import('@/pages/PlaceholderPage.vue'),

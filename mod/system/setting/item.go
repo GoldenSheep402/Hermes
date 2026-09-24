@@ -20,8 +20,11 @@ const (
 	SettingKeyTrackerFlushBatchSize        = "tracker.flush_batch_size"
 	SettingKeyTrackerGlobalFreeleech       = "tracker.global_freeleech"
 	SettingKeyTrackerFreeleechCountdownHrs = "tracker.freeleech_countdown_hours"
-	SettingKeyTrackerBonusFormula          = "tracker.bonus_formula"
-	SettingKeyTrackerList                  = "tracker.list"
+	SettingKeyTrackerAnnounceURL           = "tracker.announce_url"
+	SettingKeyBonusEnabled                 = "bonus.enabled"
+	SettingKeyBonusMultiplier              = "bonus.multiplier"
+	SettingKeyBonusUploadPointsPerGiB      = "bonus.upload_points_per_gib"
+	SettingKeyBonusInvitePoints            = "bonus.invite_points"
 	SettingKeyAuthSMTPEnable               = "auth.smtp_enable"
 )
 
@@ -44,8 +47,14 @@ var (
 	TrackerFlushBatchSize         *Item[int]
 	TrackerGlobalFreeleech        *Item[bool]
 	TrackerFreeleechCountdownHour *Item[int]
-	TrackerBonusFormula           *Item[string]
-	TrackerList                   *Item[string]
+	TrackerAnnounceURL            *Item[string]
+)
+
+var (
+	BonusEnabled            *Item[bool]
+	BonusMultiplier         *Item[float64]
+	BonusUploadPointsPerGiB *Item[int]
+	BonusInvitePoints       *Item[int]
 )
 
 var (
@@ -72,8 +81,14 @@ func init() {
 		TrackerFlushBatchSize = NewProjectItem(SettingKeyTrackerFlushBatchSize, "流量落库批次大小", 200)
 		TrackerGlobalFreeleech = NewProjectItem(SettingKeyTrackerGlobalFreeleech, "全站Freeleech", false)
 		TrackerFreeleechCountdownHour = NewProjectItem(SettingKeyTrackerFreeleechCountdownHrs, "限时Freeleech倒计时(小时)", 0)
-		TrackerBonusFormula = NewProjectItem(SettingKeyTrackerBonusFormula, "魔力公式", "sqrt(uploaded)")
-		TrackerList = NewProjectItem(SettingKeyTrackerList, "Tracker 列表", "")
+		TrackerAnnounceURL = NewProjectItem(SettingKeyTrackerAnnounceURL, "Tracker Announce URL", "")
+	})
+
+	Group("bonus", "魔力", func() {
+		BonusEnabled = NewProjectItem(SettingKeyBonusEnabled, "启用做种魔力", true)
+		BonusMultiplier = NewProjectItem(SettingKeyBonusMultiplier, "魔力系数", 1.0)
+		BonusUploadPointsPerGiB = NewProjectItem(SettingKeyBonusUploadPointsPerGiB, "兑换上传量单价(魔力/GiB)", 300)
+		BonusInvitePoints = NewProjectItem(SettingKeyBonusInvitePoints, "兑换邀请单价(魔力)", 50000)
 	})
 
 	Group("auth", "认证", func() {
@@ -128,34 +143,107 @@ func AuthSMTPEnableValue(ctx context.Context) bool {
 	return AuthSMTPEnable.Value()
 }
 
-func TrackerListValue(ctx context.Context) []string {
+func TrackerAnnounceURLValue(ctx context.Context) string {
 	_ = ctx
-	if TrackerList == nil {
-		return nil
-	}
-
-	return parseTrackerListText(TrackerList.Value())
-}
-
-func TrackerListTextValue(ctx context.Context) string {
-	_ = ctx
-	list := TrackerListValue(ctx)
-	if len(list) == 0 {
+	if TrackerAnnounceURL == nil {
 		return ""
 	}
-	return strings.Join(list, "\n")
+	return strings.TrimSpace(TrackerAnnounceURL.Value())
 }
 
-func parseTrackerListText(raw string) []string {
+func TrackerAnnounceIntervalValue(ctx context.Context) int {
+	_ = ctx
+	if TrackerAnnounceInterval == nil {
+		return 1800
+	}
+	v := TrackerAnnounceInterval.Value()
+	if v < 60 {
+		return 1800
+	}
+	return v
+}
+
+func TrackerGlobalFreeleechValue(ctx context.Context) bool {
+	_ = ctx
+	if TrackerGlobalFreeleech == nil {
+		return false
+	}
+	return TrackerGlobalFreeleech.Value()
+}
+
+func TrackerFreeleechCountdownHoursValue(ctx context.Context) int {
+	_ = ctx
+	if TrackerFreeleechCountdownHour == nil {
+		return 0
+	}
+	v := TrackerFreeleechCountdownHour.Value()
+	if v < 0 {
+		return 0
+	}
+	return v
+}
+
+func BonusEnabledValue(ctx context.Context) bool {
+	_ = ctx
+	if BonusEnabled == nil {
+		return true
+	}
+	return BonusEnabled.Value()
+}
+
+func BonusMultiplierValue(ctx context.Context) float64 {
+	_ = ctx
+	if BonusMultiplier == nil {
+		return 1
+	}
+	v := BonusMultiplier.Value()
+	if v <= 0 {
+		return 1
+	}
+	return v
+}
+
+func BonusUploadPointsPerGiBValue(ctx context.Context) int {
+	_ = ctx
+	if BonusUploadPointsPerGiB == nil {
+		return 300
+	}
+	v := BonusUploadPointsPerGiB.Value()
+	if v <= 0 {
+		return 300
+	}
+	return v
+}
+
+func BonusInvitePointsValue(ctx context.Context) int {
+	_ = ctx
+	if BonusInvitePoints == nil {
+		return 50000
+	}
+	v := BonusInvitePoints.Value()
+	if v <= 0 {
+		return 50000
+	}
+	return v
+}
+
+// normalizeAnnounceURLInput accepts legacy multi-line tracker.list values and keeps the first URL.
+func normalizeAnnounceURLInput(raw string) string {
 	content := strings.TrimSpace(raw)
 	if content == "" {
-		return nil
+		return ""
 	}
 
 	if strings.HasPrefix(content, "[") && strings.HasSuffix(content, "]") {
 		var list []string
 		if err := json.Unmarshal([]byte(content), &list); err == nil {
-			return normalizeTrackerList(list)
+			for _, item := range list {
+				item = strings.TrimSpace(item)
+				if item != "" && !strings.HasPrefix(item, "#") {
+					return item
+				}
+			}
+			return ""
 		}
 	}
 
@@ -164,33 +252,20 @@ func parseTrackerListText(raw string) []string {
 		content = strings.TrimSpace(single)
 	}
 
-	if strings.Contains(content, "\n") || strings.Contains(content, "\r") {
-		lines := strings.Split(strings.ReplaceAll(content, "\r\n", "\n"), "\n")
-		return normalizeTrackerList(lines)
-	}
-
-	return normalizeTrackerList(strings.Split(content, ","))
-}
-
-func ParseTrackerList(raw string) []string {
-	return parseTrackerListText(raw)
-}
-
-func normalizeTrackerList(items []string) []string {
-	result := make([]string, 0, len(items))
-	seen := make(map[string]struct{}, len(items))
-	for _, item := range items {
-		text := strings.TrimSpace(item)
-		if text == "" || strings.HasPrefix(text, "#") {
+	content = strings.ReplaceAll(content, "\r\n", "\n")
+	for _, line := range strings.Split(content, "\n") {
+		line = strings.TrimSpace(line)
+		if line == "" || strings.HasPrefix(line, "#") {
 			continue
 		}
-		if _, ok := seen[text]; ok {
-			continue
+		if idx := strings.Index(line, ","); idx >= 0 {
+			line = strings.TrimSpace(line[:idx])
 		}
-		seen[text] = struct{}{}
-		result = append(result, text)
+		if line != "" {
+			return line
+		}
 	}
-	return result
+	return ""
 }
 
 func ManagedTypeAndDesc(key string) (string, string, bool) {
@@ -219,10 +294,16 @@ func ManagedTypeAndDesc(key string) (string, string, bool) {
 		return "bool", TrackerGlobalFreeleech.Label, true
 	case SettingKeyTrackerFreeleechCountdownHrs:
 		return "int", TrackerFreeleechCountdownHour.Label, true
-	case SettingKeyTrackerBonusFormula:
-		return "string", TrackerBonusFormula.Label, true
-	case SettingKeyTrackerList:
-		return "string", TrackerList.Label, true
+	case SettingKeyTrackerAnnounceURL:
+		return "string", TrackerAnnounceURL.Label, true
+	case SettingKeyBonusEnabled:
+		return "bool", BonusEnabled.Label, true
+	case SettingKeyBonusMultiplier:
+		return "float", BonusMultiplier.Label, true
+	case SettingKeyBonusUploadPointsPerGiB:
+		return "int", BonusUploadPointsPerGiB.Label, true
+	case SettingKeyBonusInvitePoints:
+		return "int", BonusInvitePoints.Label, true
 	case SettingKeyAuthSMTPEnable:
 		return "bool", AuthSMTPEnable.Label, true
 	default:
@@ -256,10 +337,16 @@ func ManagedValueString(ctx context.Context, key string) (string, bool) {
 		return strconv.FormatBool(TrackerGlobalFreeleech.Value()), true
 	case SettingKeyTrackerFreeleechCountdownHrs:
 		return strconv.Itoa(TrackerFreeleechCountdownHour.Value()), true
-	case SettingKeyTrackerBonusFormula:
-		return TrackerBonusFormula.Value(), true
-	case SettingKeyTrackerList:
-		return TrackerListTextValue(ctx), true
+	case SettingKeyTrackerAnnounceURL:
+		return TrackerAnnounceURLValue(ctx), true
+	case SettingKeyBonusEnabled:
+		return strconv.FormatBool(BonusEnabledValue(ctx)), true
+	case SettingKeyBonusMultiplier:
+		return strconv.FormatFloat(BonusMultiplierValue(ctx), 'f', -1, 64), true
+	case SettingKeyBonusUploadPointsPerGiB:
+		return strconv.Itoa(BonusUploadPointsPerGiBValue(ctx)), true
+	case SettingKeyBonusInvitePoints:
+		return strconv.Itoa(BonusInvitePointsValue(ctx)), true
 	case SettingKeyAuthSMTPEnable:
 		return strconv.FormatBool(AuthSMTPEnable.Value()), true
 	default:
@@ -332,11 +419,32 @@ func UpdateManagedValueFromString(ctx context.Context, key, value string) (bool,
 			return true, err
 		}
 		return true, TrackerFreeleechCountdownHour.Update(v)
-	case SettingKeyTrackerBonusFormula:
-		return true, TrackerBonusFormula.Update(value)
-	case SettingKeyTrackerList:
-		normalized := strings.Join(parseTrackerListText(value), "\n")
-		return true, TrackerList.Update(normalized)
+	case SettingKeyTrackerAnnounceURL:
+		return true, TrackerAnnounceURL.Update(normalizeAnnounceURLInput(value))
+	case SettingKeyBonusEnabled:
+		v, err := strconv.ParseBool(trimmed)
+		if err != nil {
+			return true, err
+		}
+		return true, BonusEnabled.Update(v)
+	case SettingKeyBonusMultiplier:
+		v, err := strconv.ParseFloat(trimmed, 64)
+		if err != nil {
+			return true, err
+		}
+		return true, BonusMultiplier.Update(v)
+	case SettingKeyBonusUploadPointsPerGiB:
+		v, err := strconv.Atoi(trimmed)
+		if err != nil {
+			return true, err
+		}
+		return true, BonusUploadPointsPerGiB.Update(v)
+	case SettingKeyBonusInvitePoints:
+		v, err := strconv.Atoi(trimmed)
+		if err != nil {
+			return true, err
+		}
+		return true, BonusInvitePoints.Update(v)
 	case SettingKeyAuthSMTPEnable:
 		v, err := strconv.ParseBool(trimmed)
 		if err != nil {

@@ -111,6 +111,38 @@
           "BonusService"
         ]
       }
+    },
+    "/gapi/bonus/v1/shop": {
+      "post": {
+        "operationId": "BonusService_ListShopItems",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ListShopItemsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1ListShopItemsRequest"
+            }
+          }
+        ],
+        "tags": [
+          "BonusService"
+        ]
+      }
     }
   },
   "definitions": {
@@ -153,7 +185,8 @@
         },
         "amount": {
           "type": "string",
-          "format": "int64"
+          "format": "int64",
+          "title": "milli-points (1000 = 1 bonus point)"
         },
         "reason": {
           "type": "string"
@@ -172,12 +205,14 @@
     "v1ExchangeBonusRequest": {
       "type": "object",
       "properties": {
-        "amount": {
+        "item": {
           "type": "string",
-          "format": "int64"
+          "title": "\"upload\" | \"invite\""
         },
-        "target": {
-          "type": "string"
+        "quantity": {
+          "type": "string",
+          "format": "int64",
+          "title": "GiB for upload, count for invite"
         }
       }
     },
@@ -186,7 +221,8 @@
       "properties": {
         "remainingBalance": {
           "type": "string",
-          "format": "int64"
+          "format": "int64",
+          "title": "milli-points"
         }
       }
     },
@@ -198,7 +234,13 @@
       "properties": {
         "balance": {
           "type": "string",
-          "format": "int64"
+          "format": "int64",
+          "title": "milli-points"
+        },
+        "balancePoints": {
+          "type": "string",
+          "format": "int64",
+          "title": "floor(balance / 1000) for convenience"
         }
       }
     },
@@ -228,6 +270,42 @@
         "total": {
           "type": "string",
           "format": "int64"
+        }
+      }
+    },
+    "v1ListShopItemsRequest": {
+      "type": "object"
+    },
+    "v1ListShopItemsResponse": {
+      "type": "object",
+      "properties": {
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1ShopItem"
+          }
+        }
+      }
+    },
+    "v1ShopItem": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "title": "\"upload\" | \"invite\""
+        },
+        "name": {
+          "type": "string"
+        },
+        "pricePoints": {
+          "type": "string",
+          "format": "int64",
+          "title": "display points (not milli)"
+        },
+        "unit": {
+          "type": "string",
+          "title": "\"GiB\" | \"invite\""
         }
       }
     }

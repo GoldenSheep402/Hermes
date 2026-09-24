@@ -11,6 +11,7 @@ import (
 	"google.golang.org/grpc"
 	"gorm.io/gorm"
 
+	"github.com/GoldenSheep402/Hermes/conf"
 	"github.com/GoldenSheep402/Hermes/core/kernel"
 	"github.com/GoldenSheep402/Hermes/mod/grpcGateway/gateway"
 	systemSetting "github.com/GoldenSheep402/Hermes/mod/system/setting"
@@ -30,10 +31,9 @@ type Mod struct {
 	trafficFlushWG     sync.WaitGroup
 }
 
-type Config struct {
-	Endpoint       string   `yaml:"Endpoint"`
-	AllowedSubnets []string `yaml:"AllowedSubnets"`
-}
+// Config is unused; TrackerV1 in global config is the canonical source for
+// TrustedProxyCIDRs and RedisKeyPrefix at runtime.
+type Config struct{}
 
 func (m *Mod) Config() any {
 	return &m.config
@@ -61,6 +61,9 @@ func (m *Mod) Load(h *kernel.Hub) error {
 	if err := dao.Init(db, rdb); err != nil {
 		h.Log.Fatalw("failed to init dao", "error", err)
 	}
+	if gc := conf.Get(); gc != nil {
+		dao.SetRedisKeyPrefix(gc.TrackerV1.RedisKeyPrefix)
+	}
 
 	handlers.Registry(jinE)
 
@@ -84,6 +87,15 @@ func (m *Mod) Load(h *kernel.Hub) error {
 
 func (m *Mod) Start(h *kernel.Hub) error {
 	interval, batchSize := m.resolveFlushConfig(context.Background())
+
+	// Mirror freeleech settings into Redis so announce Lua can apply them without DB hits.
+	if err := dao.Traffic.SyncGlobalFreeleechFromSettings(
+		context.Background(),
+		systemSetting.TrackerGlobalFreeleechValue(context.Background()),
+		systemSetting.TrackerFreeleechCountdownHoursValue(context.Background()),
+	); err != nil {
+		h.Log.Warnw("failed to sync global freeleech on start", "err", err)
+	}
 
 	ctx, cancel := context.WithCancel(context.Background())
 	m.trafficFlushCancel = cancel

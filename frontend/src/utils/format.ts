@@ -2,6 +2,14 @@ export function formatNumber(value: number): string {
   return value.toLocaleString('en-US')
 }
 
+export function formatBonusPoints(milliOrDisplay: number, fromMilli = false): string {
+  const display = fromMilli ? Math.floor(milliOrDisplay / 1000) : milliOrDisplay
+  if (!Number.isFinite(display)) {
+    return '0'
+  }
+  return display.toLocaleString('en-US')
+}
+
 export function formatRatio(value: number): string {
   if (!Number.isFinite(value)) {
     return '0.00'

@@ -15,11 +15,19 @@ export type BonusLogItem = {
   createdAt?: string
 }
 
+export type ShopItem = {
+  id?: string
+  name?: string
+  pricePoints?: string
+  unit?: string
+}
+
 export type GetBonusBalanceRequest = {
 }
 
 export type GetBonusBalanceResponse = {
   balance?: string
+  balancePoints?: string
 }
 
 export type ListBonusLogsRequest = {
@@ -32,9 +40,16 @@ export type ListBonusLogsResponse = {
   total?: string
 }
 
+export type ListShopItemsRequest = {
+}
+
+export type ListShopItemsResponse = {
+  items?: ShopItem[]
+}
+
 export type ExchangeBonusRequest = {
-  amount?: string
-  target?: string
+  item?: string
+  quantity?: string
 }
 
 export type ExchangeBonusResponse = {
@@ -47,6 +62,9 @@ export class BonusService {
   }
   static ListBonusLogs(req: ListBonusLogsRequest, initReq?: fm.InitReq): Promise<ListBonusLogsResponse> {
     return fm.fetchReq<ListBonusLogsRequest, ListBonusLogsResponse>(`/gapi/bonus/v1/logs`, {...initReq, method: "POST", body: JSON.stringify(req, fm.replacer)})
+  }
+  static ListShopItems(req: ListShopItemsRequest, initReq?: fm.InitReq): Promise<ListShopItemsResponse> {
+    return fm.fetchReq<ListShopItemsRequest, ListShopItemsResponse>(`/gapi/bonus/v1/shop`, {...initReq, method: "POST", body: JSON.stringify(req, fm.replacer)})
   }
   static ExchangeBonus(req: ExchangeBonusRequest, initReq?: fm.InitReq): Promise<ExchangeBonusResponse> {
     return fm.fetchReq<ExchangeBonusRequest, ExchangeBonusResponse>(`/gapi/bonus/v1/exchange`, {...initReq, method: "POST", body: JSON.stringify(req, fm.replacer)})

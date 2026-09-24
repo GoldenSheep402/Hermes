@@ -28,5 +28,10 @@ func TestTrafficService_GetTorrentStats(t *testing.T) {
 	resp, err := s.GetTorrentStats(context.Background(), &trafficV1.GetTorrentStatsRequest{TorrentId: ""})
 	assert.Error(t, err)
 	assert.Nil(t, resp)
-	assert.Contains(t, err.Error(), "unauthenticated")
+	assert.Contains(t, err.Error(), "Torrent ID required")
+
+	resp2, err2 := s.GetTorrentStats(context.Background(), &trafficV1.GetTorrentStatsRequest{TorrentId: "01HZX8QJMX1234567890ABCDE"})
+	assert.Error(t, err2)
+	assert.Nil(t, resp2)
+	assert.Contains(t, err2.Error(), "unauthenticated")
 }

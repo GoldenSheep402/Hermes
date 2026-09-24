@@ -82,9 +82,10 @@ func (s *S) GetUserProfile(ctx context.Context, req *userV1.GetUserProfileReques
 	var ratio float64
 
 	// Prefer tracker Redis totals for fresher values; fallback to DB snapshots.
-	if upload, download, found, redisErr := trackerDao.Traffic.GetUserTotals(ctx, id); redisErr == nil && found {
+	if upload, download, seedTime, found, redisErr := trackerDao.Traffic.GetUserSnapshot(ctx, id); redisErr == nil && found {
 		realUpload = upload
 		realDownload = download
+		user.SeedTime = seedTime
 	} else {
 		if redisErr != nil {
 			s.Log.Warnw("failed to load realtime traffic totals from redis", "user_id", id, "err", redisErr)
@@ -95,22 +96,35 @@ func (s *S) GetUserProfile(ctx context.Context, req *userV1.GetUserProfileReques
 			realUpload = traffic.RealUpload
 			realDownload = traffic.RealDownload
 		} else {
-			// Fallback to basic user struct if traffic record not initialized yet.
 			realUpload = user.Uploaded
 			realDownload = user.Downloaded
 		}
 	}
 
-	if realDownload > 0 {
-		ratio = float64(realUpload) / float64(realDownload)
-	} else if realUpload > 0 {
+	if creditedUp, creditedDown, seedTime, found, redisErr := trackerDao.Traffic.GetUserCreditedSnapshot(ctx, id); redisErr == nil && found {
+		user.SeedTime = seedTime
+		bonusUpload := int64(0)
+		if traffic, err := trafficDao.UserTraffic.GetByUserID(ctx, id); err == nil && traffic != nil {
+			bonusUpload = traffic.BonusUpload
+		}
+		user.Uploaded = creditedUp + bonusUpload
+		user.Downloaded = creditedDown
+	}
+
+	if user.Downloaded > 0 {
+		ratio = float64(user.Uploaded) / float64(user.Downloaded)
+	} else if user.Uploaded > 0 {
 		ratio = -1 // infinity
 	}
 
 	// Fetch real activity counts
 	publishedCount, _ := resourceDao.Resource.CountPublishedByUser(ctx, id)
-	seedingCount, _ := trafficDao.TransferHistory.CountActiveSeeding(ctx, id)
-	downloadCount, _ := trafficDao.TransferHistory.CountActiveDownloading(ctx, id)
+	seedingCount, downloadCount, activityErr := trackerDao.Traffic.CountUserActive(ctx, id)
+	if activityErr != nil {
+		s.Log.Warnw("failed to load realtime user activity from redis", "user_id", id, "err", activityErr)
+		seedingCount, _ = trafficDao.TransferHistory.CountActiveSeeding(ctx, id)
+		downloadCount, _ = trafficDao.TransferHistory.CountActiveDownloading(ctx, id)
+	}
 
 	return &userV1.GetUserProfileResponse{
 		User:           convertUserModelToProto(user),
@@ -193,12 +207,16 @@ func (s *S) ResetPasskey(ctx context.Context, req *userV1.ResetPasskeyRequest) (
 		return nil, status.Error(codes.NotFound, "user not found")
 	}
 
+	oldPasskey := user.Passkey
 	user.Passkey = ulid.Make().String()
 
 	if err := dao.User.UpdateInfo(ctx, user); err != nil {
 		s.Log.Errorw("failed to reset passkey", "error", err)
 		return nil, status.Error(codes.Internal, "failed to reset passkey")
 	}
+
+	dao.User.InvalidatePasskeyCache(ctx, oldPasskey)
+	dao.User.InvalidatePasskeyCache(ctx, user.Passkey)
 
 	return &userV1.ResetPasskeyResponse{
 		Passkey: user.Passkey,

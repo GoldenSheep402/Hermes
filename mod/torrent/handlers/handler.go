@@ -67,13 +67,13 @@ func DownloadTorrent(c *jin.Context) {
 		return
 	}
 
-	announceURLs, err := common.BuildAnnounceURLsForPasskey(ctx, user.Passkey)
+	announceURL, err := common.BuildAnnounceURLForPasskey(ctx, user.Passkey)
 	if err != nil {
 		writeJSONError(c, http.StatusPreconditionFailed, int32(codes.FailedPrecondition), "tracker endpoint not available")
 		return
 	}
 
-	downloadData, err := torrent.RewriteDownloadTorrentWithTrackers(rawData, announceURLs)
+	downloadData, err := torrent.RewriteDownloadTorrent(rawData, announceURL)
 	if err != nil {
 		writeJSONError(c, http.StatusInternalServerError, int32(codes.Internal), "failed to rewrite torrent for download")
 		return

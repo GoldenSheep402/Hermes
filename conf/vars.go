@@ -31,8 +31,11 @@ type GlobalConfig struct {
 	} `yaml:"Uptrace"`
 	SentryDsn string `yaml:"SentryDsn"`
 	TrackerV1 struct {
-		Endpoint       string   `yaml:"Endpoint"`
-		AllowedSubnets []string `yaml:"AllowedSubnets"`
+		// TrustedProxyCIDRs: when non-empty, X-Forwarded-For is only trusted if RemoteAddr
+		// matches one of these CIDRs (e.g. reverse proxy). Empty keeps legacy behavior (prefer XFF).
+		TrustedProxyCIDRs []string `yaml:"TrustedProxyCIDRs"`
+		// RedisKeyPrefix namespaces all tracker Redis keys when multiple logical sites share one Redis.
+		RedisKeyPrefix string `yaml:"RedisKeyPrefix"`
 	} `yaml:"TrackerV1"`
 	CORS struct {
 		AllowOrigins []string `yaml:"AllowOrigins"`

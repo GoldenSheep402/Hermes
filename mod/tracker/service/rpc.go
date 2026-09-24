@@ -11,6 +11,7 @@ import (
 	"github.com/GoldenSheep402/Hermes/mod/casbinX/rbac"
 	"github.com/GoldenSheep402/Hermes/mod/tracker/dao"
 	"github.com/GoldenSheep402/Hermes/mod/tracker/model"
+	"github.com/GoldenSheep402/Hermes/pkg/authz"
 	"github.com/GoldenSheep402/Hermes/pkg/ctxKey"
 	trackerV1 "github.com/GoldenSheep402/Hermes/pkg/proto/tracker/v1"
 )
@@ -32,21 +33,24 @@ func requireAuth(ctx context.Context) error {
 }
 
 func (s *S) GetTorrentPeers(ctx context.Context, req *trackerV1.GetTorrentPeersRequest) (*trackerV1.GetTorrentPeersResponse, error) {
-	if err := requireAuth(ctx); err != nil {
-		return nil, err
-	}
-
 	if req.TorrentId == "" {
 		return nil, status.Error(codes.InvalidArgument, "Torrent ID required")
 	}
+	if err := authz.RequireTorrentSensitiveAccess(ctx, req.TorrentId); err != nil {
+		return nil, err
+	}
 
-	peers, err := dao.Peer.GetPeersForTorrent(ctx, req.TorrentId, 100)
+	peers, err := dao.Peer.GetPeersForTorrent(ctx, req.TorrentId, 0)
 	if err != nil {
 		s.Log.Errorw("failed to get torrent peers", "err", err)
 		return nil, status.Error(codes.Internal, "Failed to fetch peers")
 	}
+	stats, err := dao.Traffic.GetTorrentSnapshot(ctx, req.TorrentId)
+	if err != nil {
+		s.Log.Errorw("failed to get torrent peer counts", "err", err)
+		return nil, status.Error(codes.Internal, "Failed to fetch peer counts")
+	}
 
-	var seederCount, leecherCount int32
 	var protoSeeders, protoLeechers []*trackerV1.PeerInfo
 
 	for _, p := range peers {
@@ -57,29 +61,26 @@ func (s *S) GetTorrentPeers(ctx context.Context, req *trackerV1.GetTorrentPeersR
 			LanIp:  p.LanIP,
 		}
 		if p.IsSeeder {
-			seederCount++
 			protoSeeders = append(protoSeeders, info)
 		} else {
-			leecherCount++
 			protoLeechers = append(protoLeechers, info)
 		}
 	}
 
 	return &trackerV1.GetTorrentPeersResponse{
-		SeederCount:  seederCount,
-		LeecherCount: leecherCount,
+		SeederCount:  int32(stats.SeedCount),
+		LeecherCount: int32(stats.LeechCount),
 		Seeders:      protoSeeders,
 		Leechers:     protoLeechers,
 	}, nil
 }
 
 func (s *S) ListSnatches(ctx context.Context, req *trackerV1.ListSnatchesRequest) (*trackerV1.ListSnatchesResponse, error) {
-	if err := requireAuth(ctx); err != nil {
-		return nil, err
-	}
-
 	if req.TorrentId == "" {
 		return nil, status.Error(codes.InvalidArgument, "Torrent ID required")
+	}
+	if err := authz.RequireTorrentSensitiveAccess(ctx, req.TorrentId); err != nil {
+		return nil, err
 	}
 
 	list, count, err := dao.Snatch.ListByTorrent(ctx, req.TorrentId, req.Page, req.PageSize)

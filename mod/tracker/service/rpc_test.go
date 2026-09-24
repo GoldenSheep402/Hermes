@@ -17,7 +17,12 @@ func TestTrackerService_GetTorrentPeers(t *testing.T) {
 	resp, err := s.GetTorrentPeers(context.Background(), &trackerV1.GetTorrentPeersRequest{TorrentId: ""})
 	assert.Error(t, err)
 	assert.Nil(t, resp)
-	assert.Contains(t, err.Error(), "unauthenticated")
+	assert.Contains(t, err.Error(), "Torrent ID required")
+
+	resp2, err2 := s.GetTorrentPeers(context.Background(), &trackerV1.GetTorrentPeersRequest{TorrentId: "01HZX8QJMX1234567890ABCDE"})
+	assert.Error(t, err2)
+	assert.Nil(t, resp2)
+	assert.Contains(t, err2.Error(), "unauthenticated")
 }
 
 func TestTrackerService_ListSnatches(t *testing.T) {
@@ -28,7 +33,12 @@ func TestTrackerService_ListSnatches(t *testing.T) {
 	resp, err := s.ListSnatches(context.Background(), &trackerV1.ListSnatchesRequest{TorrentId: ""})
 	assert.Error(t, err)
 	assert.Nil(t, resp)
-	assert.Contains(t, err.Error(), "unauthenticated")
+	assert.Contains(t, err.Error(), "Torrent ID required")
+
+	resp2, err2 := s.ListSnatches(context.Background(), &trackerV1.ListSnatchesRequest{TorrentId: "01HZX8QJMX1234567890ABCDE"})
+	assert.Error(t, err2)
+	assert.Nil(t, resp2)
+	assert.Contains(t, err2.Error(), "unauthenticated")
 }
 
 func TestTrackerService_GetUserSnatches(t *testing.T) {

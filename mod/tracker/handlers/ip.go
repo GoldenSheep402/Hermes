@@ -6,67 +6,88 @@ import (
 	"strings"
 )
 
-// GetClientIP extracts the real client IP from the request, preferring X-Forwarded-For.
-// It gracefully falls back to RemoteAddr when no proxy headers are present.
-func GetClientIP(r *http.Request) string {
-	xff := r.Header.Get("X-Forwarded-For")
-	if xff != "" {
-		// XFF may contain multiple comma-separated values; take the first one.
-		parts := strings.Split(xff, ",")
-		ip := strings.TrimSpace(parts[0])
-		// Strip optional port if present.
-		host, _, err := net.SplitHostPort(ip)
-		if err == nil {
-			return host
+// GetClientIP extracts the client IP from the request.
+// When trustedProxyCIDRs is non-empty, X-Forwarded-For is used only if RemoteAddr matches
+// a trusted CIDR; otherwise RemoteAddr is used (prevents forged XFF from direct clients).
+// When trustedProxyCIDRs is empty, legacy behavior applies: prefer the first XFF hop if present.
+func GetClientIP(r *http.Request, trustedProxyCIDRs []string) string {
+	remoteIP := parseRequestRemoteIP(r)
+	xff := strings.TrimSpace(r.Header.Get("X-Forwarded-For"))
+
+	if len(trustedProxyCIDRs) == 0 {
+		if xff != "" {
+			return parseFirstXFF(xff)
 		}
-		return ip
+		if remoteIP != nil {
+			return remoteIP.String()
+		}
+		return stripHostPortFallback(r.RemoteAddr)
 	}
 
-	host, _, err := net.SplitHostPort(r.RemoteAddr)
+	if remoteIP == nil || !ipMatchesTrustedProxies(remoteIP, trustedProxyCIDRs) {
+		if remoteIP != nil {
+			return remoteIP.String()
+		}
+		return stripHostPortFallback(r.RemoteAddr)
+	}
+
+	if xff != "" {
+		return parseFirstXFF(xff)
+	}
+	// remoteIP is non-nil here: otherwise the trusted-proxy branch above would have returned.
+	return remoteIP.String()
+}
+
+func parseRequestRemoteIP(r *http.Request) net.IP {
+	host := stripHostPortFallback(r.RemoteAddr)
+	if host == "" {
+		return nil
+	}
+	return net.ParseIP(host)
+}
+
+func stripHostPortFallback(addr string) string {
+	host, _, err := net.SplitHostPort(addr)
 	if err == nil {
 		return host
 	}
-	return r.RemoteAddr
+	return addr
 }
 
-// IsLANIP checks if the given IP address is a private LAN IP (e.g. 10.0.0.0/8, 192.168.0.0/16, loopback)
-// or belongs to any of the allowed subnets specified in the configuration.
-func IsLANIP(ipStr string, allowedSubnets []string) bool {
-	ip := net.ParseIP(ipStr)
+func parseFirstXFF(xff string) string {
+	parts := strings.Split(xff, ",")
+	ip := strings.TrimSpace(parts[0])
+	host, _, err := net.SplitHostPort(ip)
+	if err == nil {
+		return host
+	}
+	return ip
+}
+
+func ipMatchesTrustedProxies(ip net.IP, cidrs []string) bool {
 	if ip == nil {
 		return false
 	}
-
-	// Check standard private / loopback / link-local unicast IPs
-	if ip.IsPrivate() || ip.IsLoopback() || ip.IsLinkLocalUnicast() {
-		return true
-	}
-
-	// Check custom allowed subnets
-	for _, cidr := range allowedSubnets {
-		_, ipNet, err := net.ParseCIDR(cidr)
-		if err == nil && ipNet.Contains(ip) {
+	for _, c := range cidrs {
+		c = strings.TrimSpace(c)
+		if c == "" {
+			continue
+		}
+		_, ipNet, err := net.ParseCIDR(c)
+		if err != nil {
+			// Allow single IP as /32 or /128
+			parsed := net.ParseIP(c)
+			if parsed == nil {
+				continue
+			}
+			if parsed.Equal(ip) {
+				return true
+			}
+			continue
+		}
+		if ipNet.Contains(ip) {
 			return true
 		}
 	}
-
 	return false
-}
-
-// ExtractIPs retrieves the real public IP from the request and a valid LAN IP
-// if provided in the query string ("ip" or "ipv4").
-func ExtractIPs(req *http.Request, allowedSubnets []string) (string, string) {
-	realIP := GetClientIP(req)
-	lanIP := ""
-
-	queryIP := req.URL.Query().Get("ip")
-	if queryIP == "" {
-		queryIP = req.URL.Query().Get("ipv4")
-	}
-
-	if queryIP != "" && IsLANIP(queryIP, allowedSubnets) {
-		lanIP = queryIP
-	}
-
-	return realIP, lanIP
 }

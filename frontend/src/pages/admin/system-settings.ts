@@ -15,8 +15,11 @@ export const settingKeys = {
   flushBatchSize: 'tracker.flush_batch_size',
   globalFreeleech: 'tracker.global_freeleech',
   freeleechCountdown: 'tracker.freeleech_countdown_hours',
-  bonusFormula: 'tracker.bonus_formula',
-  trackerList: 'tracker.list',
+  announceUrl: 'tracker.announce_url',
+  bonusEnabled: 'bonus.enabled',
+  bonusMultiplier: 'bonus.multiplier',
+  bonusUploadPointsPerGib: 'bonus.upload_points_per_gib',
+  bonusInvitePoints: 'bonus.invite_points',
 } as const
 
 export function parseBoolean(input: string | undefined, fallback: boolean): boolean {

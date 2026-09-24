@@ -1,0 +1,45 @@
+Mode: debug
+Port: ""
+Log:
+    LogPath: ""
+    CLS:
+        Endpoint: ""
+        AccessKey: ""
+        AccessToken: ""
+        TopicID: ""
+B2:
+    BucketKeyID: ""
+    BucketKey: ""
+    BucketName: ""
+Pyroscope:
+    ApplicationName: ""
+    ServerAddress: ""
+    BasicAuthUser: ""
+    BasicAuthPass: ""
+    TenantID: ""
+Uptrace:
+    ServiceName: ""
+    ServiceVersion: ""
+    DSN: ""
+SentryDsn: ""
+TrackerV1:
+    TrustedProxyCIDRs: []
+    RedisKeyPrefix: ""
+CORS:
+    AllowOrigins: []
+Pgsql:
+    Addr: ""
+    Port: ""
+    User: ""
+    Password: ""
+    Database: ""
+Rds:
+    Addr: ""
+    Port: ""
+    Password: ""
+    DB: 0
+tracker: {}
+user:
+    AdminName: ""
+    AdminAccount: ""
+    AdminPassword: ""

@@ -10,6 +10,7 @@ import (
 	"github.com/GoldenSheep402/Hermes/mod/casbinX/rbac"
 	trackerDao "github.com/GoldenSheep402/Hermes/mod/tracker/dao"
 	"github.com/GoldenSheep402/Hermes/mod/traffic/dao"
+	"github.com/GoldenSheep402/Hermes/pkg/authz"
 	"github.com/GoldenSheep402/Hermes/pkg/ctxKey"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
@@ -28,6 +29,18 @@ func requireAuth(ctx context.Context) error {
 	userID, ok := ctx.Value(ctxKey.UID).(string)
 	if !ok || userID == "" {
 		return status.Error(codes.Unauthenticated, "unauthenticated")
+	}
+	return nil
+}
+
+func requireAdmin(ctx context.Context) error {
+	if err := requireAuth(ctx); err != nil {
+		return err
+	}
+	userID := ctx.Value(ctxKey.UID).(string)
+	isAdmin, err := rbac.CasbinManager.CheckUserIsGlobalAdmin(userID)
+	if err != nil || !isAdmin {
+		return status.Error(codes.PermissionDenied, "admin privileges required")
 	}
 	return nil
 }
@@ -76,14 +89,14 @@ func (s S) ListTransferHistory(ctx context.Context, request *trafficV1.ListTrans
 }
 
 func (s S) GetTorrentStats(ctx context.Context, request *trafficV1.GetTorrentStatsRequest) (*trafficV1.GetTorrentStatsResponse, error) {
-	if err := requireAuth(ctx); err != nil {
-		return nil, err
-	}
 	if request.TorrentId == "" {
 		return nil, status.Error(codes.InvalidArgument, "Torrent ID required")
 	}
+	if err := authz.RequireTorrentSensitiveAccess(ctx, request.TorrentId); err != nil {
+		return nil, err
+	}
 
-	ts, err := dao.TorrentStats.GetByTorrentID(ctx, request.TorrentId)
+	ts, err := trackerDao.Traffic.GetTorrentSnapshot(ctx, request.TorrentId)
 	if err != nil {
 		s.Log.Errorw("failed to get torrent stats", "err", err)
 		return nil, status.Error(codes.NotFound, "Torrent stats not found")
@@ -103,7 +116,7 @@ func (s S) GetTorrentStats(ctx context.Context, request *trafficV1.GetTorrentSta
 
 func (s S) StreamSiteTraffic(req *trafficV1.StreamSiteTrafficRequest, stream trafficV1.TrafficService_StreamSiteTrafficServer) error {
 	ctx := stream.Context()
-	if err := requireAuth(ctx); err != nil {
+	if err := requireAdmin(ctx); err != nil {
 		return err
 	}
 

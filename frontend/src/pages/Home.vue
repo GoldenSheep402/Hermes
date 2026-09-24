@@ -41,7 +41,7 @@ const authStore = useAuthStore()
       <div class="grid gap-2">
         <router-link class="quick-entry" to="/torrents">进入种子列表</router-link>
         <router-link class="quick-entry" to="/upload">发布资源</router-link>
-        <router-link class="quick-entry" to="/forums">进入论坛</router-link>
+        <router-link class="quick-entry" to="/bonus">魔力商店</router-link>
         <router-link class="quick-entry" to="/faq">查看 FAQ</router-link>
       </div>
     </t-card>

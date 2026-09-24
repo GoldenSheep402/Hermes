@@ -7,6 +7,7 @@ import (
 	"github.com/GoldenSheep402/Hermes/mod/torrent/common"
 	"github.com/GoldenSheep402/Hermes/mod/torrent/dao"
 	"github.com/GoldenSheep402/Hermes/mod/torrent/model"
+	trackerDao "github.com/GoldenSheep402/Hermes/mod/tracker/dao"
 	userDao "github.com/GoldenSheep402/Hermes/mod/user/dao"
 	"github.com/GoldenSheep402/Hermes/pkg/ctxKey"
 	torrentV1 "github.com/GoldenSheep402/Hermes/pkg/proto/torrent/v1"
@@ -49,13 +50,13 @@ func (s *S) UploadTorrent(ctx context.Context, req *torrentV1.UploadTorrentReque
 		return nil, status.Error(codes.Unauthenticated, "invalid user passkey")
 	}
 
-	announceURLs, err := common.BuildAnnounceURLsForPasskey(ctx, uploader.Passkey)
+	announceURL, err := common.BuildAnnounceURLForPasskey(ctx, uploader.Passkey)
 	if err != nil {
 		return nil, status.Error(codes.FailedPrecondition, "tracker endpoint not available")
 	}
 
-	// Rewrite for upload persistence: bind announce URLs and enforce private tracker mode.
-	normalizedData, err := torrent.RewriteUploadTorrentWithTrackers(req.TorrentData, announceURLs)
+	// Rewrite for upload persistence: bind announce URL and enforce private tracker mode.
+	normalizedData, err := torrent.RewriteUploadTorrent(req.TorrentData, announceURL)
 	if err != nil {
 		s.Log.Errorw("failed to rewrite torrent at upload", "error", err)
 		return nil, status.Error(codes.InvalidArgument, "Invalid torrent file")
@@ -136,13 +137,13 @@ func (s *S) DownloadTorrent(ctx context.Context, req *torrentV1.DownloadTorrentR
 		return nil, status.Error(codes.Unauthenticated, "invalid user passkey")
 	}
 
-	announceURLs, err := common.BuildAnnounceURLsForPasskey(ctx, user.Passkey)
+	announceURL, err := common.BuildAnnounceURLForPasskey(ctx, user.Passkey)
 	if err != nil {
 		s.Log.Errorw("failed to resolve tracker endpoint for download", "uid", uid, "err", err)
 		return nil, status.Error(codes.FailedPrecondition, "tracker endpoint not available")
 	}
 
-	downloadData, err := torrent.RewriteDownloadTorrentWithTrackers(rawData, announceURLs)
+	downloadData, err := torrent.RewriteDownloadTorrent(rawData, announceURL)
 	if err != nil {
 		s.Log.Errorw("failed to rewrite torrent download data", "id", req.TorrentId, "err", err)
 		return nil, status.Error(codes.Internal, "Failed to build torrent download")
@@ -167,6 +168,19 @@ func (s *S) GetTorrent(ctx context.Context, req *torrentV1.GetTorrentRequest) (*
 		s.Log.Errorw("failed to get torrent", "id", req.Id, "err", err)
 		return nil, status.Error(codes.NotFound, "Torrent not found")
 	}
+	stats, err := trackerDao.Traffic.GetTorrentSnapshot(ctx, torrent.ID)
+	if err != nil {
+		s.Log.Warnw("failed to get tracker torrent stats snapshot", "id", req.Id, "err", err)
+		stats = nil
+	}
+	seedCount := torrent.SeedCount
+	leechCount := torrent.LeechCount
+	snatchCount := torrent.SnatchCount
+	if stats != nil {
+		seedCount = stats.SeedCount
+		leechCount = stats.LeechCount
+		snatchCount = stats.SnatchCount
+	}
 
 	return &torrentV1.GetTorrentResponse{
 		Torrent: &torrentV1.TorrentInfo{
@@ -177,9 +191,9 @@ func (s *S) GetTorrent(ctx context.Context, req *torrentV1.GetTorrentRequest) (*
 			Size:         torrent.Size,
 			IsSingleFile: torrent.IsSingleFile,
 			FileCount:    int32(torrent.FileCount),
-			SeedCount:    0, // Will be hydrated by Tracker
-			LeechCount:   0, // Will be hydrated by Tracker
-			SnatchCount:  0, // Will be hydrated by Tracker
+			SeedCount:    int32(seedCount),
+			LeechCount:   int32(leechCount),
+			SnatchCount:  int32(snatchCount),
 			IsActive:     torrent.IsActive,
 			CreatedAt:    torrent.CreatedAt.Format("2006-01-02T15:04:05Z07:00"),
 		},

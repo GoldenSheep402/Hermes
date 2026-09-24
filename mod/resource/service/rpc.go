@@ -19,6 +19,7 @@ import (
 	torrentCommon "github.com/GoldenSheep402/Hermes/mod/torrent/common"
 	torrentDao "github.com/GoldenSheep402/Hermes/mod/torrent/dao"
 	torrentModel "github.com/GoldenSheep402/Hermes/mod/torrent/model"
+	trackerDao "github.com/GoldenSheep402/Hermes/mod/tracker/dao"
 	userDao "github.com/GoldenSheep402/Hermes/mod/user/dao"
 	userModel "github.com/GoldenSheep402/Hermes/mod/user/model"
 	"github.com/GoldenSheep402/Hermes/pkg/ctxKey"
@@ -151,13 +152,13 @@ func (s *S) CreateResource(ctx context.Context, req *resourceV1.CreateResourceRe
 		return nil, status.Error(codes.Unauthenticated, "invalid user passkey")
 	}
 
-	announceURLs, err := torrentCommon.BuildAnnounceURLsForPasskey(ctx, uploader.Passkey)
+	announceURL, err := torrentCommon.BuildAnnounceURLForPasskey(ctx, uploader.Passkey)
 	if err != nil {
 		return nil, status.Error(codes.FailedPrecondition, "tracker endpoint not available")
 	}
 
-	// Rewrite for upload persistence: bind announce URLs and enforce private tracker mode.
-	normalizedData, err := torrent.RewriteUploadTorrentWithTrackers(req.TorrentData, announceURLs)
+	// Rewrite for upload persistence: bind announce URL and enforce private tracker mode.
+	normalizedData, err := torrent.RewriteUploadTorrent(req.TorrentData, announceURL)
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, "Invalid torrent data")
 	}
@@ -566,10 +567,12 @@ func (s *S) SetPromotion(ctx context.Context, req *resourceV1.SetPromotionReques
 		"double_upload": req.DoubleUpload,
 	}
 
+	var freeUntil *time.Time
 	if req.FreeUntil != "" {
 		t, err := time.Parse(time.RFC3339, req.FreeUntil)
 		if err == nil {
 			updates["free_until"] = t
+			freeUntil = &t
 		} else {
 			return nil, status.Error(codes.InvalidArgument, "Invalid FreeUntil time format")
 		}
@@ -577,10 +580,12 @@ func (s *S) SetPromotion(ctx context.Context, req *resourceV1.SetPromotionReques
 		updates["free_until"] = nil
 	}
 
+	var doubleUntil *time.Time
 	if req.DoubleUntil != "" {
 		t, err := time.Parse(time.RFC3339, req.DoubleUntil)
 		if err == nil {
 			updates["double_until"] = t
+			doubleUntil = &t
 		} else {
 			return nil, status.Error(codes.InvalidArgument, "Invalid DoubleUntil time format")
 		}
@@ -588,9 +593,31 @@ func (s *S) SetPromotion(ctx context.Context, req *resourceV1.SetPromotionReques
 		updates["double_until"] = nil
 	}
 
+	res, err := dao.Resource.GetByID(ctx, req.ResourceId)
+	if err != nil || res == nil {
+		return nil, status.Error(codes.NotFound, "Resource not found")
+	}
+
 	if err := dao.Resource.UpdateFields(ctx, req.ResourceId, updates); err != nil {
 		s.Log.Errorw("failed to set promotion", "err", err)
 		return nil, status.Error(codes.Internal, "Failed to update resource promotion")
+	}
+
+	upFactor := int64(1)
+	if req.DoubleUpload {
+		upFactor = 2
+	}
+	downFactor := int64(1)
+	if req.IsFree {
+		downFactor = 0
+	}
+	if syncErr := trackerDao.Traffic.SetTorrentPromo(ctx, res.TorrentID, trackerDao.PromoFactors{
+		UploadFactor:   upFactor,
+		DownloadFactor: downFactor,
+		UploadUntil:    trackerDao.FormatUnix(doubleUntil),
+		DownloadUntil:  trackerDao.FormatUnix(freeUntil),
+	}); syncErr != nil {
+		s.Log.Warnw("failed to sync torrent promo to redis", "torrent_id", res.TorrentID, "err", syncErr)
 	}
 
 	return &resourceV1.SetPromotionResponse{}, nil

@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/hex"
 	"hash/fnv"
+	"log/slog"
 	"math/rand"
 	"net"
 	"net/http"
@@ -16,6 +17,7 @@ import (
 	"github.com/zeebo/bencode"
 
 	"github.com/GoldenSheep402/Hermes/conf"
+	systemSetting "github.com/GoldenSheep402/Hermes/mod/system/setting"
 	torrentDao "github.com/GoldenSheep402/Hermes/mod/torrent/dao"
 	trackerDao "github.com/GoldenSheep402/Hermes/mod/tracker/dao"
 	trackerModel "github.com/GoldenSheep402/Hermes/mod/tracker/model"
@@ -29,11 +31,15 @@ const (
 	defaultPeerFetchCount    = 120
 	maxPeerFetchCount        = 600
 	maxPeersPerSubnetInPhase = 2
-	announceDedupeWindow     = 12 * time.Second
+	// maxScrapeInfoHashes limits scrape request size (BEP common practice).
+	maxScrapeInfoHashes = 64
 )
 
-// Registry TODO: multi tracker support
+// Registry registers BitTorrent tracker HTTP routes. Multi-site isolation uses RedisKeyPrefix
+// in global config (TrackerV1.RedisKeyPrefix); passkey segments should be redacted in access logs
+// (see RedactPasskeyInPath and deployment docs).
 func Registry(jinE *jin.Engine) {
+	jinE.Use(trackerAccessMetaMiddleware())
 	jinE.GET("/announce/:passkey", Announce)
 	jinE.GET("/scrape/:passkey", Scrape)
 	// Backward-compatible routes for deployments that proxy tracker through /api/*.
@@ -51,6 +57,20 @@ func BencodeError(c *jin.Context, msg string) {
 	bencode.NewEncoder(c.Writer).Encode(resp)
 }
 
+func trackerAccessMetaMiddleware() jin.HandlerFunc {
+	return func(c *jin.Context) {
+		c.Next()
+		// Structured log (passkey-redacted path) for observability; uses default slog logger.
+		path := RedactPasskeyInPath(c.Request.URL.Path)
+		status := c.Writer.Status()
+		if status >= 400 {
+			slog.Warn("tracker_http", "path", path, "status", status)
+		} else {
+			slog.Debug("tracker_http", "path", path, "status", status)
+		}
+	}
+}
+
 func Announce(c *jin.Context) {
 	ctx := c.Request.Context()
 	passkey := c.Params.ByName("passkey")
@@ -59,10 +79,14 @@ func Announce(c *jin.Context) {
 		return
 	}
 
-	// 1. Authenticate user by passkey
-	user, err := userDao.User.GetByPasskey(ctx, passkey)
+	// 1. Authenticate user by passkey (Redis-backed cache)
+	user, err := userDao.User.GetByPasskeyCached(ctx, passkey)
 	if err != nil || user == nil {
 		BencodeError(c, "Invalid passkey")
+		return
+	}
+	if !user.IsEnabled {
+		BencodeError(c, "User disabled")
 		return
 	}
 
@@ -81,8 +105,8 @@ func Announce(c *jin.Context) {
 		return
 	}
 
-	// 3. Find Torrent by InfoHash
-	torrent, err := torrentDao.Torrent.GetByHash(ctx, infoHashHex)
+	// 3. Find Torrent by InfoHash (Redis-backed cache)
+	torrent, err := torrentDao.Torrent.GetByHashCached(ctx, infoHashHex)
 	if err != nil {
 		BencodeError(c, "Torrent not registered")
 		return
@@ -90,6 +114,10 @@ func Announce(c *jin.Context) {
 
 	// Manual parsing instead of ShouldBindQuery due to jin limitation and binary query
 	port, _ := strconv.Atoi(q.Get("port"))
+	if port < 1 || port > 65535 {
+		BencodeError(c, "Invalid port")
+		return
+	}
 	uploaded, _ := strconv.ParseInt(q.Get("uploaded"), 10, 64)
 	downloaded, _ := strconv.ParseInt(q.Get("downloaded"), 10, 64)
 	left, _ := strconv.ParseInt(q.Get("left"), 10, 64)
@@ -109,43 +137,19 @@ func Announce(c *jin.Context) {
 	}
 	event := normalizeAnnounceEvent(q.Get("event"))
 
-	// Extract Real IP and LanIP (if any)
-	// We dynamically load AllowedSubnets from the global config so it responds to hot-reloads
-	var allowedSubnets []string
-	if c := conf.Get(); c != nil {
-		allowedSubnets = c.TrackerV1.AllowedSubnets
+	// Extract client public IP (LAN hairpin removed for single-site public tracker).
+	var trustedProxies []string
+	if cfg := conf.Get(); cfg != nil {
+		trustedProxies = cfg.TrackerV1.TrustedProxyCIDRs
 	}
 
-	realIP, lanIP := ExtractIPs(c.Request, allowedSubnets)
+	realIP := GetClientIP(c.Request, trustedProxies)
 
-	// 4. Update Peer info in DB (or Redis eventually)
+	// 4. Update Peer info in Redis
 	isSeeder := left == 0
 
 	peerIDHex := hex.EncodeToString([]byte(peerIDRaw))
-
-	isUniqueAnnounce, dedupeErr := trackerDao.Peer.MarkAnnounceUnique(
-		ctx,
-		torrent.ID,
-		peerIDHex,
-		uploaded,
-		downloaded,
-		left,
-		announceDedupeWindow,
-	)
-	if dedupeErr != nil {
-		// Degrade gracefully: keep tracker available even if dedupe cache check fails.
-		isUniqueAnnounce = true
-	}
-
-	lastPeer, _ := trackerDao.Peer.Get(ctx, torrent.ID, peerIDHex)
 	now := time.Now()
-	startedAt := now
-	if lastPeer != nil && !lastPeer.StartedAt.IsZero() {
-		startedAt = lastPeer.StartedAt
-	}
-	if event == "started" || lastPeer == nil {
-		startedAt = now
-	}
 
 	peer := &trackerModel.Peer{
 		Model:      stdao.Model{ID: ulid.Make().String()},
@@ -153,76 +157,93 @@ func Announce(c *jin.Context) {
 		UserID:     user.ID,
 		PeerID:     peerIDHex,
 		IP:         realIP,
-		LanIP:      lanIP,
+		LanIP:      "",
 		Port:       port,
 		Uploaded:   uploaded,
 		Downloaded: downloaded,
 		Left:       left,
 		Agent:      c.Request.Header.Get("User-Agent"),
 		IsSeeder:   isSeeder,
-		StartedAt:  startedAt,
+		StartedAt:  now,
 		LastAction: now,
 	}
-	uploadDelta := int64(0)
-	downloadDelta := int64(0)
-	if isUniqueAnnounce {
-		uploadDelta = computeCounterDelta(lastPeer, uploaded, event, func(p *trackerModel.Peer) int64 {
-			return p.Uploaded
-		})
-		downloadDelta = computeCounterDelta(lastPeer, downloaded, event, func(p *trackerModel.Peer) int64 {
-			return p.Downloaded
-		})
+	announceResult, err := trackerDao.Traffic.ApplyAnnounce(ctx, peer, event)
+	if err != nil {
+		BencodeError(c, "Temporary tracker failure")
+		return
 	}
-	isActive := event != "stopped"
+	if !announceResult.StartedAt.IsZero() {
+		peer.StartedAt = announceResult.StartedAt
+	}
+	peer.Uploaded = announceResult.StoredUpload
+	peer.Downloaded = announceResult.StoredDownload
+	peer.Left = announceResult.StoredLeft
+	peer.IsSeeder = peer.Left == 0
 
-	if event == "stopped" {
-		// Remove peer
-		_ = trackerDao.Peer.DeletePeer(ctx, torrent.ID, peer.PeerID)
-	} else {
-		// Upsert peer
-		_ = trackerDao.Peer.Upsert(ctx, peer)
-
-		// Create snatch record if event == completed
-		if event == "completed" {
-			now := time.Now()
-			snatch := &trackerModel.Snatch{
-				Model:      stdao.Model{ID: ulid.Make().String()},
-				TorrentID:  torrent.ID,
-				UserID:     user.ID,
-				Uploaded:   uploaded,
-				Downloaded: downloaded,
-				IsActive:   true,
-				FinishedAt: &now,
-				LastAction: now,
-			}
-			_ = trackerDao.Snatch.UpdateOrCreate(ctx, snatch)
+	if event == "completed" {
+		finishedAt := announceResult.FinishedAt
+		if finishedAt.IsZero() {
+			finishedAt = time.Now()
+		}
+		snatch := &trackerModel.Snatch{
+			Model:      stdao.Model{ID: ulid.Make().String()},
+			TorrentID:  torrent.ID,
+			UserID:     user.ID,
+			Uploaded:   peer.Uploaded,
+			SeedTime:   0,
+			Downloaded: peer.Downloaded,
+			IsActive:   true,
+			FinishedAt: &finishedAt,
+			LastAction: finishedAt,
+		}
+		if err := trackerDao.Snatch.UpdateOrCreate(ctx, snatch); err != nil {
+			BencodeError(c, "Temporary tracker failure")
+			return
 		}
 	}
-	_ = trackerDao.Traffic.RecordDelta(ctx, user.ID, torrent.ID, uploadDelta, downloadDelta, isActive, isSeeder, peer.LastAction)
 
 	// 5. Build list of peers to return
 	limit := sanitizeNumWant(numWant)
-	dbPeers, _ := trackerDao.Peer.GetPeersForTorrent(ctx, torrent.ID, calcPeerFetchCount(limit))
-	selectedPeers := SelectPeersForResponse(peer, dbPeers, limit)
+	var selectedPeers []*trackerModel.Peer
+	if event != "stopped" {
+		dbPeers, sampleErr := trackerDao.Peer.GetPeersForTorrentSample(ctx, torrent.ID, calcPeerFetchCount(limit), peer.PeerID, peer.LastAction)
+		if sampleErr != nil {
+			BencodeError(c, "Temporary tracker failure")
+			return
+		}
+		selectedPeers = SelectPeersForResponse(peer, dbPeers, limit)
+	} else {
+		selectedPeers = []*trackerModel.Peer{}
+	}
+	stats, statsErr := trackerDao.Traffic.GetTorrentSnapshot(ctx, torrent.ID)
+	if statsErr != nil {
+		BencodeError(c, "Temporary tracker failure")
+		return
+	}
 
 	// Build bencode response
+	announceInterval := systemSetting.TrackerAnnounceIntervalValue(ctx)
+	minInterval := announceInterval / 3
+	if minInterval < 60 {
+		minInterval = 60
+	}
 	resp := map[string]interface{}{
-		"interval":     1800, // 30 minutes
-		"min interval": 600,  // 10 minutes
-		"complete":     torrent.SeedCount,
-		"incomplete":   torrent.LeechCount,
+		"interval":     announceInterval,
+		"min interval": minInterval,
+		"complete":     stats.SeedCount,
+		"incomplete":   stats.LeechCount,
 	}
 
 	if compact != 0 {
-		resp["peers"] = BuildCompactPeerList(realIP, lanIP, peer.PeerID, selectedPeers)
+		resp["peers"] = BuildCompactPeerList(peer.PeerID, selectedPeers)
 	} else {
 		// Dictionary format
-		resp["peers"] = BuildPeerList(realIP, lanIP, peer.PeerID, selectedPeers)
+		resp["peers"] = BuildPeerList(peer.PeerID, selectedPeers)
 	}
 
-	bencode.NewEncoder(c.Writer).Encode(resp)
 	c.Writer.Header().Set("Content-Type", "text/plain")
 	c.Writer.WriteHeader(http.StatusOK)
+	_ = bencode.NewEncoder(c.Writer).Encode(resp)
 }
 
 func Scrape(c *jin.Context) {
@@ -233,14 +254,21 @@ func Scrape(c *jin.Context) {
 	}
 
 	// Authenticate
-	user, err := userDao.User.GetByPasskey(c.Request.Context(), passkey)
+	user, err := userDao.User.GetByPasskeyCached(c.Request.Context(), passkey)
 	if err != nil || user == nil {
 		BencodeError(c, "Invalid passkey")
+		return
+	}
+	if !user.IsEnabled {
+		BencodeError(c, "User disabled")
 		return
 	}
 
 	q := c.Request.URL.Query()
 	infoHashesRaw := q["info_hash"]
+	if len(infoHashesRaw) > maxScrapeInfoHashes {
+		infoHashesRaw = infoHashesRaw[:maxScrapeInfoHashes]
+	}
 
 	filesMap := map[string]interface{}{}
 
@@ -250,15 +278,19 @@ func Scrape(c *jin.Context) {
 		}
 		hashHex := hex.EncodeToString([]byte(rawHash))
 
-		torrent, err := torrentDao.Torrent.GetByHash(c.Request.Context(), hashHex)
+		torrent, err := torrentDao.Torrent.GetByHashCached(c.Request.Context(), hashHex)
 		if err != nil || torrent == nil {
+			continue
+		}
+		stats, err := trackerDao.Traffic.GetTorrentSnapshot(c.Request.Context(), torrent.ID)
+		if err != nil {
 			continue
 		}
 
 		filesMap[rawHash] = map[string]interface{}{
-			"complete":   torrent.SeedCount,
-			"downloaded": torrent.SnatchCount,
-			"incomplete": torrent.LeechCount,
+			"complete":   stats.SeedCount,
+			"downloaded": stats.SnatchCount,
+			"incomplete": stats.LeechCount,
 		}
 	}
 
@@ -277,9 +309,9 @@ func computeCounterDelta(lastPeer *trackerModel.Peer, current int64, event strin
 	}
 	if lastPeer == nil {
 		// When peer snapshot is missing (e.g. redis restart/expiry), blindly trusting
-		// the cumulative counter may double count old traffic. Accept full value only
-		// on explicit session boundaries.
-		if event == "started" || event == "completed" {
+		// the cumulative counter may double count old traffic. Accept full value on
+		// started or empty event (matches announce.lua first-session behavior).
+		if event == "started" || event == "" {
 			return current
 		}
 		return 0
@@ -302,14 +334,19 @@ func computeCounterDelta(lastPeer *trackerModel.Peer, current int64, event strin
 func normalizeAnnounceEvent(raw string) string {
 	event := strings.ToLower(strings.TrimSpace(raw))
 	switch event {
+	case "":
+		return ""
 	case "start":
 		return "started"
 	case "stop":
 		return "stopped"
 	case "complete":
 		return "completed"
-	default:
+	case "started", "stopped", "completed":
 		return event
+	default:
+		// Treat unknown client events as periodic announce (empty).
+		return ""
 	}
 }
 
@@ -338,7 +375,7 @@ func calcPeerFetchCount(limit int) int {
 // SelectPeersForResponse applies a smarter peer selection strategy:
 // - filter duplicates and same-account peers
 // - prefer opposite role (leecher gets seeders, seeder gets leechers)
-// - prefer LAN-affinity and active peers
+// - prefer active peers
 // - keep subnet diversity to avoid hotspot peers
 func SelectPeersForResponse(requester *trackerModel.Peer, dbPeers []*trackerModel.Peer, limit int) []*trackerModel.Peer {
 	limit = sanitizeNumWant(limit)
@@ -384,6 +421,9 @@ func filterPeerCandidates(requester *trackerModel.Peer, peers []*trackerModel.Pe
 			continue
 		}
 		if p.Port <= 0 || p.Port > 65535 {
+			continue
+		}
+		if net.ParseIP(p.IP) == nil {
 			continue
 		}
 		if _, exists := seenPeerID[p.PeerID]; exists {
@@ -447,13 +487,6 @@ func sortPeersWithStrategy(requester *trackerModel.Peer, peers []*trackerModel.P
 	sort.SliceStable(peers, func(i, j int) bool {
 		a := peers[i]
 		b := peers[j]
-
-		// Prefer LAN-affinity first when available.
-		aLAN := lanAffinityScore(requester, a)
-		bLAN := lanAffinityScore(requester, b)
-		if aLAN != bLAN {
-			return aLAN > bLAN
-		}
 
 		if requester.IsSeeder {
 			// For seeding peers, prioritize active leechers with more remaining data.
@@ -526,20 +559,6 @@ func appendPeersWithSubnetDiversity(
 	return dst
 }
 
-func lanAffinityScore(requester, candidate *trackerModel.Peer) int {
-	if requester == nil || candidate == nil {
-		return 0
-	}
-	score := 0
-	if requester.IP != "" && requester.IP == candidate.IP {
-		score++
-	}
-	if requester.LanIP != "" && candidate.LanIP != "" && isSameSubnet24(requester.LanIP, candidate.LanIP) {
-		score++
-	}
-	return score
-}
-
 func peerSubnetKey(ip string) string {
 	parsed := net.ParseIP(ip).To4()
 	if parsed == nil {
@@ -548,11 +567,8 @@ func peerSubnetKey(ip string) string {
 	return strconv.Itoa(int(parsed[0])) + "." + strconv.Itoa(int(parsed[1])) + "." + strconv.Itoa(int(parsed[2]))
 }
 
-// BuildPeerList constructs the list of peers to be returned to the client,
-// handling LAN IP substitution only if peers share the same public IP AND
-// their LAN IPs are in the same subnet (assumed /24 for typical homes).
-// It returns BOTH the real IP and the LAN IP so clients can fallback to the public IP.
-func BuildPeerList(clientRealIP, clientLanIP string, excludePeerID string, dbPeers []*trackerModel.Peer) []map[string]interface{} {
+// BuildPeerList constructs the dictionary peer list using public IPs only.
+func BuildPeerList(excludePeerID string, dbPeers []*trackerModel.Peer) []map[string]interface{} {
 	var bPeers []map[string]interface{}
 	for _, p := range dbPeers {
 		if p.PeerID == excludePeerID {
@@ -563,25 +579,11 @@ func BuildPeerList(clientRealIP, clientLanIP string, excludePeerID string, dbPee
 			continue
 		}
 
-		// Always return the standard public IP
 		bPeers = append(bPeers, map[string]interface{}{
 			"peer id": string(rawPeerID),
 			"ip":      p.IP,
 			"port":    p.Port,
 		})
-
-		// If both peers share the exact same public (real) IP, and the target peer has a valid LAN IP registered
-		// AND they are in the exact same /24 subnet for IPv4
-		if p.LanIP != "" && clientLanIP != "" && p.IP == clientRealIP {
-			if isSameSubnet24(p.LanIP, clientLanIP) {
-				// Provide the LAN IP as an additional endpoint for fallback
-				bPeers = append(bPeers, map[string]interface{}{
-					"peer id": string(rawPeerID),
-					"ip":      p.LanIP,
-					"port":    p.Port,
-				})
-			}
-		}
 	}
 	if bPeers == nil {
 		bPeers = []map[string]interface{}{}
@@ -590,40 +592,19 @@ func BuildPeerList(clientRealIP, clientLanIP string, excludePeerID string, dbPee
 }
 
 // BuildCompactPeerList constructs the binary compact representation of peers.
-func BuildCompactPeerList(clientRealIP, clientLanIP string, excludePeerID string, dbPeers []*trackerModel.Peer) string {
+// Only IPv4 endpoints are encoded (To4); IPv6-only peers are omitted in compact mode.
+func BuildCompactPeerList(excludePeerID string, dbPeers []*trackerModel.Peer) string {
 	var buf []byte
 	for _, p := range dbPeers {
 		if p.PeerID == excludePeerID {
 			continue
 		}
 
-		// Always add Public IP
 		ipBytes := net.ParseIP(p.IP).To4()
 		if ipBytes != nil {
 			buf = append(buf, ipBytes...)
 			buf = append(buf, byte(p.Port>>8), byte(p.Port&0xFF))
 		}
-
-		// Add LAN IP as an additional fallback endpoint
-		if p.LanIP != "" && clientLanIP != "" && p.IP == clientRealIP {
-			if isSameSubnet24(p.LanIP, clientLanIP) {
-				lanIpBytes := net.ParseIP(p.LanIP).To4()
-				if lanIpBytes != nil {
-					buf = append(buf, lanIpBytes...)
-					buf = append(buf, byte(p.Port>>8), byte(p.Port&0xFF))
-				}
-			}
-		}
 	}
 	return string(buf)
-}
-
-func isSameSubnet24(ip1, ip2 string) bool {
-	parsed1 := net.ParseIP(ip1).To4()
-	parsed2 := net.ParseIP(ip2).To4()
-	if parsed1 == nil || parsed2 == nil {
-		return false
-	}
-	// Check if first 3 bytes (24 bits) match
-	return parsed1[0] == parsed2[0] && parsed1[1] == parsed2[1] && parsed1[2] == parsed2[2]
 }

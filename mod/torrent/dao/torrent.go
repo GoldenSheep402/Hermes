@@ -7,6 +7,7 @@ import (
 
 	"github.com/GoldenSheep402/Hermes/mod/torrent/model"
 	"github.com/GoldenSheep402/Hermes/pkg/stdao"
+	"github.com/redis/go-redis/v9"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"gorm.io/gorm"
@@ -14,9 +15,11 @@ import (
 
 type torrent struct {
 	stdao.Std[*model.Torrent]
+	rds *redis.Client
 }
 
-func (t *torrent) Init(db *gorm.DB) error {
+func (t *torrent) Init(db *gorm.DB, rds *redis.Client) error {
+	t.rds = rds
 	if err := t.Std.Init(db); err != nil {
 		return err
 	}
@@ -111,6 +114,7 @@ func (t *torrent) Create(
 		return "", status.Error(codes.Internal, "Internal error")
 	}
 
+	t.CacheInfoHash(ctx, torrentBase.InfoHash, torrentBase.ID, torrentBase.Size)
 	return torrentBase.ID, nil
 }
 
@@ -141,7 +145,10 @@ func (t *torrent) GetBase(ctx context.Context, torrentID string) (*model.Torrent
 func (t *torrent) GetByHash(ctx context.Context, hash string) (*model.Torrent, error) {
 	db := t.GetTxFromCtx(ctx).WithContext(ctx)
 	var torrent model.Torrent
-	if err := db.Model(&model.Torrent{}).Where("info_hash = ?", hash).Order("created_at ASC").First(&torrent).Error; err != nil {
+	if err := db.Model(&model.Torrent{}).
+		Where("info_hash = ? AND is_active = ?", hash, true).
+		Order("created_at ASC").
+		First(&torrent).Error; err != nil {
 		return nil, status.Error(codes.NotFound, "Torrent not found")
 	}
 	return &torrent, nil
@@ -153,7 +160,8 @@ func (t *torrent) DeleteByID(ctx context.Context, torrentID string) error {
 	}
 
 	db := t.GetTxFromCtx(ctx).WithContext(ctx)
-	return db.Transaction(func(tx *gorm.DB) error {
+	var infoHash string
+	err := db.Transaction(func(tx *gorm.DB) error {
 		var current model.Torrent
 		if err := tx.Model(&model.Torrent{}).Where("id = ?", torrentID).First(&current).Error; err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -161,6 +169,7 @@ func (t *torrent) DeleteByID(ctx context.Context, torrentID string) error {
 			}
 			return status.Error(codes.Internal, "Internal error")
 		}
+		infoHash = current.InfoHash
 
 		if err := tx.Model(&model.Torrent{}).Where("id = ?", torrentID).Update("is_active", false).Error; err != nil {
 			return status.Error(codes.Internal, "Internal error")
@@ -182,6 +191,11 @@ func (t *torrent) DeleteByID(ctx context.Context, torrentID string) error {
 
 		return nil
 	})
+	if err != nil {
+		return err
+	}
+	t.InvalidateInfoHashCache(ctx, infoHash)
+	return nil
 }
 
 func isDuplicateInfoHashError(err error) bool {

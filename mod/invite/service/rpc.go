@@ -10,13 +10,15 @@ import (
 
 	"github.com/GoldenSheep402/Hermes/mod/invite/dao"
 	"github.com/GoldenSheep402/Hermes/mod/invite/model"
+	userDao "github.com/GoldenSheep402/Hermes/mod/user/dao"
+	userModel "github.com/GoldenSheep402/Hermes/mod/user/model"
 	"github.com/GoldenSheep402/Hermes/pkg/ctxKey"
 	"github.com/GoldenSheep402/Hermes/pkg/stdao"
 	"github.com/oklog/ulid/v2"
+	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-
-	"go.uber.org/zap"
+	"gorm.io/gorm"
 )
 
 var _ inviteV1.InviteServiceServer = (*S)(nil)
@@ -51,22 +53,50 @@ func (s S) CreateInviteCode(ctx context.Context, req *inviteV1.CreateInviteCodeR
 		count = 1 // Default to 1, max 10
 	}
 
+	user, err := userDao.User.GetByID(ctx, userID)
+	if err != nil || user == nil {
+		return nil, status.Error(codes.NotFound, "user not found")
+	}
+	if !user.IsAdmin && user.InviteCount < int(count) {
+		return nil, status.Error(codes.FailedPrecondition, "insufficient invite quota")
+	}
+
 	var codesList []string
-	for i := 0; i < int(count); i++ {
-		codeStr := generateSecureCode()
-		invite := &model.InviteCode{
-			Model:     stdao.Model{ID: ulid.Make().String()},
-			Code:      codeStr,
-			SenderID:  userID,
-			IsUsed:    false,
-			ExpiredAt: time.Now().Add(72 * time.Hour), // Expire in 3 days
+	err = dao.InviteCode.DB().WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if !user.IsAdmin {
+			res := tx.Model(&userModel.User{}).
+				Where("id = ? AND invite_count >= ?", userID, count).
+				Update("invite_count", gorm.Expr("invite_count - ?", count))
+			if res.Error != nil {
+				return res.Error
+			}
+			if res.RowsAffected == 0 {
+				return status.Error(codes.FailedPrecondition, "insufficient invite quota")
+			}
 		}
 
-		if err := dao.InviteCode.Create(ctx, invite); err != nil {
-			s.Log.Errorw("failed to create invite code", "err", err)
-			return nil, status.Error(codes.Internal, "Failed to allocate invite codes")
+		for i := 0; i < int(count); i++ {
+			codeStr := generateSecureCode()
+			invite := &model.InviteCode{
+				Model:     stdao.Model{ID: ulid.Make().String()},
+				Code:      codeStr,
+				SenderID:  userID,
+				IsUsed:    false,
+				ExpiredAt: time.Now().Add(72 * time.Hour),
+			}
+			if err := tx.Create(invite).Error; err != nil {
+				return err
+			}
+			codesList = append(codesList, codeStr)
 		}
-		codesList = append(codesList, codeStr)
+		return nil
+	})
+	if err != nil {
+		if st, ok := status.FromError(err); ok {
+			return nil, st.Err()
+		}
+		s.Log.Errorw("failed to create invite code", "err", err)
+		return nil, status.Error(codes.Internal, "Failed to allocate invite codes")
 	}
 
 	return &inviteV1.CreateInviteCodeResponse{Codes: codesList}, nil

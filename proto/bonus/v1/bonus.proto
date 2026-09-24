@@ -9,11 +9,18 @@ import "google/api/annotations.proto";
 message BonusLogItem {
   string id = 1;
   string userId = 2;
-  int64 amount = 3;
+  int64 amount = 3; // milli-points (1000 = 1 bonus point)
   string reason = 4;
   string description = 5;
   string relatedId = 6;
   string createdAt = 7;
+}
+
+message ShopItem {
+  string id = 1;          // "upload" | "invite"
+  string name = 2;
+  int64 pricePoints = 3;  // display points (not milli)
+  string unit = 4;        // "GiB" | "invite"
 }
 
 // ─── Service ────────────────────────────────────────────────────────────────
@@ -34,6 +41,13 @@ service BonusService {
     };
   }
 
+  rpc ListShopItems(ListShopItemsRequest) returns (ListShopItemsResponse) {
+    option (google.api.http) = {
+      post : "/gapi/bonus/v1/shop"
+      body : "*"
+    };
+  }
+
   rpc ExchangeBonus(ExchangeBonusRequest) returns (ExchangeBonusResponse) {
     option (google.api.http) = {
       post : "/gapi/bonus/v1/exchange"
@@ -45,7 +59,10 @@ service BonusService {
 // ─── Requests / Responses ───────────────────────────────────────────────────
 
 message GetBonusBalanceRequest {}
-message GetBonusBalanceResponse { int64 balance = 1; }
+message GetBonusBalanceResponse {
+  int64 balance = 1;      // milli-points
+  int64 balancePoints = 2; // floor(balance / 1000) for convenience
+}
 
 message ListBonusLogsRequest {
   int32 page = 1;
@@ -56,8 +73,13 @@ message ListBonusLogsResponse {
   int64 total = 2;
 }
 
+message ListShopItemsRequest {}
+message ListShopItemsResponse { repeated ShopItem items = 1; }
+
 message ExchangeBonusRequest {
-  int64 amount = 1;
-  string target = 2;
+  string item = 1;    // "upload" | "invite"
+  int64 quantity = 2; // GiB for upload, count for invite
 }
-message ExchangeBonusResponse { int64 remainingBalance = 1; }
+message ExchangeBonusResponse {
+  int64 remainingBalance = 1; // milli-points
+}

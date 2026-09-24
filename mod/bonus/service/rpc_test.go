@@ -36,7 +36,18 @@ func TestBonusService_ExchangeBonus(t *testing.T) {
 		Log: zap.NewNop().Sugar(),
 	}
 
-	resp, err := s.ExchangeBonus(context.Background(), &bonusV1.ExchangeBonusRequest{Amount: 100})
+	resp, err := s.ExchangeBonus(context.Background(), &bonusV1.ExchangeBonusRequest{Item: "upload", Quantity: 1})
+	assert.Error(t, err)
+	assert.Nil(t, resp)
+	assert.Contains(t, err.Error(), "unauthenticated")
+}
+
+func TestBonusService_ListShopItems(t *testing.T) {
+	s := &S{
+		Log: zap.NewNop().Sugar(),
+	}
+
+	resp, err := s.ListShopItems(context.Background(), &bonusV1.ListShopItemsRequest{})
 	assert.Error(t, err)
 	assert.Nil(t, resp)
 	assert.Contains(t, err.Error(), "unauthenticated")

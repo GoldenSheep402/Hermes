@@ -9,6 +9,7 @@ import (
 	systemSetting "github.com/GoldenSheep402/Hermes/mod/system/setting"
 	torrentDao "github.com/GoldenSheep402/Hermes/mod/torrent/dao"
 	torrentModel "github.com/GoldenSheep402/Hermes/mod/torrent/model"
+	trackerDao "github.com/GoldenSheep402/Hermes/mod/tracker/dao"
 	trafficDao "github.com/GoldenSheep402/Hermes/mod/traffic/dao"
 	trafficModel "github.com/GoldenSheep402/Hermes/mod/traffic/model"
 	userDao "github.com/GoldenSheep402/Hermes/mod/user/dao"
@@ -97,6 +98,7 @@ func (s S) SetSettings(ctx context.Context, req *systemV1.SetSettingsRequest) (*
 		return nil, err
 	}
 
+	syncFreeleech := false
 	for _, setting := range req.Settings {
 		if setting.Key == "" {
 			continue
@@ -108,6 +110,20 @@ func (s S) SetSettings(ctx context.Context, req *systemV1.SetSettingsRequest) (*
 		if err := systemSetting.Upsert(ctx, setting.Key, setting.Value, itemType, setting.Desc); err != nil {
 			s.Log.Errorw("failed to upsert setting", "key", setting.Key, "err", err)
 			return nil, status.Error(codes.Internal, "Failed to save settings")
+		}
+		if setting.Key == systemSetting.SettingKeyTrackerGlobalFreeleech ||
+			setting.Key == systemSetting.SettingKeyTrackerFreeleechCountdownHrs {
+			syncFreeleech = true
+		}
+	}
+
+	if syncFreeleech {
+		if err := trackerDao.Traffic.SyncGlobalFreeleechFromSettings(
+			ctx,
+			systemSetting.TrackerGlobalFreeleechValue(ctx),
+			systemSetting.TrackerFreeleechCountdownHoursValue(ctx),
+		); err != nil {
+			s.Log.Warnw("failed to sync global freeleech to redis", "err", err)
 		}
 	}
 
@@ -130,7 +146,7 @@ func (s S) DeleteSetting(ctx context.Context, req *systemV1.DeleteSettingRequest
 }
 
 func (s S) GetSiteStats(ctx context.Context, req *systemV1.GetSiteStatsRequest) (*systemV1.GetSiteStatsResponse, error) {
-	if _, err := requireAuth(ctx); err != nil {
+	if err := requireAdmin(ctx); err != nil {
 		return nil, err
 	}
 
@@ -157,23 +173,31 @@ func (s S) GetSiteStats(ctx context.Context, req *systemV1.GetSiteStatsRequest) 
 	}
 
 	var totalTraffic int64
-	if err := trafficDao.UserTraffic.DB().WithContext(ctx).
-		Model(&trafficModel.UserTraffic{}).
-		Select("COALESCE(SUM(real_upload + real_download), 0)").
-		Scan(&totalTraffic).Error; err != nil {
-		s.Log.Errorw("failed to aggregate total traffic", "err", err)
-		return nil, status.Error(codes.Internal, "Failed to aggregate site stats")
+	if upload, download, found, err := trackerDao.Traffic.GetSiteTotals(ctx); err == nil && found {
+		totalTraffic = upload + download
+	} else {
+		if err != nil {
+			s.Log.Warnw("failed to sample tracker site totals", "err", err)
+		}
+		if err := trafficDao.UserTraffic.DB().WithContext(ctx).
+			Model(&trafficModel.UserTraffic{}).
+			Select("COALESCE(SUM(real_upload + real_download), 0)").
+			Scan(&totalTraffic).Error; err != nil {
+			s.Log.Errorw("failed to aggregate total traffic", "err", err)
+			return nil, status.Error(codes.Internal, "Failed to aggregate site stats")
+		}
 	}
 
-	var peerAgg struct {
-		TotalSeeders  int64 `gorm:"column:total_seeders"`
-		TotalLeechers int64 `gorm:"column:total_leechers"`
+	// O(1) DB aggregate: sums per-torrent seed/leech slots from last flush to DB (may lag Redis by flush interval).
+	var peerSum struct {
+		SeedSum  int64 `gorm:"column:seed_sum"`
+		LeechSum int64 `gorm:"column:leech_sum"`
 	}
 	if err := torrentDao.Torrent.DB().WithContext(ctx).
 		Model(&torrentModel.Torrent{}).
-		Select("COALESCE(SUM(seed_count), 0) AS total_seeders, COALESCE(SUM(leech_count), 0) AS total_leechers").
-		Scan(&peerAgg).Error; err != nil {
-		s.Log.Errorw("failed to aggregate peer stats", "err", err)
+		Select("COALESCE(SUM(seed_count), 0) AS seed_sum, COALESCE(SUM(leech_count), 0) AS leech_sum").
+		Scan(&peerSum).Error; err != nil {
+		s.Log.Errorw("failed to aggregate peer slot sums", "err", err)
 		return nil, status.Error(codes.Internal, "Failed to aggregate site stats")
 	}
 
@@ -182,7 +206,7 @@ func (s S) GetSiteStats(ctx context.Context, req *systemV1.GetSiteStatsRequest) 
 		TotalTorrents:  totalTorrents,
 		TotalResources: totalResources,
 		TotalTraffic:   totalTraffic,
-		TotalSeeders:   peerAgg.TotalSeeders,
-		TotalLeechers:  peerAgg.TotalLeechers,
+		TotalSeeders:   peerSum.SeedSum,
+		TotalLeechers:  peerSum.LeechSum,
 	}, nil
 }

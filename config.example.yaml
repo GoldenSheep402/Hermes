@@ -42,6 +42,8 @@ user:
     AdminAccount: "admin@admin.com"
     AdminPassword: "admin@admin.com"
 TrackerV1:
-    Endpoint: "http://172.16.7.183:27811"
-    AllowedSubnets: [
-    ]
+    # When set, X-Forwarded-For is honored only if RemoteAddr matches a CIDR (e.g. reverse proxy).
+    # Example: [ "127.0.0.1/32", "10.0.0.0/8" ]
+    TrustedProxyCIDRs: []
+    # Optional namespace for Redis keys when multiple sites share one Redis instance.
+    RedisKeyPrefix: ""

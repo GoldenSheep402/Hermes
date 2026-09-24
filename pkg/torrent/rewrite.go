@@ -8,22 +8,30 @@ import (
 	"github.com/zeebo/bencode"
 )
 
-// RewriteDownloadTorrent parses raw torrent bytes, replaces tracker announce fields,
-// and re-encodes the torrent for client download.
-func RewriteDownloadTorrent(rawData []byte, announceURL string) ([]byte, error) {
-	return RewriteDownloadTorrentWithTrackers(rawData, []string{announceURL})
+const poweredByHermesCommentTag = "Powered by Hermes"
+
+// appendPoweredByHermesComment appends a site attribution to the torrent root comment on download.
+func appendPoweredByHermesComment(existing string) string {
+	existing = strings.TrimSpace(existing)
+	if strings.Contains(strings.ToLower(existing), "powered by hermes") {
+		return existing
+	}
+	if existing == "" {
+		return poweredByHermesCommentTag
+	}
+	return existing + " | " + poweredByHermesCommentTag
 }
 
-// RewriteDownloadTorrentWithTrackers parses raw torrent bytes, replaces tracker announce fields
-// with a prioritized list, and re-encodes the torrent for client download.
-func RewriteDownloadTorrentWithTrackers(rawData []byte, announceURLs []string) ([]byte, error) {
+// RewriteDownloadTorrent parses raw torrent bytes, replaces the primary announce URL,
+// removes announce-list (clients prefer it over announce when present), and re-encodes.
+func RewriteDownloadTorrent(rawData []byte, announceURL string) ([]byte, error) {
 	if len(rawData) == 0 {
 		return nil, fmt.Errorf("empty torrent data")
 	}
 
-	normalized, err := normalizeAnnounceURLs(announceURLs)
-	if err != nil {
-		return nil, err
+	announceURL = strings.TrimSpace(announceURL)
+	if announceURL == "" {
+		return nil, fmt.Errorf("empty announce url")
 	}
 
 	parsed, err := Parse(rawData)
@@ -31,28 +39,25 @@ func RewriteDownloadTorrentWithTrackers(rawData []byte, announceURLs []string) (
 		return nil, err
 	}
 
-	parsed.Announce = normalized[0]
-	announceList := make([][]string, 0, len(normalized))
-	for _, trackerURL := range normalized {
-		announceList = append(announceList, []string{trackerURL})
-	}
-	parsed.AnnounceList = announceList
+	parsed.Announce = announceURL
+	parsed.AnnounceList = nil
+	parsed.Comment = appendPoweredByHermesComment(parsed.Comment)
 
 	return parsed.Marshal()
 }
 
-// RewriteUploadTorrentWithTrackers rewrites tracker fields for upload persistence and enforces
+// RewriteUploadTorrent rewrites tracker fields for upload persistence and enforces
 // private tracker mode:
 // - sets info.private = 1
-// - removes DHT / external peer-discovery related fields from root dict
-func RewriteUploadTorrentWithTrackers(rawData []byte, announceURLs []string) ([]byte, error) {
+// - removes announce-list and DHT / external peer-discovery fields
+func RewriteUploadTorrent(rawData []byte, announceURL string) ([]byte, error) {
 	if len(rawData) == 0 {
 		return nil, fmt.Errorf("empty torrent data")
 	}
 
-	normalized, err := normalizeAnnounceURLs(announceURLs)
-	if err != nil {
-		return nil, err
+	announceURL = strings.TrimSpace(announceURL)
+	if announceURL == "" {
+		return nil, fmt.Errorf("empty announce url")
 	}
 
 	root, err := decodeTorrentRoot(rawData)
@@ -60,12 +65,8 @@ func RewriteUploadTorrentWithTrackers(rawData []byte, announceURLs []string) ([]
 		return nil, err
 	}
 
-	root["announce"] = normalized[0]
-	announceList := make([][]string, 0, len(normalized))
-	for _, trackerURL := range normalized {
-		announceList = append(announceList, []string{trackerURL})
-	}
-	root["announce-list"] = announceList
+	root["announce"] = announceURL
+	delete(root, "announce-list")
 
 	info, ok := root["info"].(map[string]interface{})
 	if !ok || info == nil {
@@ -88,19 +89,34 @@ func RewriteUploadTorrentWithTrackers(rawData []byte, announceURLs []string) ([]
 	return buf.Bytes(), nil
 }
 
-func normalizeAnnounceURLs(announceURLs []string) ([]string, error) {
-	normalized := make([]string, 0, len(announceURLs))
+// RewriteDownloadTorrentWithTrackers is kept for callers that still pass a list;
+// only the first non-empty URL is used.
+func RewriteDownloadTorrentWithTrackers(rawData []byte, announceURLs []string) ([]byte, error) {
+	url, err := firstAnnounceURL(announceURLs)
+	if err != nil {
+		return nil, err
+	}
+	return RewriteDownloadTorrent(rawData, url)
+}
+
+// RewriteUploadTorrentWithTrackers is kept for callers that still pass a list;
+// only the first non-empty URL is used.
+func RewriteUploadTorrentWithTrackers(rawData []byte, announceURLs []string) ([]byte, error) {
+	url, err := firstAnnounceURL(announceURLs)
+	if err != nil {
+		return nil, err
+	}
+	return RewriteUploadTorrent(rawData, url)
+}
+
+func firstAnnounceURL(announceURLs []string) (string, error) {
 	for _, announceURL := range announceURLs {
 		announceURL = strings.TrimSpace(announceURL)
-		if announceURL == "" {
-			continue
+		if announceURL != "" {
+			return announceURL, nil
 		}
-		normalized = append(normalized, announceURL)
 	}
-	if len(normalized) == 0 {
-		return nil, fmt.Errorf("empty announce url")
-	}
-	return normalized, nil
+	return "", fmt.Errorf("empty announce url")
 }
 
 func decodeTorrentRoot(rawData []byte) (map[string]interface{}, error) {

@@ -46,57 +46,27 @@ func BuildAnnounceURL(endpoint string, passkey string) (string, error) {
 	return u.String(), nil
 }
 
-// BuildAnnounceURLForPasskey keeps backward-compatibility and returns the first announce URL.
+// BuildAnnounceURLForPasskey resolves the single site announce URL from system settings.
 func BuildAnnounceURLForPasskey(ctx context.Context, passkey string) (string, error) {
-	list, err := BuildAnnounceURLsForPasskey(ctx, passkey)
-	if err != nil {
-		return "", err
-	}
-	if len(list) == 0 {
+	endpoint := ResolveTrackerEndpointFromSettings(ctx)
+	if endpoint == "" {
 		return "", errMissingTrackerHost
 	}
-	return list[0], nil
+	return BuildAnnounceURL(endpoint, passkey)
 }
 
-// BuildAnnounceURLsForPasskey resolves tracker list only from system settings.
+// BuildAnnounceURLsForPasskey returns a one-element list for callers that still expect a slice.
 func BuildAnnounceURLsForPasskey(ctx context.Context, passkey string) ([]string, error) {
-	endpoints := ResolveTrackerEndpointsFromSettings(ctx)
-	if len(endpoints) == 0 {
-		return nil, errMissingTrackerHost
+	announceURL, err := BuildAnnounceURLForPasskey(ctx, passkey)
+	if err != nil {
+		return nil, err
 	}
-
-	return BuildAnnounceURLsFromEndpoints(endpoints, passkey)
+	return []string{announceURL}, nil
 }
 
-// BuildAnnounceURLsFromEndpoints builds normalized announce URLs and removes duplicates.
-func BuildAnnounceURLsFromEndpoints(endpoints []string, passkey string) ([]string, error) {
-	announceURLs := make([]string, 0, len(endpoints))
-	seen := map[string]struct{}{}
-
-	for _, endpoint := range endpoints {
-		announceURL, err := BuildAnnounceURL(endpoint, passkey)
-		if err != nil {
-			continue
-		}
-		if _, ok := seen[announceURL]; ok {
-			continue
-		}
-		seen[announceURL] = struct{}{}
-		announceURLs = append(announceURLs, announceURL)
-	}
-
-	if len(announceURLs) == 0 {
-		return nil, errMissingTrackerHost
-	}
-	return announceURLs, nil
-}
-
-func ResolveTrackerEndpointsFromSettings(ctx context.Context) []string {
-	return systemSetting.TrackerListValue(ctx)
-}
-
-func parseTrackerList(raw string) []string {
-	return systemSetting.ParseTrackerList(raw)
+// ResolveTrackerEndpointFromSettings returns the configured public announce endpoint.
+func ResolveTrackerEndpointFromSettings(ctx context.Context) string {
+	return systemSetting.TrackerAnnounceURLValue(ctx)
 }
 
 func normalizeAnnouncePath(path string) string {

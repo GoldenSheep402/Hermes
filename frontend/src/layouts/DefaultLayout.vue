@@ -17,6 +17,7 @@ const navItems: NavItem[] = [
   { path: '/home', label: '首页 Home' },
   { path: '/torrents', label: '种子 Torrents' },
   { path: '/upload', label: '发布 Upload' },
+  { path: '/bonus', label: '魔力 Bonus' },
   { path: '/forums', label: '论坛 Forums' },
   { path: '/top10', label: '排行榜 Top 10' },
   { path: '/rules', label: '规则 Rules' },

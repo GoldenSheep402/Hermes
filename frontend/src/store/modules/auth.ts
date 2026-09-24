@@ -107,8 +107,8 @@ export const useAuthStore = defineStore('hermes/auth', {
         throw new Error('无法获取用户信息')
       }
 
-      const upload = parseInt64(userProfile?.realUpload ?? user.uploaded)
-      const download = parseInt64(userProfile?.realDownload ?? user.downloaded)
+      const upload = parseInt64(user.uploaded)
+      const download = parseInt64(user.downloaded)
       const isStaff = Boolean(user.isAdmin)
       const roles = isStaff ? ['user', 'staff'] : ['user']
 
@@ -122,7 +122,7 @@ export const useAuthStore = defineStore('hermes/auth', {
         downloadBytes: download,
         uploadRateBytes: currentUploadRate,
         downloadRateBytes: currentDownloadRate,
-        bonusPoints: parseInt64(user.bonusPoints),
+        bonusPoints: milliToDisplayPoints(parseInt64(user.bonusPoints)),
         inboxUnread: 0,
         inviteCount: user.inviteCount || 0,
         avatar: user.avatar || '',
@@ -155,4 +155,11 @@ function parseInt64(value: string | number | undefined): number {
     return Number.isFinite(parsed) ? parsed : 0
   }
   return 0
+}
+
+function milliToDisplayPoints(milli: number): number {
+  if (!Number.isFinite(milli) || milli <= 0) {
+    return 0
+  }
+  return Math.floor(milli / 1000)
 }

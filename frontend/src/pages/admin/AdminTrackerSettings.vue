@@ -19,8 +19,11 @@ const trackerSetting = reactive({
   flushBatchSize: 200,
   globalFreeleech: false,
   freeleechCountdown: 0,
-  bonusFormula: 'sqrt(uploaded)',
-  trackerList: '',
+  announceUrl: '',
+  bonusEnabled: true,
+  bonusMultiplier: 1,
+  bonusUploadPointsPerGib: 300,
+  bonusInvitePoints: 50000,
 })
 
 const settingsLoading = ref(false)
@@ -33,8 +36,14 @@ function syncSettingsToState(map: Record<string, string>) {
   trackerSetting.flushBatchSize = parseNumber(map[settingKeys.flushBatchSize], trackerSetting.flushBatchSize)
   trackerSetting.globalFreeleech = parseBoolean(map[settingKeys.globalFreeleech], trackerSetting.globalFreeleech)
   trackerSetting.freeleechCountdown = parseNumber(map[settingKeys.freeleechCountdown], trackerSetting.freeleechCountdown)
-  trackerSetting.bonusFormula = map[settingKeys.bonusFormula] || trackerSetting.bonusFormula
-  trackerSetting.trackerList = map[settingKeys.trackerList] || trackerSetting.trackerList
+  trackerSetting.announceUrl = map[settingKeys.announceUrl] || trackerSetting.announceUrl
+  trackerSetting.bonusEnabled = parseBoolean(map[settingKeys.bonusEnabled], trackerSetting.bonusEnabled)
+  trackerSetting.bonusMultiplier = parseNumber(map[settingKeys.bonusMultiplier], trackerSetting.bonusMultiplier)
+  trackerSetting.bonusUploadPointsPerGib = parseNumber(
+    map[settingKeys.bonusUploadPointsPerGib],
+    trackerSetting.bonusUploadPointsPerGib,
+  )
+  trackerSetting.bonusInvitePoints = parseNumber(map[settingKeys.bonusInvitePoints], trackerSetting.bonusInvitePoints)
 }
 
 function buildPayload(): Setting[] {
@@ -69,16 +78,35 @@ function buildPayload(): Setting[] {
       type: 'int',
       desc: '活动倒计时（小时）',
     },
-    { key: settingKeys.bonusFormula, value: trackerSetting.bonusFormula.trim(), type: 'string', desc: '魔力值公式' },
     {
-      key: settingKeys.trackerList,
-      value: trackerSetting.trackerList
-        .split('\n')
-        .map((line) => line.trim())
-        .filter((line) => line.length > 0)
-        .join('\n'),
+      key: settingKeys.announceUrl,
+      value: trackerSetting.announceUrl.trim(),
       type: 'string',
-      desc: 'Tracker 列表，一行一个地址',
+      desc: '公网 Tracker Announce URL',
+    },
+    {
+      key: settingKeys.bonusEnabled,
+      value: boolToValue(trackerSetting.bonusEnabled),
+      type: 'bool',
+      desc: '启用做种魔力',
+    },
+    {
+      key: settingKeys.bonusMultiplier,
+      value: String(Math.max(0.01, Number(trackerSetting.bonusMultiplier) || 1)),
+      type: 'float',
+      desc: '魔力系数',
+    },
+    {
+      key: settingKeys.bonusUploadPointsPerGib,
+      value: String(Math.max(1, Number(trackerSetting.bonusUploadPointsPerGib) || 300)),
+      type: 'int',
+      desc: '兑换上传量单价（魔力/GiB）',
+    },
+    {
+      key: settingKeys.bonusInvitePoints,
+      value: String(Math.max(1, Number(trackerSetting.bonusInvitePoints) || 50000)),
+      type: 'int',
+      desc: '兑换邀请单价（魔力）',
     },
   ]
 }
@@ -131,13 +159,17 @@ function updateGlobalFreeleech(value: boolean) {
   trackerSetting.globalFreeleech = value
 }
 
+function updateBonusEnabled(value: boolean) {
+  trackerSetting.bonusEnabled = value
+}
+
 onMounted(() => {
   void loadSectionSettings()
 })
 </script>
 
 <template>
-  <t-card title="Tracker 及业务参数" size="small" :loading="settingsLoading" class="h-full">
+  <t-card title="Tracker 及魔力参数" size="small" :loading="settingsLoading" class="h-full">
     <div class="form-grid">
       <label>
         <span>Announce 最小间隔（秒）</span>
@@ -159,17 +191,28 @@ onMounted(() => {
         <span>活动倒计时（小时）</span>
         <t-input-number v-model="trackerSetting.freeleechCountdown" :min="0" :max="720" />
       </label>
-      <label>
-        <span>魔力值公式</span>
-        <t-input v-model="trackerSetting.bonusFormula" />
-      </label>
       <label class="lg:col-span-2">
-        <span>Tracker URL 列表（系统设置 list）</span>
-        <t-textarea
-          v-model="trackerSetting.trackerList"
-          :autosize="{ minRows: 4, maxRows: 8 }"
-          placeholder="一行一个地址，例如：&#10;https://tracker.example.com/announce&#10;https://backup.example.com/announce"
+        <span>Tracker Announce URL</span>
+        <t-input
+          v-model="trackerSetting.announceUrl"
+          placeholder="例如：https://tracker.example.com/announce"
         />
+      </label>
+      <label>
+        <span>启用做种魔力</span>
+        <t-switch :value="trackerSetting.bonusEnabled" @change="updateBonusEnabled" />
+      </label>
+      <label>
+        <span>魔力系数</span>
+        <t-input-number v-model="trackerSetting.bonusMultiplier" :min="0.01" :step="0.1" :decimal-places="2" />
+      </label>
+      <label>
+        <span>兑换上传量单价（魔力/GiB）</span>
+        <t-input-number v-model="trackerSetting.bonusUploadPointsPerGib" :min="1" :step="10" />
+      </label>
+      <label>
+        <span>兑换邀请单价（魔力）</span>
+        <t-input-number v-model="trackerSetting.bonusInvitePoints" :min="1" :step="1000" />
       </label>
     </div>
 

@@ -16,8 +16,13 @@ type BonusLog struct {
 
 // Bonus reason constants.
 const (
-	BonusReasonSeeding        = "seeding"
-	BonusReasonExchangeUpload = "exchange_upload"
-	BonusReasonGift           = "gift"
-	BonusReasonSystem         = "system"
+	BonusReasonSeeding         = "seeding"
+	BonusReasonExchangeUpload  = "exchange_upload"
+	BonusReasonExchangeInvite  = "exchange_invite"
+	BonusReasonGift            = "gift"
+	BonusReasonSystem          = "system"
 )
+
+// MilliPointsPerPoint is the storage scale: 1000 milli-points = 1 display point.
+const MilliPointsPerPoint int64 = 1000
+
